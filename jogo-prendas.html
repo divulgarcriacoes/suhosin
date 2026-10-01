@@ -155,21 +155,32 @@
 
             this.add.image(512, 384, 'background');
 
-            // Desenhar ruas
+            // Desenhar Rua Santa Júlia
             const rua = this.add.graphics();
             rua.fillStyle(0x888888, 1);
-            rua.fillRect(0, 300, 1024, 100); // Rua horizontal
-            rua.fillRect(400, 0, 100, 768);   // Rua vertical
+            rua.fillRect(0, 350, 1024, 80); // Rua Santa Júlia
+
+            // Nome da rua
+            this.add.text(20, 360, 'RUA SANTA JÚLIA', {
+                fontSize: '16px',
+                fill: '#FFFF00',
+                fontStyle: 'bold'
+            }).setDepth(1);
             rua.destroy();
 
-            // Adicionar casas (retângulos coloridos)
+            // Adicionar casas da Rua Santa Júlia
             const casas = [
-                { x: 150, y: 100, cor: 0xFF6B6B, prendas: 'Bolo' },
-                { x: 650, y: 100, cor: 0x4ECDC4, prendas: 'Refrigerante' },
-                { x: 150, y: 450, cor: 0xFFE66D, prendas: 'Doces' },
-                { x: 650, y: 450, cor: 0x95E1D3, prendas: 'Água' },
-                { x: 150, y: 600, cor: 0xF38181, prendas: 'Salgados' },
-                { x: 650, y: 600, cor: 0xAA96DA, prendas: 'Sucos' }
+                { x: 150, y: 250, cor: 0xFF1493, prendas: 'Agasalhos', numero: '12' },
+                { x: 300, y: 250, cor: 0x1E90FF, prendas: 'Alimentos', numero: '20' },
+                { x: 450, y: 250, cor: 0xFFD700, prendas: 'Dinheiro', numero: '28' },
+                { x: 600, y: 250, cor: 0x32CD32, prendas: 'Roupas', numero: '32' },
+                { x: 750, y: 250, cor: 0xFF6347, prendas: 'Brinquedos', numero: '40' },
+
+                { x: 150, y: 500, cor: 0x8B4513, prendas: 'Utensílios', numero: '15' },
+                { x: 300, y: 500, cor: 0x9370DB, prendas: 'Livros', numero: '23' },
+                { x: 450, y: 500, cor: 0xFF00FF, prendas: 'Doações', numero: '36' },
+                { x: 600, y: 500, cor: 0xFF69B4, prendas: 'Alimentos', numero: '38' },
+                { x: 750, y: 500, cor: 0xDAAA00, prendas: 'Móveis', numero: '46' }
             ];
 
             this.casas = this.physics.add.staticGroup();
@@ -177,12 +188,43 @@
             casas.forEach((casa, index) => {
                 const rect = this.add.rectangle(casa.x, casa.y, 120, 80, casa.cor);
                 rect.setDepth(0);
+
+                // Destacar a casa do usuário (nº 36)
+                if (casa.numero === '36') {
+                    const border = this.add.rectangle(casa.x, casa.y, 135, 95);
+                    border.setStrokeStyle(5, 0xFFFF00);
+                    border.setFillStyle(null);
+                    border.setDepth(-1);
+
+                    const estrela = this.add.text(casa.x, casa.y - 45, '⭐ SUA CASA ⭐', {
+                        fontSize: '13px',
+                        fill: '#FFD700',
+                        fontStyle: 'bold',
+                        backgroundColor: '#000000',
+                        padding: { x: 6, y: 3 }
+                    });
+                    estrela.setOrigin(0.5);
+                    estrela.setDepth(2);
+                }
+
                 this.casas.add(rect);
 
+                // Adicionar número da casa
+                const numero = this.add.text(casa.x, casa.y - 22, `Nº ${casa.numero}`, {
+                    fontSize: '13px',
+                    fill: '#FFFFFF',
+                    fontStyle: 'bold',
+                    backgroundColor: '#000000',
+                    padding: { x: 5, y: 2 }
+                });
+                numero.setOrigin(0.5);
+                numero.setDepth(2);
+
                 // Adicionar texto com nome da prendas
-                const text = this.add.text(casa.x, casa.y, casa.prendas, {
+                const text = this.add.text(casa.x, casa.y + 5, casa.prendas, {
                     fontSize: '12px',
-                    fill: '#000000',
+                    fill: '#FFFFFF',
+                    fontStyle: 'bold',
                     align: 'center'
                 });
                 text.setOrigin(0.5, 0.5);
@@ -190,6 +232,7 @@
 
                 // Guardar info da casa
                 rect.prendas = casa.prendas;
+                rect.numero = casa.numero;
                 rect.coletado = false;
                 rect.index = index;
             });
