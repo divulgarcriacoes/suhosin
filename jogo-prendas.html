@@ -32,12 +32,29 @@
             color: white;
             padding: 15px;
             border-radius: 8px;
-            font-size: 18px;
+            font-size: 16px;
             z-index: 100;
+            max-width: 250px;
         }
         .score {
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             font-weight: bold;
+            color: #FFD700;
+        }
+        .missoes {
+            margin-top: 15px;
+            border-top: 1px solid #666;
+            padding-top: 10px;
+            font-size: 14px;
+        }
+        .missao-item {
+            margin-bottom: 8px;
+            padding: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+        }
+        .missao-completa {
+            color: #90EE90;
         }
         .controls {
             position: absolute;
@@ -50,17 +67,57 @@
             font-size: 14px;
             z-index: 100;
         }
+        #missoes-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 100;
+            max-width: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .missao-titulo {
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #FFD700;
+            font-size: 16px;
+        }
+        .missao {
+            margin-bottom: 12px;
+            padding: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            border-left: 3px solid #FFD700;
+        }
+        .missao-completa {
+            background: rgba(144,238,144,0.2);
+            border-left-color: #90EE90;
+        }
     </style>
 </head>
 <body>
     <div id="game"></div>
     <div id="info">
-        <div class="score">Pontos: <span id="score">0</span></div>
-        <div>Prendas: <span id="prendas">0</span>/10</div>
+        <div class="score">⭐ Pontos: <span id="score">0</span></div>
+        <div>📦 Itens: <span id="prendas">0</span></div>
+        <div class="missoes">
+            <div style="font-weight: bold; margin-bottom: 8px;">🎯 Missões Ativas:</div>
+            <div id="missoes-ativas"></div>
+        </div>
+    </div>
+    <div id="missoes-panel">
+        <div class="missao-titulo">📋 MISSÕES DISPONÍVEIS</div>
+        <div id="missoes-lista"></div>
     </div>
     <div class="controls">
         <div>⬆️ Setas para mover</div>
         <div>📱 Ou clique na tela</div>
+        <div style="margin-top: 8px; color: #FFD700;">M = Abrir Missões</div>
     </div>
 
     <script>
