@@ -177,7 +177,7 @@ function dcprice_omnitek_rows_for_product( $product_id ) {
  * produto, mas evita "sem preço" pro resto do catálogo.
  * ---------------------------------------------------------------------- */
 function dcprice_tecnica_generica_tabela() {
-	return array(
+	$tabela = array(
 		'laser'        => array(
 			'label' => 'Laser',
 			'tiers' => array(
@@ -251,6 +251,24 @@ function dcprice_tecnica_generica_tabela() {
 			),
 		),
 	);
+	// Técnicas novas (lista por material): o preço é 22% do custo (ver dcprice_omnitek_gravacao_pct);
+	// a faixa abaixo só existe porque o restante do motor espera 'tiers'.
+	$novas = array(
+		'uv_direto'    => 'Digital UV',
+		'dtf_uv'       => 'DTF UV',
+		'dtf_textil'   => 'DTF têxtil',
+		'sublimacao'   => 'Sublimação',
+		'bordado'      => 'Bordado',
+		'baixo_relevo' => 'Baixo-relevo',
+		'impressao'    => 'Impressão',
+	);
+	foreach ( $novas as $k => $label ) {
+		$tabela[ $k ] = array(
+			'label' => $label,
+			'tiers' => $tabela['transfer']['tiers'],
+		);
+	}
+	return $tabela;
 }
 
 /* -------------------------------------------------------------------------
@@ -371,6 +389,12 @@ function dcprice_omnitek_gravacao_pct( $tecnica_key ) {
 	}
 	if ( false !== strpos( $tecnica_key, 'laser' ) ) {
 		return 0.20; // Laser: 20% do custo (igual ao default, mas explícito)
+	}
+	// Técnicas novas marcadas à mão no produto (lista por material): 22% do custo.
+	foreach ( array( 'manual:uv_direto', 'manual:dtf_uv', 'manual:dtf_textil', 'manual:sublimacao', 'manual:bordado', 'manual:baixo_relevo', 'manual:impressao' ) as $nova ) {
+		if ( false !== strpos( $tecnica_key, $nova ) ) {
+			return 0.22;
+		}
 	}
 	return 0.20; // Default: Digital UV, Sublimação, Hot Stamping, Transfer, etc.
 }
