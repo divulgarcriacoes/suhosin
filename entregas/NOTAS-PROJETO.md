@@ -124,3 +124,22 @@ Em aberto: valores e número de planos, período de teste, limite de pedidos por
 - Risco: os designers mais fracos podem ser os primeiros a assinar. Mitigar com aprovação de portfólio, convite de 10 a 20 designers fortes com selo "fundador", exigir fotos reais do ambiente pronto, e premiação e avaliação de clientes para destacar os melhores.
 - Lançamento: lista de espera antes (nome, e-mail, área, cidade, com consentimento), entrada em lotes de 50 a 100 por semana com aprovação de portfólio, designers fundadores com projetos publicados antes de abrir, servidor e e-mail dimensionados para picos, limite diário de aprovações pela equipe de moderação.
 - Nome do aplicativo: em escolha, vem primeiro. Candidatos: Traço, Prancha, Croqui, Ateliê, Trama, Projeta. Conferir fora daqui: Google Play, App Store, domínio .com.br, Instagram e INPI. Definir o tom: profissional e sério, moderno e jovem, ou acolhedor e de comunidade.
+
+## Atualização de 05/10/2026 (site Divulgar Criações)
+
+Endereço do showroom e da fábrica: Rua Santa Julia, 36, Jardim Villaça, São Roque/SP, CEP 18135-420. Sorocaba aparece nos textos só como região atendida.
+
+Snippets e páginas novos (todos de estilo, por cima do tema; atualizar um snippet mantém o status ativo):
+- 84482 Contato (shortcode `[dc_contato]`, formulário próprio com envio por e-mail) e 84486 (estilo do contato). Página nova publicada em /contato/ (id 84483); a antiga "Contato 2026" (id 39458) ficou em rascunho no endereço /contato-2026-antigo/. Redirecionamento 301 de /contato-novo/ para /contato/.
+- 84484 Rodapé novo (substitui o rodapé do ElementsKit "Rodapé Divulgar 2026", id 39816, escondido por CSS). Botão "Orçamento em 1 minuto" aponta para /orcar-por-lista/.
+- 84498 Orçar por Lista (página id 79080; formulário do plugin dc-quote-lista2), 84500 Portfólio (id 16828), 84507 Tipos de gravações (id 2568, título trocado de "Shop"), 84508 Novidades (id 22611), 84512 Clientes (id 16830).
+- 84401 taxa de manuseio de 20% no frete. 83949 limpar títulos: 1.318 títulos corrigidos, com a medida junto do nome (Bolsa Térmica 2,6 Litros).
+- Armadilha repetida: um snippet que roda em um gancho não pode registrar `add_action` nesse mesmo gancho e prioridade (não dispara). Imprimir o HTML ou CSS direto.
+- O Wordfence bloqueia as consultas da ferramenta de leitura de páginas (erro 503); só afeta a ferramenta.
+
+Catálogo do Meta (catálogo "Divulgar Criações - Brindes Corporativos", via plugin do Facebook no WooCommerce, pixel ativo, taxa de correspondência 92,1%):
+- 8.380 produtos no catálogo contra 4.279 publicados no site; há produtos com preço R$ 0,00 (o catálogo foi criado quando o site ainda não tinha preço). Títulos e preços novos foram gravados direto no banco e podem não ter sido reenviados.
+- Falta evento de compra no pixel (esperado, a venda é por orçamento). 5 códigos de produto sem correspondência.
+- Próximo passo: sincronizar todos os produtos pelo plugin do Facebook no WordPress, conferir no catálogo, só depois ativar a Loja (Facebook e Instagram) e as coleções (Agendas 2027, Squeezes e Garrafas, Mochilas, Copos, Fones). Testar `wa.me/c/5515981543186` para ver se o catálogo está ligado ao WhatsApp.
+
+Pendentes: testar o envio do formulário de contato e um orçamento por lista; chave nova da Spot (colocar direto no plugin, nunca colar no chat); fotos da obra do showroom na biblioteca de mídia para a seção "Nossa história" e "Nosso showroom"; página /showroom/ com QR nas peças; novo ajuste do botão "Escolher arquivo" (texto branco) no Orçar por Lista; "Pedido da agência" no gerador de pedido; Casa Finna e rede de designers (ver seções acima); reconectar as ferramentas do site quando o Wordfence ou a conexão falharem.
