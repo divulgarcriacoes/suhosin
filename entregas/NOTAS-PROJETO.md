@@ -47,3 +47,23 @@ Não guardar chaves ou senhas neste arquivo.
 
 - Página para as agências: https://claude.ai/artifact/4UKLTqWGkLjgTktRmiGM6T
 - Roteiro interno: https://claude.ai/artifact/1q3Sw4RynJZ1cJiSHeQJ14
+
+## Casa Finna (casafinna.com.br): venda online de móveis planejados
+
+O site atual é institucional e completo, sem loja. Conceito: "Projete sua casa online", com três entradas (quero comprar, quero projetar, quero inspiração). Modelo: configurador + orçamento em faixa de preço + projetista + CRM + pagamento + acompanhamento. Não é um e-commerce tradicional.
+
+Etapas combinadas, uma por vez, cada uma testada antes da próxima:
+1. "Começar meu projeto": configurador de 7 passos (ambiente, tamanho, fotos, planta, estilo, acabamentos, dados), protocolo (ex.: CF-10842), e-mail de confirmação e painel interno de projetos.
+2. Páginas de ambientes (SEO) e orçamento online em faixa de preço.
+3. Área do cliente "Meu projeto" com etapas e apresentação (aprovar, solicitar alteração, falar com projetista).
+4. Contrato digital e pagamento (Pix, cartão, boleto).
+5. Painel de gestão (funil) e distribuição de leads por projetista e região.
+6. Parceiros (arquitetos, designers) e indicação por link.
+7. IA que gera ideia a partir da foto (por último; exige chave e tem custo).
+
+Para começar a etapa 1 falta:
+- Acesso ao site da Casa Finna pelo EMCP Tools (as ferramentas hoje só alcançam o site da Divulgar Criações; o ambiente bloqueia o endereço casafinna.com.br).
+- Ambientes e acabamentos reais.
+- Projetistas e como dividem os projetos (cidade ou região).
+- Tabela de preço por metro linear (ambiente, padrão e acabamento) para a faixa de estimativa, na etapa 2. Não inventar faixa.
+- Contrato digital: definir como registrar o aceite com valor legal. Financiamento fica fora da primeira versão.
