@@ -67,3 +67,15 @@ Para começar a etapa 1 falta:
 - Projetistas e como dividem os projetos (cidade ou região).
 - Tabela de preço por metro linear (ambiente, padrão e acabamento) para a faixa de estimativa, na etapa 2. Não inventar faixa.
 - Contrato digital: definir como registrar o aceite com valor legal. Financiamento fica fora da primeira versão.
+
+## Rede de projetistas de móveis planejados (ideia em definição)
+
+Marketplace onde clientes que querem móveis planejados entram, veem a "sala" de cada projetista (projetos, serviços, avaliações) e pedem projeto ou orçamento. Não é uma rede social de feed no começo.
+
+- Sala do projetista: apresentação, projetos por ambiente (fotos, 3D, planta, estilo, materiais, medidas, prazo), faixa de preço, serviços, avaliações e botão "quero um projeto assim". Painel privado para cadastrar projetos e atender pedidos.
+- Receita 1: assinatura dos projetistas (planos por número de projetos, destaque nas buscas e pedidos por mês). Cobrança recorrente pelo Mercado Pago. Sem pagamento, a sala sai do ar sem apagar nada.
+- Receita 2: publicidade de lojas e fornecedores da área de móveis (lojas, marcenarias, fornecedores de material, eletros e decoração, montagem). Espaços: faixa na home e nas páginas de ambiente, patrocinado na busca, perfil de loja. Sempre identificar como "Publicidade". Painel do anunciante com cliques e visualizações. Começar com mensalidade fixa por espaço.
+- Com assinatura como receita, o contato direto (WhatsApp) do projetista pode aparecer.
+- Começar por uma cidade ou região, com 20 a 30 projetistas convidados e aprovados manualmente, com primeiros meses grátis.
+- Reaproveita: cadastro com aprovação, painel por perfil, orçamento em PDF, link de pagamento e etapas. Conversa com o projeto Casa Finna.
+- Em aberto: valores e número de planos, período de teste, limite de pedidos por plano, plataforma (WordPress ou sistema próprio) e se a Casa Finna participa como loja.
