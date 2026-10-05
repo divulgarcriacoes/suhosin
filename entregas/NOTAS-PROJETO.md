@@ -99,3 +99,11 @@ Em aberto: valores e número de planos, período de teste, limite de pedidos por
 - O designer divulga o próprio link para o público votar. Isso gera acesso e cadastros para a rede.
 - Cuidados: regulamento claro (quem participa, critérios, prazos, direitos de imagem, entrega do prêmio), checar com advogado se a premiação exige autorização, e ter o fluxo de avaliação pronto antes da primeira edição.
 - Medir: registrar a origem de cada voto e visita (link do designer) para mostrar a ele quantas pessoas trouxe. Preparar o servidor e o cache para picos perto do fechamento.
+
+### Referência: Behance e áreas de atuação (rede de designers)
+
+- Referência de estrutura: Behance. Barra de áreas no topo, grade de projetos só com imagem (título, autor, curtidas e visualizações), selo PRO ao lado do nome com card de venda do plano pago no meio da grade, login com Google discreto, abas "For You" e "Following". Usar só como referência de estrutura; visual, nome e textos devem ser próprios.
+- Lacuna a explorar: no Behance só existe "Arquitetura"; interiores e móveis planejados quase não aparecem. Fortalecer primeiro Interiores e Móveis planejados.
+- A rede mistura todas as áreas, com áreas como porta de entrada (página, destaques e ranking por área). A sala do designer muda os campos conforme a área (móveis e interiores: ambiente, medidas, materiais, planta, 3D). Primeira versão com campos comuns (título, fotos, descrição, cidade, ano) mais os campos de móveis e interiores.
+- Diferenciais em relação ao Behance: cliente buscando designer na cidade com pedido de projeto e orçamento, português com Pix e boleto, vagas e classificados no mesmo lugar, premiações por avaliação de clientes reais, cidade do designer no card.
+- Nome: em escolha. Critérios: curto, fácil de falar, serve para todas as áreas, domínio .com.br e Instagram livres, marca livre no INPI (conferir fora daqui). Ideias: Ateliê, Traço, Croqui, Trama, Elo, ou nome inventado curto com "a rede de designers do Brasil" como apoio.
