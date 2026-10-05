@@ -91,3 +91,11 @@ Regras decididas:
 - Lançar com todas as áreas no cadastro, mas convidar os primeiros 20 a 30 designers em uma área forte (talvez móveis planejados, por causa da Casa Finna) e dar os primeiros meses grátis.
 
 Em aberto: valores e número de planos, período de teste, limite de pedidos por plano, plataforma (WordPress ou sistema próprio), qual área fortalecer primeiro e se a Casa Finna participa.
+
+### Premiações e avaliações (rede de designers)
+
+- Dois prêmios mensais separados: "Melhor avaliado do mês" (só avaliações verificadas de clientes de projetos, com nota ponderada, mínimo de avaliações no mês, desempate por quantidade e por data) e "Escolha do público" (voto aberto, exige cadastro, um voto por pessoa por designer por mês, proteção contra robôs, votos suspeitos podem ser anulados). Exemplo: o melhor avaliado de dezembro ganha um tablet.
+- Fluxo de avaliação: o designer cadastra o projeto concluído com o contato do cliente e a plataforma envia o link de avaliação, com confirmação por código. Uma avaliação por projeto e por cliente, o designer só pode responder. Selo de origem: "projeto contratado pela plataforma" ou "cliente indicado pelo designer" (peso menor ou fora do prêmio).
+- O designer divulga o próprio link para o público votar. Isso gera acesso e cadastros para a rede.
+- Cuidados: regulamento claro (quem participa, critérios, prazos, direitos de imagem, entrega do prêmio), checar com advogado se a premiação exige autorização, e ter o fluxo de avaliação pronto antes da primeira edição.
+- Medir: registrar a origem de cada voto e visita (link do designer) para mostrar a ele quantas pessoas trouxe. Preparar o servidor e o cache para picos perto do fechamento.
