@@ -68,14 +68,26 @@ Para começar a etapa 1 falta:
 - Tabela de preço por metro linear (ambiente, padrão e acabamento) para a faixa de estimativa, na etapa 2. Não inventar faixa.
 - Contrato digital: definir como registrar o aceite com valor legal. Financiamento fica fora da primeira versão.
 
-## Rede de projetistas de móveis planejados (ideia em definição)
+## Rede de designers (ideia em definição)
 
-Marketplace onde clientes que querem móveis planejados entram, veem a "sala" de cada projetista (projetos, serviços, avaliações) e pedem projeto ou orçamento. Não é uma rede social de feed no começo.
+Rede centrada no designer, de todas as áreas (gráfico, interiores, móveis planejados, moda, produto, web, ilustração e outras). O designer é quem assina. Cliente final, lojistas e fornecedores existem para dar pedidos, vagas e fornecedores ao designer. Não é uma rede social de feed no começo.
 
-- Sala do projetista: apresentação, projetos por ambiente (fotos, 3D, planta, estilo, materiais, medidas, prazo), faixa de preço, serviços, avaliações e botão "quero um projeto assim". Painel privado para cadastrar projetos e atender pedidos.
-- Receita 1: assinatura dos projetistas (planos por número de projetos, destaque nas buscas e pedidos por mês). Cobrança recorrente pelo Mercado Pago. Sem pagamento, a sala sai do ar sem apagar nada.
-- Receita 2: publicidade de lojas e fornecedores da área de móveis (lojas, marcenarias, fornecedores de material, eletros e decoração, montagem). Espaços: faixa na home e nas páginas de ambiente, patrocinado na busca, perfil de loja. Sempre identificar como "Publicidade". Painel do anunciante com cliques e visualizações. Começar com mensalidade fixa por espaço.
-- Com assinatura como receita, o contato direto (WhatsApp) do projetista pode aparecer.
-- Começar por uma cidade ou região, com 20 a 30 projetistas convidados e aprovados manualmente, com primeiros meses grátis.
-- Reaproveita: cadastro com aprovação, painel por perfil, orçamento em PDF, link de pagamento e etapas. Conversa com o projeto Casa Finna.
-- Em aberto: valores e número de planos, período de teste, limite de pedidos por plano, plataforma (WordPress ou sistema próprio) e se a Casa Finna participa como loja.
+Partes do produto:
+- Sala do designer: apresentação, projetos por área (fotos, 3D, planta, estilo, materiais, prazo), faixa de preço, serviços, avaliações e botão "quero um projeto assim". Painel privado para cadastrar projetos e atender pedidos.
+- Áreas de atuação: cada designer escolhe uma ou mais. Busca, vagas, classificados e anúncios são filtrados por área.
+- Pedidos de clientes: o cliente escolhe a área e o designer e pede projeto ou orçamento. Principal motivo para o designer assinar.
+- Vagas: qualquer empresa pode publicar vagas para designers e áreas afins. Candidato se cadastra e se candidata com um clique. Currículo é dado pessoal (LGPD). Vaga expira em 30 a 45 dias.
+- Classificado: qualquer empresa ou profissional anuncia produtos e serviços (material, software, equipamento, gráfica, curso, montagem). Anúncio com validade de 30 dias.
+- Publicidade: faixa na home e nas páginas de área, patrocinado na busca e perfil de loja ou fornecedor. Sempre identificar como "Publicidade". Painel do anunciante com cliques e visualizações.
+
+Receita:
+- Assinatura dos designers (planos por número de projetos na sala, destaque nas buscas e pedidos por mês), cobrança recorrente pelo Mercado Pago. Sem pagamento, a sala sai do ar sem apagar nada.
+- Anúncios, classificados e vagas de empresas: incluídos em plano ou avulsos, com destaque pago.
+- Como não há comissão por projeto, o contato direto (WhatsApp) do designer pode aparecer.
+
+Regras decididas:
+- Qualquer empresa ou profissional pode anunciar, publicar vaga ou classificado, em qualquer área.
+- Moderação: revisar antes de publicar no começo, ter botão "denunciar", lista de itens proibidos e remoção rápida. Deixar claro que a negociação é entre as partes e que a plataforma não contrata ninguém.
+- Lançar com todas as áreas no cadastro, mas convidar os primeiros 20 a 30 designers em uma área forte (talvez móveis planejados, por causa da Casa Finna) e dar os primeiros meses grátis.
+
+Em aberto: valores e número de planos, período de teste, limite de pedidos por plano, plataforma (WordPress ou sistema próprio), qual área fortalecer primeiro e se a Casa Finna participa.
