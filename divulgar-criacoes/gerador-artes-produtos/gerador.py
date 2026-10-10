@@ -521,6 +521,7 @@ def detectar_cartao(fundo):
 
 
 FOTO_ZOOM = 1.0
+SAIDA = AQUI / "saida"      # a cada execucao vira uma subpasta nova: saida/AAAA-MM-DD_HH-MM
 TEMA = {"pasta": None, "cor": "#FF5900"}    # --tema: pasta temas/<nome> com fundo_feed.png, fundo_story.png e tema.json
 
 
@@ -754,7 +755,7 @@ def processar(produto, rgba, sem_ia, nomes, cenario=None, estilo="cartao", mostr
         if not all(info.get(k) for k in ("minimo", "qtd_estoque")):
             pag = ler_pagina(produto.get("permalink"))
             info.setdefault("minimo", pag.get("minimo")); info.setdefault("qtd_estoque", pag.get("qtd")); info.setdefault("tecnica", pag.get("tecnica"))
-        pasta = AQUI / "saida" / f"{produto.get('id', 0)}-{re.sub(r'[^\w]+', '-', nome.lower()).strip('-')[:60]}"
+        pasta = SAIDA / f"{produto.get('id', 0)}-{re.sub(r'[^\w]+', '-', nome.lower()).strip('-')[:60]}"
         pasta.mkdir(parents=True, exist_ok=True)
         for fmt in nomes:
             tam = tamanho_do_modelo(fmt)
@@ -773,7 +774,7 @@ def processar(produto, rgba, sem_ia, nomes, cenario=None, estilo="cartao", mostr
     nome = unescape(produto["name"])
     minimo = produto.get("minimo") or (pedido_minimo(produto.get("permalink")) if estilo == "comercial" else None)
     slug = re.sub(r"[^\w]+", "-", nome.lower()).strip("-")[:60]
-    pasta = AQUI / "saida" / f"{produto.get('id', 0)}-{slug}"
+    pasta = SAIDA / f"{produto.get('id', 0)}-{slug}"
     pasta.mkdir(parents=True, exist_ok=True)
     for fmt in nomes:
         tam = tuple(CFG["formatos"][fmt])
@@ -809,6 +810,7 @@ def main():
     ap.add_argument("--continuar", action="store_true", help="pula os produtos que ja tem arte na pasta saida (para retomar um lote grande)")
     ap.add_argument("--zoom", type=float, default=1.0, help="aumenta a foto dentro do quadro branco, como o PowerClip (ex.: --zoom 1.3; o que passar da borda e cortado)")
     ap.add_argument("--tema", help="tema/campanha: nome da pasta em temas/ (ex.: --tema novembro-azul)")
+    ap.add_argument("--pasta", help="nome da subpasta do lote dentro de saida (ex.: --pasta novembro-azul). Sem isso, usa data e hora")
     ap.add_argument("--sem-ia", action="store_true")
     ap.add_argument("--demo", action="store_true")
     ap.add_argument("--formatos", nargs="+", default=["feed", "story"])
@@ -817,7 +819,16 @@ def main():
     FOTO_ZOOM = a.zoom
     if a.tema:
         ativar_tema(a.tema)
-    print('gerador.py versao 12.1 (1 "A PARTIR DE" so, foto sem margem branca, --zoom) - arquivo: ' + str(Path(__file__).resolve()))
+    global SAIDA
+    base_saida = AQUI / "saida"
+    if a.pasta:
+        SAIDA = base_saida / re.sub(r"[^\w.-]+", "-", a.pasta).strip("-")
+    elif a.continuar and base_saida.exists() and any(p.is_dir() for p in base_saida.iterdir()):
+        SAIDA = sorted((p for p in base_saida.iterdir() if p.is_dir()), key=lambda p: p.stat().st_mtime)[-1]    # retoma o lote mais recente
+    else:
+        SAIDA = base_saida / (time.strftime("%Y-%m-%d_%H-%M") + (f"_{a.tema}" if a.tema else ""))
+    print(f"  Pasta deste lote: {SAIDA}")
+    print('gerador.py versao 12.2 (1 "A PARTIR DE" so, foto sem margem branca, --zoom) - arquivo: ' + str(Path(__file__).resolve()))
     if a.ids:   # aceita 93014,80131,1380 ou 93014 80131 1380
         a.ids = [int(x) for tok in a.ids for x in re.split(r"[,;\s]+", tok) if x.strip().isdigit()]
 
@@ -833,7 +844,7 @@ def main():
     feitos, pulados = 0, 0
     for p in produtos:
         print(p["name"])
-        if a.continuar and list((AQUI / "saida").glob(f"{p.get('id', 0)}-*/feed.jpg")):
+        if a.continuar and list(SAIDA.glob(f"{p.get('id', 0)}-*/feed.jpg")):
             print("  ja existe, pulando"); pulados += 1; continue
         if a.so_estoque and (p.get("estoque") or p.get("stock_status")) == "outofstock":
             print("  sem estoque, pulando"); pulados += 1; continue
@@ -848,7 +859,7 @@ def main():
             time.sleep(max(0.0, a.pausa))
         except Exception as e:
             print(f"  ! erro neste produto: {e}"); pulados += 1
-    print(f"\nPronto: {feitos} produto(s) gerado(s), {pulados} pulado(s). Artes na pasta saida.")
+    print(f"\nPronto: {feitos} produto(s) gerado(s), {pulados} pulado(s). Artes em: {SAIDA}")
 
 
 if __name__ == "__main__":
