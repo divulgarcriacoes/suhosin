@@ -33,7 +33,8 @@ def _store_para_v3(p):
             "estoque": "instock" if p.get("is_in_stock", True) else "outofstock",
             "qtd": p.get("low_stock_remaining"),
             "categories": [{"name": c.get("name", "")} for c in p.get("categories", [])],
-            "images": [{"src": i.get("src", "")} for i in p.get("images", [])]}
+            "images": [{"src": i.get("src", ""), "name": i.get("name", ""), "alt": i.get("alt", "")} for i in p.get("images", [])],
+            "attributes": [{"name": a.get("name", ""), "options": [t.get("name", "") for t in a.get("terms", [])]} for a in p.get("attributes", [])]}
 
 
 def buscar_produtos(limite, produto_id=None, categoria=None, ids=None, busca=None, sku=None, ordem="date", preco_min=None, preco_max=None):
@@ -521,6 +522,7 @@ def detectar_cartao(fundo):
 
 
 FOTO_ZOOM = 1.0
+SEM_CORES = False
 SAIDA = AQUI / "saida"      # a cada execucao vira uma subpasta nova: saida/AAAA-MM-DD_HH-MM
 TEMA = {"pasta": None, "cor": "#FF5900"}    # --tema: pasta temas/<nome> com fundo_feed.png, fundo_story.png e tema.json
 
@@ -549,7 +551,50 @@ def fundo_do_tema(story):
     return (TEMA["pasta"] or AQUI / "modelo") / nome
 
 
-def montar_padrao(produto_rgba, tam, nome, preco, codigo=None, qtd=None, minimo=None, gravacao=None, cartao=False, formato=None):
+COR_HEX = {
+    "preto": "#1A1A1A", "branco": "#FFFFFF", "off white": "#F4F1EA", "cinza": "#8A8F98", "cinza claro": "#C9CCD1", "cinza escuro": "#4A4F57",
+    "grafite": "#3B3F45", "chumbo": "#4A4F57", "prata": "#C0C4CC", "dourado": "#D4AF37", "ouro": "#D4AF37", "bronze": "#A8742B", "cobre": "#B87333",
+    "azul": "#1E5BD8", "azul claro": "#7FB8F0", "azul escuro": "#14307A", "azul marinho": "#10224F", "azul royal": "#1946C4", "azul bebe": "#A9D1F5",
+    "azul turquesa": "#1BB5B8", "turquesa": "#1BB5B8", "ciano": "#1BB5D8", "verde": "#2E9A4B", "verde claro": "#8BD17C", "verde escuro": "#14532D",
+    "verde limao": "#9BD81E", "limao": "#C5E31E", "verde militar": "#4B5320", "verde bandeira": "#0F8A3E", "amarelo": "#F6D32D", "laranja": "#F5821F",
+    "vermelho": "#D3202B", "vinho": "#6D1330", "bordo": "#5E1224", "rosa": "#F08CB6", "rosa claro": "#F7C5DA", "pink": "#E5338C", "magenta": "#C71585",
+    "roxo": "#6B2FA0", "lilas": "#B89AE0", "violeta": "#7A3FC0", "marrom": "#6B4226", "chocolate": "#4A2C1A", "bege": "#D9C3A0", "creme": "#F2E6C9",
+    "natural": "#D2B48C", "madeira": "#A9743F", "bambu": "#D2B48C", "kraft": "#C8A878", "caqui": "#B8A574", "salmao": "#FA8072", "coral": "#FF6F61",
+    "transparente": "#E6F2F7", "cristal": "#E6F2F7", "incolor": "#E6F2F7", "fume": "#6E7077",
+}
+
+
+def _sem_acento(t):
+    return "".join(c for c in unicodedata.normalize("NFD", str(t).lower()) if unicodedata.category(c) != "Mn")
+
+
+def extrair_cores(produto, maximo=10):
+    """Cores disponiveis: atributo 'Cor' do produto ou nomes de cor nos arquivos das fotos (ex.: Caneta-Metal-AZUL-CLARO-21982.jpg).
+    Retorna [(nome, hex)] sem repetir, na ordem em que aparecem."""
+    achadas = []
+
+    def add(nome):
+        n = " ".join(nome.split())
+        if n in COR_HEX and n not in [a for a, _ in achadas]:
+            achadas.append((n, COR_HEX[n]))
+
+    for at in produto.get("attributes", []) or []:
+        if "cor" in _sem_acento(at.get("name", "")):
+            for op in at.get("options", []):
+                add(_sem_acento(op))
+    for im in (produto.get("images") or [])[1:]:          # a 1a foto e a de capa; as da galeria trazem a cor no nome do arquivo
+        arq = _sem_acento(im.get("name") or im.get("src", "").split("?")[0].split("/")[-1].rsplit(".", 1)[0])
+        toks = re.findall(r"[a-z]+", arq)
+        i = 0
+        while i < len(toks):
+            if i + 1 < len(toks) and f"{toks[i]} {toks[i + 1]}" in COR_HEX:
+                add(f"{toks[i]} {toks[i + 1]}"); i += 2
+            else:
+                add(toks[i]); i += 1
+    return achadas[:maximo]
+
+
+def montar_padrao(produto_rgba, tam, nome, preco, codigo=None, qtd=None, minimo=None, gravacao=None, cartao=False, formato=None, cores=None):
     """Arte padrao: fundo da marca + slogan + produto + codigo, nome, estoque e preco (igual ao modelo aprovado)."""
     W, H = tam
     story = (formato == "story") if formato else H > W
@@ -603,15 +648,55 @@ def montar_padrao(produto_rgba, tam, nome, preco, codigo=None, qtd=None, minimo=
             if (caixa[2] - caixa[0]) > foto.width * .15 and (caixa[3] - caixa[1]) > foto.height * .15:
                 foto = foto.crop(caixa)
         pad = S(26)
-        esc = min((S(cx1 - cx0) - 2 * pad) / foto.width, (S(pb - cy0) - 2 * pad) / foto.height)
+        # produto estreito e alto (caneta, garrafa...): sobra espaco nas laterais, entao as cores ficam num painel ao lado;
+        # produto largo: as cores ficam numa fileira no pe do quadro
+        lateral = bool(cores) and foto.width / foto.height < 0.75
+        if cores and not lateral:
+            pb = cy1 - 68
+        pw = S(262) if lateral else 0
+        esc = min((S(cx1 - cx0) - pw - 2 * pad) / foto.width, (S(pb - cy0) - 2 * pad) / foto.height)
         esc *= max(0.3, FOTO_ZOOM)        # --zoom: aumenta a foto dentro do quadro (o que passar da borda e cortado, como no PowerClip)
         foto = foto.resize((max(1, int(foto.width * esc)), max(1, int(foto.height * esc))), Image.LANCZOS)
         qx0, qy0, qx1, qy1 = S(cx0), S(cy0), S(cx1), S(pb)
         camada = Image.new("RGB", (qx1 - qx0, qy1 - qy0), "white")
-        camada.paste(foto, ((qx1 - qx0) // 2 - foto.width // 2, (qy1 - qy0) // 2 - foto.height // 2))
+        camada.paste(foto, (pw + ((qx1 - qx0) - pw) // 2 - foto.width // 2, (qy1 - qy0) // 2 - foto.height // 2))
         mascara = Image.new("L", camada.size, 0)
         ImageDraw.Draw(mascara).rounded_rectangle((0, 0, camada.width - 1, camada.height - 1), S(46), fill=255)
         fundo.paste(camada, (qx0, qy0), mascara)
+        if cores and lateral:       # painel das cores, a esquerda do produto
+            d = ImageDraw.Draw(fundo)
+            px0, py0, px1, py1 = S(cx0) + S(26), S(cy0) + S(26 + (64 if story and qtd else 0)), S(cx0) + pw - S(6), S(cy1) - S(26)     # no story o selo de estoque fica no canto de cima do quadro
+            d.rounded_rectangle((px0, py0, px1, py1), S(26), fill="#F4F6F8")
+            f_t = fonte_modelo("BebasNeue-Regular.ttf", S(38))
+            f_n = fonte_modelo("BebasNeue-Regular.ttf", S(34))
+            diam, vao = S(46), S(20)
+            while max(d.textlength(c_[0].upper(), font=f_n) for c_ in cores) > (px1 - px0) - S(24) - diam - S(16) - S(14) and f_n.size > 14:
+                f_n = fonte_modelo("BebasNeue-Regular.ttf", f_n.size - 2)
+            cap = max(1, int(((py1 - py0) - S(110)) // (diam + vao)))
+            lista = cores[:cap]
+            alt = f_t.size + S(30) + len(lista) * diam + (len(lista) - 1) * vao
+            y = py0 + ((py1 - py0) - alt) / 2
+            tit = "CORES DISPONÍVEIS" if d.textlength("CORES DISPONÍVEIS", font=f_t) < (px1 - px0) - S(20) else "CORES"
+            d.text(((px0 + px1) / 2 - d.textlength(tit, font=f_t) / 2, y), tit, font=f_t, fill="#475467")
+            y += f_t.size + S(30)
+            for nome_c, hx in lista:
+                d.ellipse((px0 + S(24), y, px0 + S(24) + diam, y + diam), fill=hx, outline="#B8BEC8", width=max(1, S(2)))
+                d.text((px0 + S(24) + diam + S(16), y + diam / 2 - f_n.size * .52), nome_c.upper(), font=f_n, fill="#1C1C1A")
+                y += diam + vao
+        elif cores:       # fileira de quadradinhos com as cores disponiveis, no pe do quadro branco
+            d = ImageDraw.Draw(fundo)
+            lado, vao = S(36), S(12)
+            f_c = fonte_modelo("BebasNeue-Regular.ttf", S(30))
+            rot = "CORES:" if len(cores) > 1 else "COR:"
+            wr = d.textlength(rot, font=f_c) + S(16)
+            total = wr + len(cores) * lado + (len(cores) - 1) * vao
+            x = (S(cx0) + S(cx1)) / 2 - total / 2
+            yc = S(cy1) - S(34) - lado / 2
+            d.text((x, yc + lado / 2 - f_c.size * .52), rot, font=f_c, fill="#667085")
+            x += wr
+            for _, hx in cores:
+                d.rounded_rectangle((x, yc, x + lado, yc + lado), S(8), fill=hx, outline="#C9CED6", width=max(1, S(2)))
+                x += lado + vao
     else:
         p = aparar(produto_rgba)
         if story:
@@ -922,13 +1007,17 @@ def processar(produto, rgba, sem_ia, nomes, cenario=None, estilo="cartao", mostr
         if not all(info.get(k) for k in ("minimo", "qtd_estoque")):
             pag = ler_pagina(produto.get("permalink"))
             info.setdefault("minimo", pag.get("minimo")); info.setdefault("qtd_estoque", pag.get("qtd")); info.setdefault("tecnica", pag.get("tecnica"))
+        cores_prod = None if SEM_CORES else (extrair_cores(produto) or None)
+        if cores_prod:
+            print("  cores: " + ", ".join(n for n, _ in cores_prod))
         pasta = SAIDA / f"{produto.get('id', 0)}-{re.sub(r'[^\w]+', '-', nome.lower()).strip('-')[:60]}"
         pasta.mkdir(parents=True, exist_ok=True)
         for fmt in nomes:
             tam = tamanho_do_modelo(fmt)
             montar_padrao(rgba, tam, nome, preco_br(produto.get("price")), produto.get("sku") or None,
                           info.get("qtd_estoque"), info.get("minimo") or CFG["loja"].get("minimo_padrao") or None,
-                          gravacao or texto_gravacao(info.get("tecnica")), estilo == "cartao", fmt).save(pasta / f"{fmt}.jpg", quality=93)
+                          gravacao or texto_gravacao(info.get("tecnica")), estilo == "cartao", fmt,
+                          cores_prod).save(pasta / f"{fmt}.jpg", quality=93)
         gravar_legenda(pasta, produto, nome, info)
         print(f"  ok -> {pasta}")
         return pasta
@@ -985,12 +1074,14 @@ def main():
     ap.add_argument("--sem-capa", action="store_true", help="carrossel sem a capa (10 produtos em vez de 9 + capa)")
     ap.add_argument("--seg", type=float, default=2.5, help="segundos de cada produto no video (padrao 2,5)")
     ap.add_argument("--musica", help="arquivo de audio (mp3) para o video (opcional; sem isso o video sai sem som)")
+    ap.add_argument("--sem-cores", action="store_true", help="nao mostra as cores disponiveis na arte")
     ap.add_argument("--sem-ia", action="store_true")
     ap.add_argument("--demo", action="store_true")
     ap.add_argument("--formatos", nargs="+", default=["feed", "story"])
     a = ap.parse_args()
-    global FOTO_ZOOM
+    global FOTO_ZOOM, SEM_CORES
     FOTO_ZOOM = a.zoom
+    SEM_CORES = a.sem_cores
     if a.tema:
         ativar_tema(a.tema)
     global SAIDA, LEGENDA_MODELO
@@ -1004,7 +1095,7 @@ def main():
     else:
         SAIDA = base_saida / (time.strftime("%Y-%m-%d_%H-%M") + (f"_{a.tema}" if a.tema else ""))
     print(f"  Pasta deste lote: {SAIDA}")
-    print('gerador.py versao 14.1 (1 "A PARTIR DE" so, foto sem margem branca, --zoom) - arquivo: ' + str(Path(__file__).resolve()))
+    print('gerador.py versao 15.0 (1 "A PARTIR DE" so, foto sem margem branca, --zoom) - arquivo: ' + str(Path(__file__).resolve()))
     if a.ids:   # aceita 93014,80131,1380 ou 93014 80131 1380
         a.ids = [int(x) for tok in a.ids for x in re.split(r"[,;\s]+", tok) if x.strip().isdigit()]
 
