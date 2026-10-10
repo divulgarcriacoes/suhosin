@@ -594,6 +594,33 @@ def extrair_cores(produto, maximo=10):
     return achadas[:maximo]
 
 
+def cor_da_foto(img):
+    """Cor do produto na foto principal (a foto de capa nao traz a cor no nome do arquivo). Retorna (nome, hex) ou None."""
+    try:
+        im = img.convert("RGBA")
+        im.thumbnail((160, 160))
+        px = [p for p in im.getdata() if p[3] > 200 and not (p[0] > 225 and p[1] > 225 and p[2] > 225)]   # tira transparente e fundo branco
+        if len(px) < 200:
+            return None
+        # cor mais frequente entre os pixels, agrupando em passos de 24 (ignora sombras claras e brilhos)
+        cont = {}
+        for r, g, b, _ in px:
+            k = (r // 24, g // 24, b // 24)
+            cont[k] = cont.get(k, 0) + 1
+        k = max(cont, key=cont.get)
+        pts = [(r, g, b) for r, g, b, _ in px if (r // 24, g // 24, b // 24) == k]
+        r, g, b = (sum(c[i] for c in pts) // len(pts) for i in range(3))
+        melhor, dist = None, 1e9
+        for nome, hx in COR_HEX.items():
+            hr, hg, hb = int(hx[1:3], 16), int(hx[3:5], 16), int(hx[5:7], 16)
+            dd = (2 * (r - hr) ** 2 + 4 * (g - hg) ** 2 + 3 * (b - hb) ** 2) ** .5
+            if dd < dist:
+                melhor, dist = nome, dd
+        return (melhor, COR_HEX[melhor]) if melhor and dist < 190 else None
+    except Exception:
+        return None
+
+
 def montar_padrao(produto_rgba, tam, nome, preco, codigo=None, qtd=None, minimo=None, gravacao=None, cartao=False, formato=None, cores=None):
     """Arte padrao: fundo da marca + slogan + produto + codigo, nome, estoque e preco (igual ao modelo aprovado)."""
     W, H = tam
@@ -1008,6 +1035,10 @@ def processar(produto, rgba, sem_ia, nomes, cenario=None, estilo="cartao", mostr
             pag = ler_pagina(produto.get("permalink"))
             info.setdefault("minimo", pag.get("minimo")); info.setdefault("qtd_estoque", pag.get("qtd")); info.setdefault("tecnica", pag.get("tecnica"))
         cores_prod = None if SEM_CORES else (extrair_cores(produto) or None)
+        if cores_prod:      # a cor da foto principal (a da capa) tambem entra, se ainda nao estiver na lista
+            cf = cor_da_foto(rgba)
+            if cf and cf[0] not in [n for n, _ in cores_prod]:
+                cores_prod = ([cf] + cores_prod)[:10]
         if cores_prod:
             print("  cores: " + ", ".join(n for n, _ in cores_prod))
         pasta = SAIDA / f"{produto.get('id', 0)}-{re.sub(r'[^\w]+', '-', nome.lower()).strip('-')[:60]}"
@@ -1095,7 +1126,7 @@ def main():
     else:
         SAIDA = base_saida / (time.strftime("%Y-%m-%d_%H-%M") + (f"_{a.tema}" if a.tema else ""))
     print(f"  Pasta deste lote: {SAIDA}")
-    print('gerador.py versao 15.0 (1 "A PARTIR DE" so, foto sem margem branca, --zoom) - arquivo: ' + str(Path(__file__).resolve()))
+    print('gerador.py versao 15.1 (1 "A PARTIR DE" so, foto sem margem branca, --zoom) - arquivo: ' + str(Path(__file__).resolve()))
     if a.ids:   # aceita 93014,80131,1380 ou 93014 80131 1380
         a.ids = [int(x) for tok in a.ids for x in re.split(r"[,;\s]+", tok) if x.strip().isdigit()]
 
