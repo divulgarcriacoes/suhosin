@@ -1376,7 +1376,7 @@ def main():
     else:
         SAIDA = base_saida / (time.strftime("%Y-%m-%d_%H-%M") + (f"_{a.tema}" if a.tema else ""))
     print(f"  Pasta deste lote: {SAIDA}")
-    print('gerador.py versao 16.2 (1 "A PARTIR DE" so, foto sem margem branca, --zoom) - arquivo: ' + str(Path(__file__).resolve()))
+    print('gerador.py versao 17.1 (1 "A PARTIR DE" so, foto sem margem branca, --zoom) - arquivo: ' + str(Path(__file__).resolve()))
     if a.ids:   # aceita 93014,80131,1380 ou 93014 80131 1380
         a.ids = [int(x) for tok in a.ids for x in re.split(r"[,;\s]+", tok) if x.strip().isdigit()]
 
