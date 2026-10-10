@@ -897,14 +897,19 @@ def gerar_colecao(itens, titulo, sem_capa=False, seg=2.5, musica=None):
         shutil.copy(pasta / "story.jpg", dest)
         quadros.append(dest)
     montar_video(quadros, out / "video.mp4", seg, 0.4, musica)
-    nomes = "\n".join(f"{i}. {unescape(p['name'])} - R$ {preco_br(p.get('price'))}" for i, (_, p) in enumerate(itens, 1))
-    tags = "#brindescorporativos #brindespersonalizados #marketingpromocional #divulgarcriacoes #brindes"
-    base = f"{titulo.upper()}: {n} modelos para personalizar com a sua marca! \U0001F3AF\n\n{nomes}\n\nA partir de R$ {pmin}\nPeça seu orçamento pelo site, link na bio."
-    wpp = str(CFG["loja"].get("whatsapp") or "")
-    if wpp:
-        base += f"\nWhatsApp: {wpp}"
-    (out / "legenda_carrossel.txt").write_text(base + f"\n\n{tags}", encoding="utf-8")
-    (out / "legenda_reels.txt").write_text(base + f"\n\n{tags}", encoding="utf-8")
+    def montar_legenda(lista):
+        nomes = "\n".join(f"{i}. {unescape(p['name'])} - R$ {preco_br(p.get('price'))}" for i, (_, p) in enumerate(lista, 1))
+        tags = ["#brindescorporativos", "#brindespersonalizados", "#marketingpromocional", "#divulgarcriacoes", "#brindes", "#presentescorporativos"]
+        t = "#" + re.sub(r"[^a-z0-9]", "", "".join(ch for ch in unicodedata.normalize("NFD", titulo.lower().split()[0]) if unicodedata.category(ch) != "Mn"))
+        if len(t) > 3 and t not in tags:
+            tags.append(t)
+        texto = f"{titulo.upper()}: {len(lista)} modelos para personalizar com a sua marca! \U0001F3AF\n\n{nomes}\n\nA partir de R$ {pmin}\nPeça seu orçamento pelo site, link na bio."
+        wpp = str(CFG["loja"].get("whatsapp") or "")
+        if wpp:
+            texto += f"\nWhatsApp: {wpp}"
+        return texto + "\n\n" + " ".join(tags)
+    (out / "legenda_carrossel.txt").write_text(montar_legenda(itens[:limite]), encoding="utf-8")   # so os produtos que estao no carrossel
+    (out / "legenda_reels.txt").write_text(montar_legenda(itens), encoding="utf-8")
     print(f"\nColecao pronta em: {out}\n  carrossel: {len(slides)} slides | video: {len(quadros)} quadros ({out / 'video.mp4'})")
 
 
@@ -999,7 +1004,7 @@ def main():
     else:
         SAIDA = base_saida / (time.strftime("%Y-%m-%d_%H-%M") + (f"_{a.tema}" if a.tema else ""))
     print(f"  Pasta deste lote: {SAIDA}")
-    print('gerador.py versao 14.0 (1 "A PARTIR DE" so, foto sem margem branca, --zoom) - arquivo: ' + str(Path(__file__).resolve()))
+    print('gerador.py versao 14.1 (1 "A PARTIR DE" so, foto sem margem branca, --zoom) - arquivo: ' + str(Path(__file__).resolve()))
     if a.ids:   # aceita 93014,80131,1380 ou 93014 80131 1380
         a.ids = [int(x) for tok in a.ids for x in re.split(r"[,;\s]+", tok) if x.strip().isdigit()]
 
