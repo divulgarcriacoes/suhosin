@@ -525,7 +525,7 @@ FOTO_ZOOM = 1.0
 SEM_CORES = False
 CORES_DA_FOTO = False
 SAIDA = AQUI / "saida"      # a cada execucao vira uma subpasta nova: saida/AAAA-MM-DD_HH-MM
-TEMA = {"pasta": None, "cor": "#FF5900"}    # --tema: pasta temas/<nome> com fundo_feed.png, fundo_story.png e tema.json
+TEMA = {"pasta": None, "cor": "#FF5900", "layout": None}    # --tema: pasta temas/<nome> com fundo_feed.png, fundo_story.png e tema.json
 
 
 def temas_disponiveis():
@@ -533,8 +533,37 @@ def temas_disponiveis():
     return sorted(p.name for p in base.iterdir() if p.is_dir() and (p / "fundo_feed.png").exists()) if base.exists() else []
 
 
+ATUALIZAR_TEMA = False
+
+
+def baixar_tema(nome):
+    """Busca no site (subido pelo painel: Gerador de artes, card 6) os fundos e o layout do tema e guarda em temas/<nome>/."""
+    try:
+        r = requests.get(CFG["loja"]["url"].rstrip("/") + "/wp-json/dc/v1/tema", params={"nome": nome},
+                         headers={"User-Agent": "Mozilla/5.0 (gerador-artes)"}, timeout=40)
+        if r.status_code != 200:
+            return False
+        dados = r.json()
+        if not dados.get("fundo_feed") or not dados.get("fundo_story"):
+            return False
+        pasta = AQUI / "temas" / nome
+        pasta.mkdir(parents=True, exist_ok=True)
+        for fmt in ("feed", "story"):
+            img = requests.get(dados[f"fundo_{fmt}"], headers={"User-Agent": "Mozilla/5.0 (gerador-artes)"}, timeout=90)
+            img.raise_for_status()
+            Image.open(io.BytesIO(img.content)).convert("RGB").save(pasta / f"fundo_{fmt}.png")
+        (pasta / "tema.json").write_text(json.dumps({"cor_destaque": dados.get("cor", "#FF5900"), "layout": dados.get("layout")}, ensure_ascii=False), encoding="utf-8")
+        print(f"  tema '{nome}' baixado do site")
+        return True
+    except Exception as e:
+        print(f"  ! nao consegui baixar o tema do site: {e}", file=sys.stderr)
+        return False
+
+
 def ativar_tema(nome):
     pasta = AQUI / "temas" / nome
+    if ATUALIZAR_TEMA or not (pasta / "fundo_feed.png").exists() or not (pasta / "fundo_story.png").exists():
+        baixar_tema(nome)
     if not (pasta / "fundo_feed.png").exists() or not (pasta / "fundo_story.png").exists():
         sys.exit(f"Tema '{nome}' nao encontrado. Crie a pasta temas/{nome}/ com fundo_feed.png e fundo_story.png.\n"
                  f"Temas disponiveis: {', '.join(temas_disponiveis()) or '(nenhum ainda)'}")
@@ -542,7 +571,9 @@ def ativar_tema(nome):
     cfg = pasta / "tema.json"
     if cfg.exists():
         try:
-            TEMA["cor"] = json.loads(cfg.read_text(encoding="utf-8")).get("cor_destaque", TEMA["cor"])
+            dados = json.loads(cfg.read_text(encoding="utf-8"))
+            TEMA["cor"] = dados.get("cor_destaque", TEMA["cor"])
+            TEMA["layout"] = dados.get("layout") or None
         except Exception as e:
             print(f"  ! tema.json invalido ({e}); usando a cor padrao", file=sys.stderr)
 
@@ -666,6 +697,135 @@ def cores_da_foto_multi(img, maximo=8):
         return [(n, COR_HEX[n] if n in COR_HEX else COR_HEX[n + " claro"]) for n, c in sorted(fam.items(), key=lambda kv: -kv[1]) if c / total >= .06][:maximo]
     except Exception:
         return []
+
+
+def _cores_fileira(fundo, cores, cx0, cx1, cy1, k):
+    d = ImageDraw.Draw(fundo)
+    lado, vao = int(36 * k), int(12 * k)
+    f_c = fonte_modelo("BebasNeue-Regular.ttf", 30 * k)
+    rot = "CORES:" if len(cores) > 1 else "COR:"
+    wr = d.textlength(rot, font=f_c) + 16 * k
+    total = wr + len(cores) * lado + (len(cores) - 1) * vao
+    x = (cx0 + cx1) / 2 - total / 2
+    yc = cy1 - 34 * k - lado / 2
+    d.text((x, yc + lado / 2 - f_c.size * .52), rot, font=f_c, fill="#667085")
+    x += wr
+    for _, hx in cores:
+        d.rounded_rectangle((x, yc, x + lado, yc + lado), int(8 * k), fill=hx, outline="#C9CED6", width=max(1, int(2 * k)))
+        x += lado + vao
+
+
+def montar_tema(produto_rgba, tam, nome, preco, codigo=None, qtd=None, minimo=None, gravacao=None, cartao=True, formato="feed", cores=None):
+    """Arte de um tema com layout proprio (tema.json -> "layout"). Posicoes em fracao da largura (x) e da altura (y) da imagem."""
+    W, H = tam
+    L = (TEMA["layout"] or {}).get(formato) or {}
+    k = W / 1080
+    tpl = fundo_do_tema(formato == "story")
+    fundo = Image.open(tpl).convert("RGBA").resize((W, H), Image.LANCZOS)
+    d = ImageDraw.Draw(fundo)
+    COR = TEMA["cor"]
+    cor_tag = L.get("cor_tag", "#FF5900")
+    px = lambda v: v * W
+    py = lambda v: v * H
+    caixa = lambda a: (px(a[0]), py(a[1]), px(a[2]), py(a[3]))
+    # --- quadro com a foto
+    if L.get("quadro"):
+        cx0, cy0, cx1, cy1 = (int(v) for v in caixa(L["quadro"]))
+    else:
+        achado = detectar_cartao(fundo)
+        cx0, cy0, cx1, cy1 = achado if achado else (int(W * .05), int(H * .2), int(W * .6), int(H * .75))
+    cw, ch = cx1 - cx0, cy1 - cy0
+    foto = produto_rgba.convert("RGBA")
+    branco = Image.new("RGBA", foto.size, (255, 255, 255, 255)); branco.alpha_composite(foto); foto = branco.convert("RGB")
+    cx_ = foto.convert("L").point(lambda v: 255 if v < 240 else 0).getbbox()
+    if cx_:
+        m = int(max(foto.size) * .03)
+        cx_ = (max(0, cx_[0] - m), max(0, cx_[1] - m), min(foto.width, cx_[2] + m), min(foto.height, cx_[3] + m))
+        if (cx_[2] - cx_[0]) > foto.width * .15 and (cx_[3] - cx_[1]) > foto.height * .15:
+            foto = foto.crop(cx_)
+    faixa = int(68 * k) if cores else 0
+    pad = int(26 * k)
+    esc = min((cw - 2 * pad) / foto.width, (ch - faixa - 2 * pad) / foto.height) * max(0.3, FOTO_ZOOM)
+    foto = foto.resize((max(1, int(foto.width * esc)), max(1, int(foto.height * esc))), Image.LANCZOS)
+    camada = Image.new("RGB", (cw, ch), "white")
+    camada.paste(foto, (cw // 2 - foto.width // 2, (ch - faixa) // 2 - foto.height // 2))
+    mascara = Image.new("L", camada.size, 0)
+    ImageDraw.Draw(mascara).rounded_rectangle((0, 0, cw - 1, ch - 1), int(min(cw, ch) * L.get("raio", .08)), fill=255)
+    fundo.paste(camada, (cx0, cy0), mascara)
+    if cores:
+        _cores_fileira(fundo, cores, cx0, cx1, cy1, k)
+    d = ImageDraw.Draw(fundo)
+    # --- etiqueta do codigo
+    if codigo and L.get("tag"):
+        f = fonte_modelo("BebasNeue-Regular.ttf", 36 * k * L.get("tag_escala", 1))
+        t = f"CÓDIGO - {codigo}"
+        w = d.textlength(t, font=f) + 36 * k
+        cx, cy = px(L["tag"][0]), py(L["tag"][1])
+        h = f.size * 1.45
+        d.rounded_rectangle((cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2), int(12 * k), fill=cor_tag)
+        d.text((cx - d.textlength(t, font=f) / 2, cy - f.size * .52), t, font=f, fill="white")
+    # --- nome do produto (ate 3 linhas, centralizado na caixa)
+    if L.get("nome"):
+        x0, y0, x1, y1 = caixa(L["nome"])
+        f, linhas = _ajustar(d, nome.upper(), "BebasNeue-Regular.ttf", 100 * k * L.get("nome_escala", 1), x1 - x0, 3, .4)
+        while len(linhas) * f.size * .9 > (y1 - y0) and f.size > 20 * k:
+            f, linhas = _ajustar(d, nome.upper(), "BebasNeue-Regular.ttf", f.size * .92, x1 - x0, 3, .3)
+        ty = y0 + ((y1 - y0) - len(linhas) * f.size * .9) / 2
+        cor_nome = L.get("cor_nome", "white")
+        for l in linhas:
+            x = (x0 + x1) / 2 - d.textlength(l, font=f) / 2
+            if cor_nome == "white":
+                d.text((x + 3 * k, ty + 3 * k), l, font=f, fill=(0, 0, 0, 120))
+            d.text((x, ty), l, font=f, fill=cor_nome, stroke_width=max(1, int(f.size * .01)), stroke_fill=cor_nome)
+            ty += f.size * .9
+    # --- selo de estoque
+    if qtd and L.get("estoque"):
+        teto = int(CFG["loja"].get("estoque_maximo", 50000))
+        t = (f"+{teto:,} em estoque" if int(qtd) > teto else f"{int(qtd):,} em estoque").replace(",", ".")
+        f = fonte(int(24 * k))
+        w = d.textlength(t, font=f) + 40 * k
+        sx, sy = px(L["estoque"][0]), py(L["estoque"][1])
+        al = L["estoque"][2] if len(L["estoque"]) > 2 else "l"
+        x0 = sx if al == "l" else (sx - w if al == "r" else sx - w / 2)
+        d.rounded_rectangle((x0, sy, x0 + w, sy + 34 * k), int(17 * k), fill="#C9F5D3")
+        d.text((x0 + 20 * k, sy + 17 * k - f.size * .6), t, font=f, fill="#1E7A3A")
+    # --- bloco do preco
+    if L.get("preco"):
+        bx0, by0, bx1, by1 = caixa(L["preco"])
+        bh, bw = by1 - by0, bx1 - bx0
+        d.rounded_rectangle((bx0, by0, bx1, by1), int(min(bh, bw) * .16), fill=COR)
+        dentro = L.get("rodape") == "dentro"
+        f_ap = fonte_modelo("BebasNeue-Regular.ttf", bh * (.2 if dentro else .28))
+        while d.textlength("A PARTIR DE", font=f_ap) > bh * (.62 if dentro else .84) and f_ap.size > 8:
+            f_ap = fonte_modelo("BebasNeue-Regular.ttf", f_ap.size - 1)
+        tmp = Image.new("RGBA", (int(d.textlength("A PARTIR DE", font=f_ap)) + 4, int(f_ap.size) + 8), (0, 0, 0, 0))
+        ImageDraw.Draw(tmp).text((2, 0), "A PARTIR DE", font=f_ap, fill="white")
+        tmp = tmp.rotate(90, expand=True)
+        zona_h = bh * (.68 if dentro else 1)
+        fundo.alpha_composite(tmp, (int(bx0 + bw * .03), int(by0 + zona_h / 2 - tmp.height / 2)))
+        d = ImageDraw.Draw(fundo)
+        txt = f"R$ {preco}"
+        larg = bw - tmp.width - bw * .08 - bw * .12
+        f_pr = fonte_modelo("BebasNeue-Regular.ttf", zona_h * .82)
+        while d.textlength(txt, font=f_pr) > larg and f_pr.size > 12:
+            f_pr = fonte_modelo("BebasNeue-Regular.ttf", f_pr.size - 3)
+        _, t8, _, b8 = d.textbbox((0, 0), "8", font=f_pr)
+        d.text((bx0 + bw * .03 + tmp.width + bw * .03, by0 + zona_h / 2 - (t8 + b8) / 2), txt, font=f_pr, fill="white", stroke_width=max(1, int(f_pr.size * .018)), stroke_fill="white")
+        f_un = fonte_modelo("BebasNeue-Regular.ttf", bh * .13)
+        d.text((bx1 - bw * .04 - d.textlength("/UN", font=f_un), by0 + zona_h - f_un.size * 1.5), "/UN", font=f_un, fill="white")
+        # rodape: gravacao (esq) e minimo (dir)
+        f_r = fonte_modelo("BebasNeue-Regular.ttf", (bh * .12) if dentro else 30 * k)
+        cor_r = L.get("cor_rodape", "white")
+        g = gravacao or "GRAVAÇÃO DA SUA MARCA"
+        t_min = f"MÍNIMO {int(minimo)} /UN" if minimo else ""
+        yr = (by1 - bh * .17) if dentro else (py(L["rodape_y"]) if L.get("rodape_y") else by1 + 14 * k)
+        xl, xr = (bx0 + bw * .04, bx1 - bw * .04) if dentro else (bx0, bx1)
+        while d.textlength(g, font=f_r) + d.textlength(t_min, font=f_r) + 24 * k > (xr - xl) and f_r.size > 10:
+            f_r = fonte_modelo("BebasNeue-Regular.ttf", f_r.size - 2)
+        d.text((xl, yr), g, font=f_r, fill=cor_r)
+        if t_min:
+            d.text((xr - d.textlength(t_min, font=f_r), yr), t_min, font=f_r, fill=cor_r)
+    return fundo.convert("RGB")
 
 
 def montar_padrao(produto_rgba, tam, nome, preco, codigo=None, qtd=None, minimo=None, gravacao=None, cartao=False, formato=None, cores=None):
@@ -1094,7 +1254,7 @@ def processar(produto, rgba, sem_ia, nomes, cenario=None, estilo="cartao", mostr
         pasta.mkdir(parents=True, exist_ok=True)
         for fmt in nomes:
             tam = tamanho_do_modelo(fmt)
-            montar_padrao(rgba, tam, nome, preco_br(produto.get("price")), produto.get("sku") or None,
+            (montar_tema if TEMA["layout"] else montar_padrao)(rgba, tam, nome, preco_br(produto.get("price")), produto.get("sku") or None,
                           info.get("qtd_estoque"), info.get("minimo") or CFG["loja"].get("minimo_padrao") or None,
                           gravacao or texto_gravacao(info.get("tecnica")), estilo == "cartao", fmt,
                           cores_prod).save(pasta / f"{fmt}.jpg", quality=93)
@@ -1155,12 +1315,14 @@ def main():
     ap.add_argument("--seg", type=float, default=2.5, help="segundos de cada produto no video (padrao 2,5)")
     ap.add_argument("--musica", help="arquivo de audio (mp3) para o video (opcional; sem isso o video sai sem som)")
     ap.add_argument("--cores-da-foto", action="store_true", help="se o produto nao tiver cores nos nomes das fotos, tenta achar as cores pela foto principal (bom para fotos com varias cores lado a lado)")
+    ap.add_argument("--atualizar-tema", action="store_true", help="baixa de novo o tema do site (use se voce mudou o tema no painel)")
     ap.add_argument("--sem-cores", action="store_true", help="nao mostra as cores disponiveis na arte")
     ap.add_argument("--sem-ia", action="store_true")
     ap.add_argument("--demo", action="store_true")
     ap.add_argument("--formatos", nargs="+", default=["feed", "story"])
     a = ap.parse_args()
-    global FOTO_ZOOM, SEM_CORES, CORES_DA_FOTO
+    global FOTO_ZOOM, SEM_CORES, CORES_DA_FOTO, ATUALIZAR_TEMA
+    ATUALIZAR_TEMA = a.atualizar_tema
     FOTO_ZOOM = a.zoom
     SEM_CORES = a.sem_cores
     CORES_DA_FOTO = a.cores_da_foto
@@ -1177,7 +1339,7 @@ def main():
     else:
         SAIDA = base_saida / (time.strftime("%Y-%m-%d_%H-%M") + (f"_{a.tema}" if a.tema else ""))
     print(f"  Pasta deste lote: {SAIDA}")
-    print('gerador.py versao 15.2 (1 "A PARTIR DE" so, foto sem margem branca, --zoom) - arquivo: ' + str(Path(__file__).resolve()))
+    print('gerador.py versao 16.0 (1 "A PARTIR DE" so, foto sem margem branca, --zoom) - arquivo: ' + str(Path(__file__).resolve()))
     if a.ids:   # aceita 93014,80131,1380 ou 93014 80131 1380
         a.ids = [int(x) for tok in a.ids for x in re.split(r"[,;\s]+", tok) if x.strip().isdigit()]
 
