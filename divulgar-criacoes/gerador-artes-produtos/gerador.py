@@ -523,6 +523,7 @@ def detectar_cartao(fundo):
 
 FOTO_ZOOM = 1.0
 SEM_CORES = False
+CORES_DA_FOTO = False
 SAIDA = AQUI / "saida"      # a cada execucao vira uma subpasta nova: saida/AAAA-MM-DD_HH-MM
 TEMA = {"pasta": None, "cor": "#FF5900"}    # --tema: pasta temas/<nome> com fundo_feed.png, fundo_story.png e tema.json
 
@@ -619,6 +620,52 @@ def cor_da_foto(img):
         return (melhor, COR_HEX[melhor]) if melhor and dist < 190 else None
     except Exception:
         return None
+
+
+BASICAS = ["preto", "azul", "azul claro", "azul escuro", "verde", "verde claro", "verde militar", "vermelho", "laranja", "amarelo", "rosa", "pink", "roxo", "marrom", "dourado"]
+
+
+def cores_da_foto_multi(img, maximo=8):
+    """Quando o produto vem em varias cores na MESMA foto (ex.: 4 garrafas lado a lado), acha as cores principais pela foto.
+    Ignora fundo, branco, cinza e metal; mantem so cores vivas e o preto. Retorna [(nome, hex)]."""
+    try:
+        im = img.convert("RGBA")
+        im.thumbnail((200, 200))
+        W, H = im.size
+        px = im.load()
+        borda = [px[x, y][:3] for x in range(0, W, 4) for y in (0, H - 1)] + [px[x, y][:3] for y in range(0, H, 4) for x in (0, W - 1)]
+        bg = tuple(sorted(c[i] for c in borda)[len(borda) // 2] for i in range(3))
+        pontos = {}
+        total = 0
+        for y in range(H):
+            for x in range(W):
+                r, g, b, a = px[x, y]
+                if a < 200 or max(abs(r - bg[0]), abs(g - bg[1]), abs(b - bg[2])) < 28:
+                    continue
+                mx, mn = max(r, g, b), min(r, g, b)
+                sat = 0 if mx == 0 else (mx - mn) / mx
+                if sat < .28 and mx > 70:       # branco, cinza, prata, metal
+                    continue
+                if mx < 12:
+                    continue
+                total += 1
+                melhor, dist = None, 1e9
+                for nome in BASICAS:
+                    hx = COR_HEX[nome]
+                    hr, hg, hb = int(hx[1:3], 16), int(hx[3:5], 16), int(hx[5:7], 16)
+                    dd = (2 * (r - hr) ** 2 + 4 * (g - hg) ** 2 + 3 * (b - hb) ** 2) ** .5
+                    if dd < dist:
+                        melhor, dist = nome, dd
+                pontos[melhor] = pontos.get(melhor, 0) + 1
+        if total < 300:
+            return []
+        fam = {}
+        for nome, n in pontos.items():          # junta variacoes (azul claro/escuro -> azul) para nao repetir
+            base = nome.split()[0] if nome.split()[0] in ("azul", "verde") else nome
+            fam[base] = fam.get(base, 0) + n
+        return [(n, COR_HEX[n] if n in COR_HEX else COR_HEX[n + " claro"]) for n, c in sorted(fam.items(), key=lambda kv: -kv[1]) if c / total >= .06][:maximo]
+    except Exception:
+        return []
 
 
 def montar_padrao(produto_rgba, tam, nome, preco, codigo=None, qtd=None, minimo=None, gravacao=None, cartao=False, formato=None, cores=None):
@@ -1035,6 +1082,8 @@ def processar(produto, rgba, sem_ia, nomes, cenario=None, estilo="cartao", mostr
             pag = ler_pagina(produto.get("permalink"))
             info.setdefault("minimo", pag.get("minimo")); info.setdefault("qtd_estoque", pag.get("qtd")); info.setdefault("tecnica", pag.get("tecnica"))
         cores_prod = None if SEM_CORES else (extrair_cores(produto) or None)
+        if not cores_prod and CORES_DA_FOTO and not SEM_CORES:     # sem cor nos nomes das fotos: tenta achar pela foto principal
+            cores_prod = cores_da_foto_multi(rgba) or None
         if cores_prod:      # a cor da foto principal (a da capa) tambem entra, se ainda nao estiver na lista
             cf = cor_da_foto(rgba)
             if cf and cf[0] not in [n for n, _ in cores_prod]:
@@ -1105,14 +1154,16 @@ def main():
     ap.add_argument("--sem-capa", action="store_true", help="carrossel sem a capa (10 produtos em vez de 9 + capa)")
     ap.add_argument("--seg", type=float, default=2.5, help="segundos de cada produto no video (padrao 2,5)")
     ap.add_argument("--musica", help="arquivo de audio (mp3) para o video (opcional; sem isso o video sai sem som)")
+    ap.add_argument("--cores-da-foto", action="store_true", help="se o produto nao tiver cores nos nomes das fotos, tenta achar as cores pela foto principal (bom para fotos com varias cores lado a lado)")
     ap.add_argument("--sem-cores", action="store_true", help="nao mostra as cores disponiveis na arte")
     ap.add_argument("--sem-ia", action="store_true")
     ap.add_argument("--demo", action="store_true")
     ap.add_argument("--formatos", nargs="+", default=["feed", "story"])
     a = ap.parse_args()
-    global FOTO_ZOOM, SEM_CORES
+    global FOTO_ZOOM, SEM_CORES, CORES_DA_FOTO
     FOTO_ZOOM = a.zoom
     SEM_CORES = a.sem_cores
+    CORES_DA_FOTO = a.cores_da_foto
     if a.tema:
         ativar_tema(a.tema)
     global SAIDA, LEGENDA_MODELO
@@ -1126,7 +1177,7 @@ def main():
     else:
         SAIDA = base_saida / (time.strftime("%Y-%m-%d_%H-%M") + (f"_{a.tema}" if a.tema else ""))
     print(f"  Pasta deste lote: {SAIDA}")
-    print('gerador.py versao 15.1 (1 "A PARTIR DE" so, foto sem margem branca, --zoom) - arquivo: ' + str(Path(__file__).resolve()))
+    print('gerador.py versao 15.2 (1 "A PARTIR DE" so, foto sem margem branca, --zoom) - arquivo: ' + str(Path(__file__).resolve()))
     if a.ids:   # aceita 93014,80131,1380 ou 93014 80131 1380
         a.ids = [int(x) for tok in a.ids for x in re.split(r"[,;\s]+", tok) if x.strip().isdigit()]
 
