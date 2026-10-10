@@ -36,7 +36,7 @@ def _store_para_v3(p):
             "images": [{"src": i.get("src", "")} for i in p.get("images", [])]}
 
 
-def buscar_produtos(limite, produto_id=None, categoria=None, ids=None, busca=None, sku=None, ordem="date"):
+def buscar_produtos(limite, produto_id=None, categoria=None, ids=None, busca=None, sku=None, ordem="date", preco_min=None, preco_max=None):
     loja = CFG["loja"]["url"].rstrip("/")
     cab = {"User-Agent": "Mozilla/5.0 (gerador-artes)"}
     if os.environ.get("WC_KEY"):
@@ -47,7 +47,8 @@ def buscar_produtos(limite, produto_id=None, categoria=None, ids=None, busca=Non
             r.raise_for_status()
             return [r.json()]
         r = requests.get(base, auth=auth, headers=cab, timeout=30,
-                         params={"per_page": limite, "status": "publish", "orderby": "date"})
+                         params={"per_page": limite, "status": "publish", "orderby": "date",
+                                 **({"min_price": preco_min} if preco_min else {}), **({"max_price": preco_max} if preco_max else {})})
         r.raise_for_status()
         return r.json()
     # sem chaves: usa a API publica da loja (nao precisa de login)
@@ -62,6 +63,10 @@ def buscar_produtos(limite, produto_id=None, categoria=None, ids=None, busca=Non
     if ids:
         params["include"] = ",".join(str(i) for i in ids)
         params["per_page"] = max(limite, len(ids))
+    if preco_min:       # a API publica trabalha em centavos
+        params["min_price"] = int(round(float(preco_min) * 100))
+    if preco_max:
+        params["max_price"] = int(round(float(preco_max) * 100))
     if busca:
         params["search"] = busca
     if sku:
@@ -791,6 +796,8 @@ def main():
     ap.add_argument("--sku", help="produto pelo codigo/SKU")
     ap.add_argument("--ordem", choices=["date", "popularity", "price", "rating"], default="date", help="ordem dos produtos (padrao: mais novos)")
     ap.add_argument("--categoria", help="slug ou id da categoria (ex.: chaveiros-brindes)")
+    ap.add_argument("--preco-min", type=float, help="so produtos a partir deste valor (ex.: --preco-min 5)")
+    ap.add_argument("--preco-max", type=float, help="so produtos ate este valor (ex.: --preco-max 20)")
     ap.add_argument("--foto", type=int, default=1, help="numero da foto do produto (1 = primeira, 2 = segunda...)")
     ap.add_argument("--cenario", help="descricao do cenario em ingles (ex.: \"rustic wooden table, candle light\")")
     ap.add_argument("--estilo", choices=["cartao", "padrao", "comercial", "simples"], default="cartao", help="layout da arte")
@@ -810,14 +817,14 @@ def main():
     FOTO_ZOOM = a.zoom
     if a.tema:
         ativar_tema(a.tema)
-    print('gerador.py versao 12.0 (1 "A PARTIR DE" so, foto sem margem branca, --zoom) - arquivo: ' + str(Path(__file__).resolve()))
+    print('gerador.py versao 12.1 (1 "A PARTIR DE" so, foto sem margem branca, --zoom) - arquivo: ' + str(Path(__file__).resolve()))
     if a.ids:   # aceita 93014,80131,1380 ou 93014 80131 1380
         a.ids = [int(x) for tok in a.ids for x in re.split(r"[,;\s]+", tok) if x.strip().isdigit()]
 
     if a.demo:
         rgba, prod = produto_demo()
         processar(prod, rgba, True, a.formatos, None, a.estilo, a.mostrar_qtd, a.gravacao); return
-    produtos = buscar_produtos(a.limite, a.produto_id, a.categoria, a.ids, a.busca, a.sku, a.ordem)
+    produtos = buscar_produtos(a.limite, a.produto_id, a.categoria, a.ids, a.busca, a.sku, a.ordem, a.preco_min, a.preco_max)
     if a.ids:   # avisa os IDs que a loja nao devolveu (nao e produto, esta oculto ou e rascunho)
         achados = {int(p.get("id", 0)) for p in produtos}
         for i in a.ids:
