@@ -699,6 +699,26 @@ def cores_da_foto_multi(img, maximo=8):
         return []
 
 
+def aparar_fundo(foto):
+    """Corta a margem de fundo da foto (branco OU cinza claro): compara com a cor das bordas, nao com branco puro."""
+    try:
+        rgb = foto.convert("RGB")
+        w, h = rgb.size
+        borda = [rgb.getpixel((x, y)) for x in range(0, w, max(1, w // 40)) for y in (0, h - 1)] + [rgb.getpixel((x, y)) for y in range(0, h, max(1, h // 40)) for x in (0, w - 1)]
+        bg = tuple(sorted(c[i] for c in borda)[len(borda) // 2] for i in range(3))
+        dif = ImageChops.difference(rgb, Image.new("RGB", rgb.size, bg)).convert("L").point(lambda v: 255 if v > 26 else 0)
+        caixa = dif.getbbox()
+        if not caixa:
+            return rgb
+        m = int(max(rgb.size) * .03)
+        caixa = (max(0, caixa[0] - m), max(0, caixa[1] - m), min(w, caixa[2] + m), min(h, caixa[3] + m))
+        if (caixa[2] - caixa[0]) > w * .08 and (caixa[3] - caixa[1]) > h * .08:
+            return rgb.crop(caixa)
+        return rgb
+    except Exception:
+        return foto.convert("RGB")
+
+
 def _cores_fileira(fundo, cores, cx0, cx1, cy1, k):
     d = ImageDraw.Draw(fundo)
     lado, vao = int(36 * k), int(12 * k)
@@ -713,6 +733,28 @@ def _cores_fileira(fundo, cores, cx0, cx1, cy1, k):
     for _, hx in cores:
         d.rounded_rectangle((x, yc, x + lado, yc + lado), int(8 * k), fill=hx, outline="#C9CED6", width=max(1, int(2 * k)))
         x += lado + vao
+
+
+def _painel_cores(fundo, cores, px0, py0, px1, py1, k):
+    """Painel cinza-claro com a lista de cores (bolinha + nome) dentro do retangulo dado."""
+    d = ImageDraw.Draw(fundo)
+    d.rounded_rectangle((px0, py0, px1, py1), int(26 * k), fill="#F4F6F8")
+    f_t = fonte_modelo("BebasNeue-Regular.ttf", 38 * k)
+    f_n = fonte_modelo("BebasNeue-Regular.ttf", 34 * k)
+    diam, vao = int(46 * k), int(20 * k)
+    while max(d.textlength(c_[0].upper(), font=f_n) for c_ in cores) > (px1 - px0) - 24 * k - diam - 16 * k - 14 * k and f_n.size > 14:
+        f_n = fonte_modelo("BebasNeue-Regular.ttf", f_n.size - 2)
+    cap = max(1, int(((py1 - py0) - 110 * k) // (diam + vao)))
+    lista = cores[:cap]
+    alt = f_t.size + 30 * k + len(lista) * diam + (len(lista) - 1) * vao
+    y = py0 + ((py1 - py0) - alt) / 2
+    tit = "CORES DISPONÍVEIS" if d.textlength("CORES DISPONÍVEIS", font=f_t) < (px1 - px0) - 20 * k else "CORES"
+    d.text(((px0 + px1) / 2 - d.textlength(tit, font=f_t) / 2, y), tit, font=f_t, fill="#475467")
+    y += f_t.size + 30 * k
+    for nome_c, hx in lista:
+        d.ellipse((px0 + 24 * k, y, px0 + 24 * k + diam, y + diam), fill=hx, outline="#B8BEC8", width=max(1, int(2 * k)))
+        d.text((px0 + 24 * k + diam + 16 * k, y + diam / 2 - f_n.size * .52), nome_c.upper(), font=f_n, fill="#1C1C1A")
+        y += diam + vao
 
 
 def montar_tema(produto_rgba, tam, nome, preco, codigo=None, qtd=None, minimo=None, gravacao=None, cartao=True, formato="feed", cores=None):
@@ -737,22 +779,22 @@ def montar_tema(produto_rgba, tam, nome, preco, codigo=None, qtd=None, minimo=No
     cw, ch = cx1 - cx0, cy1 - cy0
     foto = produto_rgba.convert("RGBA")
     branco = Image.new("RGBA", foto.size, (255, 255, 255, 255)); branco.alpha_composite(foto); foto = branco.convert("RGB")
-    cx_ = foto.convert("L").point(lambda v: 255 if v < 240 else 0).getbbox()
-    if cx_:
-        m = int(max(foto.size) * .03)
-        cx_ = (max(0, cx_[0] - m), max(0, cx_[1] - m), min(foto.width, cx_[2] + m), min(foto.height, cx_[3] + m))
-        if (cx_[2] - cx_[0]) > foto.width * .15 and (cx_[3] - cx_[1]) > foto.height * .15:
-            foto = foto.crop(cx_)
-    faixa = int(68 * k) if cores else 0
+    foto = aparar_fundo(foto)
+    lateral = bool(cores) and foto.width / foto.height < 0.75     # produto alto e estreito: cores num painel ao lado
+    faixa = int(68 * k) if (cores and not lateral) else 0
+    pw = int(min(262 * k, cw * .5)) if lateral else 0
     pad = int(26 * k)
-    esc = min((cw - 2 * pad) / foto.width, (ch - faixa - 2 * pad) / foto.height) * max(0.3, FOTO_ZOOM)
+    esc = min((cw - pw - 2 * pad) / foto.width, (ch - faixa - 2 * pad) / foto.height) * max(0.3, FOTO_ZOOM)
     foto = foto.resize((max(1, int(foto.width * esc)), max(1, int(foto.height * esc))), Image.LANCZOS)
     camada = Image.new("RGB", (cw, ch), "white")
-    camada.paste(foto, (cw // 2 - foto.width // 2, (ch - faixa) // 2 - foto.height // 2))
+    camada.paste(foto, (pw + (cw - pw) // 2 - foto.width // 2, (ch - faixa) // 2 - foto.height // 2))
     mascara = Image.new("L", camada.size, 0)
     ImageDraw.Draw(mascara).rounded_rectangle((0, 0, cw - 1, ch - 1), int(min(cw, ch) * L.get("raio", .08)), fill=255)
     fundo.paste(camada, (cx0, cy0), mascara)
-    if cores:
+    if cores and lateral:
+        topo_extra = int(64 * k) if (formato == "story" and qtd and (L.get("estoque") or [0, 0])[0] < .75 and abs(py((L.get("estoque") or [0, 0])[1]) - cy0) < 80 * k) else 0
+        _painel_cores(fundo, cores, cx0 + int(26 * k), cy0 + int(26 * k) + topo_extra, cx0 + pw - int(6 * k), cy1 - int(26 * k), k)
+    elif cores:
         _cores_fileira(fundo, cores, cx0, cx1, cy1, k)
     d = ImageDraw.Draw(fundo)
     # --- etiqueta do codigo
@@ -874,13 +916,8 @@ def montar_padrao(produto_rgba, tam, nome, preco, codigo=None, qtd=None, minimo=
             texto_y0 = cy1 + 15
         foto = produto_rgba.convert("RGBA")
         branco = Image.new("RGBA", foto.size, (255, 255, 255, 255)); branco.alpha_composite(foto); foto = branco.convert("RGB")
-        # corta a margem branca da foto, para o produto ocupar melhor o quadro
-        caixa = foto.convert("L").point(lambda v: 255 if v < 240 else 0).getbbox()
-        if caixa:
-            m = int(max(foto.size) * .03)
-            caixa = (max(0, caixa[0] - m), max(0, caixa[1] - m), min(foto.width, caixa[2] + m), min(foto.height, caixa[3] + m))
-            if (caixa[2] - caixa[0]) > foto.width * .15 and (caixa[3] - caixa[1]) > foto.height * .15:
-                foto = foto.crop(caixa)
+        # corta a margem da foto (branca ou cinza claro), para o produto ocupar melhor o quadro
+        foto = aparar_fundo(foto)
         pad = S(26)
         # produto estreito e alto (caneta, garrafa...): sobra espaco nas laterais, entao as cores ficam num painel ao lado;
         # produto largo: as cores ficam numa fileira no pe do quadro
@@ -1339,7 +1376,7 @@ def main():
     else:
         SAIDA = base_saida / (time.strftime("%Y-%m-%d_%H-%M") + (f"_{a.tema}" if a.tema else ""))
     print(f"  Pasta deste lote: {SAIDA}")
-    print('gerador.py versao 16.0 (1 "A PARTIR DE" so, foto sem margem branca, --zoom) - arquivo: ' + str(Path(__file__).resolve()))
+    print('gerador.py versao 16.2 (1 "A PARTIR DE" so, foto sem margem branca, --zoom) - arquivo: ' + str(Path(__file__).resolve()))
     if a.ids:   # aceita 93014,80131,1380 ou 93014 80131 1380
         a.ids = [int(x) for tok in a.ids for x in re.split(r"[,;\s]+", tok) if x.strip().isdigit()]
 
