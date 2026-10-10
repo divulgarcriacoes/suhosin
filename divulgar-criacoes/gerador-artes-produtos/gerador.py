@@ -746,21 +746,39 @@ def preco_br(v):
     return f"{f:.2f}".replace(".", ",") if f > 0 else "consulte"
 
 
+LEGENDA_MODELO = "legenda_modelo.txt"      # --legenda-modelo: outro arquivo de modelo (ex.: legenda_modelo_descontraido.txt)
+LEGENDA_PADRAO = (
+    "Brinde que valoriza a sua marca! 🎯\n\n{nome}\nCódigo: {codigo}\nA partir de R$ {preco} a unidade\n"
+    "Pedido mínimo: {minimo} unidades\n{gravacao}\n\nPeça seu orçamento pelo site, link na bio.\nWhatsApp: {whatsapp}\n\n{hashtags}"
+)
+
+
 def gravar_legenda(pasta, produto, nome, info):
-    """Salva info.json (dados do produto) e legenda.txt (texto pronto para o Instagram) ao lado das artes."""
+    """Salva info.json (dados do produto) e legenda.txt (texto pronto para o Instagram) ao lado das artes.
+    O texto vem do arquivo legenda_modelo.txt (campos entre chaves). Linha com campo vazio e removida."""
     cats = [unescape(c.get("name", "")) for c in produto.get("categories", []) if c.get("name")]
-    tags = ["#brindescorporativos", "#brindespersonalizados", "#divulgarcriacoes", "#brindes"]
-    for c in cats[:2]:
+    tags = ["#brindescorporativos", "#brindespersonalizados", "#marketingpromocional", "#divulgarcriacoes", "#brindes", "#presentescorporativos"]
+    for c in cats[:3]:
         t = "#" + re.sub(r"[^a-z0-9]", "", "".join(ch for ch in unicodedata.normalize("NFD", c.lower()) if unicodedata.category(ch) != "Mn"))
         if len(t) > 3 and t not in tags:
             tags.append(t)
-    linhas = [f"{nome.upper()}", f"Código: {produto.get('sku') or produto.get('id')}", f"A partir de R$ {preco_br(produto.get('price'))} a unidade"]
-    if info.get("minimo"):
-        linhas.append(f"Pedido mínimo: {int(info['minimo'])} unidades")
-    if info.get("tecnica"):
-        linhas.append(texto_gravacao(info.get("tecnica")).capitalize())
-    linhas += ["", "Peça seu orçamento pelo WhatsApp ou pelo site (link na bio).", "", " ".join(tags)]
-    (pasta / "legenda.txt").write_text("\n".join(linhas), encoding="utf-8")
+    campos = {
+        "nome": nome.upper(), "codigo": str(produto.get("sku") or produto.get("id") or ""),
+        "preco": preco_br(produto.get("price")), "minimo": str(int(info["minimo"])) if info.get("minimo") else "",
+        "gravacao": texto_gravacao(info.get("tecnica")).capitalize() if info.get("tecnica") else "",
+        "categoria": cats[0] if cats else "", "link": produto.get("permalink") or "",
+        "whatsapp": str(CFG["loja"].get("whatsapp") or ""), "hashtags": " ".join(tags),
+    }
+    f = AQUI / LEGENDA_MODELO
+    modelo = f.read_text(encoding="utf-8") if f.exists() else LEGENDA_PADRAO
+    saida = []
+    for lin in modelo.splitlines():
+        usados = re.findall(r"\{(\w+)\}", lin)
+        if usados and any(not campos.get(u, "") for u in usados):
+            continue
+        saida.append(re.sub(r"\{(\w+)\}", lambda m: campos.get(m.group(1), ""), lin))
+    txt = re.sub(r"\n{3,}", "\n\n", "\n".join(saida)).strip()
+    (pasta / "legenda.txt").write_text(txt, encoding="utf-8")
     (pasta / "info.json").write_text(json.dumps({"id": produto.get("id"), "nome": nome, "sku": produto.get("sku"),
                                                   "link": produto.get("permalink"), **{k: v for k, v in info.items() if v}}, ensure_ascii=False, indent=1), encoding="utf-8")
 
@@ -831,6 +849,7 @@ def main():
     ap.add_argument("--zoom", type=float, default=1.0, help="aumenta a foto dentro do quadro branco, como o PowerClip (ex.: --zoom 1.3; o que passar da borda e cortado)")
     ap.add_argument("--tema", help="tema/campanha: nome da pasta em temas/ (ex.: --tema novembro-azul)")
     ap.add_argument("--pasta", help="nome da subpasta do lote dentro de saida (ex.: --pasta novembro-azul). Sem isso, usa data e hora")
+    ap.add_argument("--legenda-modelo", help="arquivo de modelo da legenda (padrao: legenda_modelo.txt)")
     ap.add_argument("--sem-ia", action="store_true")
     ap.add_argument("--demo", action="store_true")
     ap.add_argument("--formatos", nargs="+", default=["feed", "story"])
@@ -839,7 +858,9 @@ def main():
     FOTO_ZOOM = a.zoom
     if a.tema:
         ativar_tema(a.tema)
-    global SAIDA
+    global SAIDA, LEGENDA_MODELO
+    if a.legenda_modelo:
+        LEGENDA_MODELO = a.legenda_modelo
     base_saida = AQUI / "saida"
     if a.pasta:
         SAIDA = base_saida / re.sub(r"[^\w.-]+", "-", a.pasta).strip("-")
@@ -848,7 +869,7 @@ def main():
     else:
         SAIDA = base_saida / (time.strftime("%Y-%m-%d_%H-%M") + (f"_{a.tema}" if a.tema else ""))
     print(f"  Pasta deste lote: {SAIDA}")
-    print('gerador.py versao 13.0 (1 "A PARTIR DE" so, foto sem margem branca, --zoom) - arquivo: ' + str(Path(__file__).resolve()))
+    print('gerador.py versao 13.1 (1 "A PARTIR DE" so, foto sem margem branca, --zoom) - arquivo: ' + str(Path(__file__).resolve()))
     if a.ids:   # aceita 93014,80131,1380 ou 93014 80131 1380
         a.ids = [int(x) for tok in a.ids for x in re.split(r"[,;\s]+", tok) if x.strip().isdigit()]
 

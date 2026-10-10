@@ -1,0 +1,12 @@
+Brinde que valoriza a sua marca! 🎯
+
+{nome}
+Código: {codigo}
+A partir de R$ {preco} a unidade
+Pedido mínimo: {minimo} unidades
+{gravacao}
+
+Peça seu orçamento pelo site, link na bio.
+WhatsApp: {whatsapp}
+
+{hashtags}
