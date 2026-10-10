@@ -25,7 +25,7 @@ from pathlib import Path
 import requests
 
 AQUI = Path(__file__).resolve().parent
-API = "https://graph.facebook.com/v21.0"
+API = "https://graph.facebook.com/v21.0"    # se o token vier do "login do Instagram", use "api_base": "https://graph.instagram.com/v21.0" no instagram.json
 
 
 def carregar_config():
@@ -58,6 +58,7 @@ def enviar_para_o_site(cfg, arquivo, lote):
 
 
 def publicar(cfg, url_imagem, legenda, story):
+    API = cfg.get("api_base") or globals()["API"]
     dados = {"image_url": url_imagem, "access_token": cfg["access_token"]}
     if story:
         dados["media_type"] = "STORIES"

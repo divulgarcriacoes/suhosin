@@ -1,6 +1,7 @@
 {
   "ig_user_id": "COLE_AQUI_O_ID_DA_CONTA_DO_INSTAGRAM",
   "access_token": "COLE_AQUI_O_TOKEN_DE_ACESSO_DA_META",
+  "api_base": "https://graph.instagram.com/v21.0",
   "wp_url": "https://divulgarcriacoes.com.br",
   "wp_usuario": "SEU_USUARIO_DO_WORDPRESS",
   "wp_senha_app": "SENHA_DE_APLICATIVO_DO_WORDPRESS"
