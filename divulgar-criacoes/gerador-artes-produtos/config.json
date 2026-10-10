@@ -1,0 +1,57 @@
+{
+  "loja": {
+    "nome": "Divulgar Criações",
+    "url": "https://divulgarcriacoes.com.br",
+    "cor_principal": "#1F3A5F",
+    "cor_destaque": "#F2B134",
+    "logo": "logo.png",
+    "etiqueta": "TUDO PARA SUA MARCA!",
+    "cta": "PEÇA SEU ORÇAMENTO",
+    "cor_cta": "#FF5900",
+    "whatsapp": "",
+    "logo_no_modelo": true,
+    "slogan_no_modelo": true
+  },
+  "comfyui": {
+    "url": "http://127.0.0.1:8188",
+    "checkpoint": "sd_xl_base_1.0.safetensors",
+    "passos": 28,
+    "cfg": 6.5,
+    "largura": 1024,
+    "altura": 1024,
+    "timeout_segundos": 300
+  },
+  "formatos": {
+    "feed": [
+      1080,
+      1080
+    ],
+    "story": [
+      1080,
+      1920
+    ]
+  },
+  "cenarios_por_categoria": {
+    "default": "elegant modern wooden table with soft natural window light, empty tabletop surface in the lower half of the frame, camera at table level, blurred background, no objects in the center, product photography, premium, soft light",
+    "copos": "dark wooden bar counter with warm ambient lights, bokeh, empty tabletop surface in the lower half of the frame, camera at table level, blurred background, no objects in the center, product photography, premium, soft light",
+    "vidro": "white marble surface with soft daylight, minimalist interior, empty tabletop surface in the lower half of the frame, camera at table level, blurred background, no objects in the center, product photography, premium, soft light",
+    "cozinha": "bright modern kitchen countertop, soft morning light, empty tabletop surface in the lower half of the frame, camera at table level, blurred background, no objects in the center, product photography, premium, soft light",
+    "squeezes e garrafas": "clean light wooden table in a gym or outdoor cafe, fresh morning light, empty tabletop surface in the lower half of the frame, camera at table level, blurred background, no objects in the center, product photography, premium, soft light",
+    "chaveiros": "light wooden desk with soft window light, office atmosphere, empty tabletop surface in the lower half of the frame, camera at table level, blurred background, no objects in the center, product photography, premium, soft light",
+    "artigos para vinho": "rustic dark wooden table in a wine cellar with candle light, empty tabletop surface in the lower half of the frame, camera at table level, blurred background, no objects in the center, product photography, premium, soft light"
+  },
+  "prompt_negativo": "text, letters, watermark, logo, people, hands, deformed, blurry foreground, cluttered, low quality, bench, chair, furniture in the center, trees in the center, people, food, wine glass, drinking glass, glassware, bottle, cup, mug, boxes, gift box, packages, objects that look like products for sale",
+  "cenarios_por_palavra": {
+    "vinho": "artigos para vinho",
+    "champagne": "artigos para vinho",
+    "espumante": "artigos para vinho",
+    "taça": "artigos para vinho",
+    "taca": "artigos para vinho",
+    "copo": "copos",
+    "caneca": "copos",
+    "squeeze": "squeezes e garrafas",
+    "garrafa": "squeezes e garrafas",
+    "tigela": "cozinha",
+    "chaveiro": "chaveiros"
+  }
+}
