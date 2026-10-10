@@ -9,7 +9,7 @@ Uso:
 Variaveis de ambiente (opcionais, so para ler produtos pela API):
   WC_KEY, WC_SECRET   chaves somente-leitura do WooCommerce
 """
-import argparse, io, json, os, random, re, sys, time, uuid
+import argparse, io, json, os, random, re, sys, time, unicodedata, uuid
 from html import unescape
 from pathlib import Path
 
@@ -746,6 +746,25 @@ def preco_br(v):
     return f"{f:.2f}".replace(".", ",") if f > 0 else "consulte"
 
 
+def gravar_legenda(pasta, produto, nome, info):
+    """Salva info.json (dados do produto) e legenda.txt (texto pronto para o Instagram) ao lado das artes."""
+    cats = [unescape(c.get("name", "")) for c in produto.get("categories", []) if c.get("name")]
+    tags = ["#brindescorporativos", "#brindespersonalizados", "#divulgarcriacoes", "#brindes"]
+    for c in cats[:2]:
+        t = "#" + re.sub(r"[^a-z0-9]", "", "".join(ch for ch in unicodedata.normalize("NFD", c.lower()) if unicodedata.category(ch) != "Mn"))
+        if len(t) > 3 and t not in tags:
+            tags.append(t)
+    linhas = [f"{nome.upper()}", f"Código: {produto.get('sku') or produto.get('id')}", f"A partir de R$ {preco_br(produto.get('price'))} a unidade"]
+    if info.get("minimo"):
+        linhas.append(f"Pedido mínimo: {int(info['minimo'])} unidades")
+    if info.get("tecnica"):
+        linhas.append(texto_gravacao(info.get("tecnica")).capitalize())
+    linhas += ["", "Peça seu orçamento pelo WhatsApp ou pelo site (link na bio).", "", " ".join(tags)]
+    (pasta / "legenda.txt").write_text("\n".join(linhas), encoding="utf-8")
+    (pasta / "info.json").write_text(json.dumps({"id": produto.get("id"), "nome": nome, "sku": produto.get("sku"),
+                                                  "link": produto.get("permalink"), **{k: v for k, v in info.items() if v}}, ensure_ascii=False, indent=1), encoding="utf-8")
+
+
 def processar(produto, rgba, sem_ia, nomes, cenario=None, estilo="cartao", mostrar_qtd=False, gravacao=None, minimo_forcado=None):
     if estilo in ("padrao", "cartao"):
         nome = unescape(produto["name"])
@@ -762,6 +781,7 @@ def processar(produto, rgba, sem_ia, nomes, cenario=None, estilo="cartao", mostr
             montar_padrao(rgba, tam, nome, preco_br(produto.get("price")), produto.get("sku") or None,
                           info.get("qtd_estoque"), info.get("minimo") or CFG["loja"].get("minimo_padrao") or None,
                           gravacao or texto_gravacao(info.get("tecnica")), estilo == "cartao", fmt).save(pasta / f"{fmt}.jpg", quality=93)
+        gravar_legenda(pasta, produto, nome, info)
         print(f"  ok -> {pasta}")
         return
     prompt = prompt_cenario(produto, cenario)
@@ -828,7 +848,7 @@ def main():
     else:
         SAIDA = base_saida / (time.strftime("%Y-%m-%d_%H-%M") + (f"_{a.tema}" if a.tema else ""))
     print(f"  Pasta deste lote: {SAIDA}")
-    print('gerador.py versao 12.2 (1 "A PARTIR DE" so, foto sem margem branca, --zoom) - arquivo: ' + str(Path(__file__).resolve()))
+    print('gerador.py versao 13.0 (1 "A PARTIR DE" so, foto sem margem branca, --zoom) - arquivo: ' + str(Path(__file__).resolve()))
     if a.ids:   # aceita 93014,80131,1380 ou 93014 80131 1380
         a.ids = [int(x) for tok in a.ids for x in re.split(r"[,;\s]+", tok) if x.strip().isdigit()]
 
