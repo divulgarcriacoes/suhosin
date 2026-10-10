@@ -783,6 +783,131 @@ def gravar_legenda(pasta, produto, nome, info):
                                                   "link": produto.get("permalink"), **{k: v for k, v in info.items() if v}}, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
+def montar_capa(tam, titulo, n, preco_min, formato):
+    """Capa da colecao (1o slide do carrossel e 1o quadro do video): fundo da marca + titulo da categoria no quadro branco."""
+    W, H = tam
+    story = formato == "story"
+    tpl = fundo_do_tema(story)
+    fundo = (Image.open(tpl).convert("RGBA").resize((W, H), Image.LANCZOS) if tpl.exists()
+             else Image.new("RGBA", (W, H), (60, 60, 60, 255)))
+    cor, escuro = TEMA["cor"], "#1C1C1A"
+    caixa = detectar_cartao(fundo) or (int(W * .15), int(H * .28), int(W * .85), int(H * .78))
+    x0, y0, x1, y1 = caixa
+    d = ImageDraw.Draw(fundo)
+    cw, ch = x1 - x0, y1 - y0
+    # titulo (ate 3 linhas), centralizado no quadro
+    f_t, linhas = _ajustar(d, titulo.upper(), "BebasNeue-Regular.ttf", ch * .30, cw * .86, 3, .3)
+    f_s = fonte_modelo("BebasNeue-Regular.ttf", ch * .06)
+    sub = "BRINDES PERSONALIZADOS COM A SUA MARCA"
+    while d.textlength(sub, font=f_s) > cw * .86 and f_s.size > 12:
+        f_s = fonte_modelo("BebasNeue-Regular.ttf", f_s.size - 2)
+    f_b = fonte_modelo("BebasNeue-Regular.ttf", ch * .06)
+    alt_t = len(linhas) * f_t.size * .92
+    topo = y0 + (ch - (f_s.size + alt_t + ch * .04 + f_b.size + ch * .10)) / 2
+    d.text(((x0 + x1) / 2 - d.textlength(sub, font=f_s) / 2, topo), sub, font=f_s, fill="#667085")
+    ty = topo + f_s.size + ch * .02
+    for l in linhas:
+        d.text(((x0 + x1) / 2 - d.textlength(l, font=f_t) / 2, ty), l, font=f_t, fill=escuro, stroke_width=max(1, int(f_t.size * .01)), stroke_fill=escuro)
+        ty += f_t.size * .92
+    # chamada para deslizar
+    chamada = "CONFIRA OS MODELOS" if story else "DESLIZE PARA VER  >>"
+    wc = d.textlength(chamada, font=f_b) + ch * .08
+    cy = ty + ch * .04
+    d.rounded_rectangle(((x0 + x1) / 2 - wc / 2, cy, (x0 + x1) / 2 + wc / 2, cy + f_b.size * 1.5), int(f_b.size * .7), fill=cor)
+    d.text(((x0 + x1) / 2 - d.textlength(chamada, font=f_b) / 2, cy + f_b.size * .22), chamada, font=f_b, fill="white")
+    # faixa embaixo do quadro: quantos modelos e a partir de quanto
+    texto = f"{n} MODELOS" + (f"  -  A PARTIR DE R$ {preco_min}" if preco_min else "")
+    bx0, bx1 = int(W * .10), int(W * .90)
+    by0 = int(y1 + (H - y1) * .12)
+    by1 = by0 + int((H - y1) * (.40 if story else .50))
+    f_p = fonte_modelo("BebasNeue-Regular.ttf", (by1 - by0) * .55)
+    while d.textlength(texto, font=f_p) > (bx1 - bx0) * .92 and f_p.size > 16:
+        f_p = fonte_modelo("BebasNeue-Regular.ttf", f_p.size - 3)
+    d.rounded_rectangle((bx0, by0, bx1, by1), int((by1 - by0) * .22), fill=cor)
+    _, t8, _, b8 = d.textbbox((0, 0), "8", font=f_p)
+    d.text(((bx0 + bx1) / 2 - d.textlength(texto, font=f_p) / 2, (by0 + by1) / 2 - (t8 + b8) / 2), texto, font=f_p, fill="white")
+    return fundo.convert("RGB")
+
+
+def achar_ffmpeg():
+    try:
+        import imageio_ffmpeg
+        return imageio_ffmpeg.get_ffmpeg_exe()
+    except Exception:
+        import shutil
+        exe = shutil.which("ffmpeg")
+        if exe:
+            return exe
+    sys.exit("Para criar o video falta o FFmpeg. Instale com:  pip install imageio-ffmpeg")
+
+
+def montar_video(imagens, saida, seg=2.5, trans=0.4, musica=None):
+    """Video vertical 9:16 (Reels/Story): cada imagem aparece 'seg' segundos, com transicao suave."""
+    import subprocess
+    ff = achar_ffmpeg()
+    n = len(imagens)
+    cmd = [ff, "-y", "-loglevel", "error"]
+    for im in imagens:
+        cmd += ["-loop", "1", "-t", f"{seg:.2f}", "-i", str(im)]
+    cmd += ["-i", str(musica)] if musica else ["-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo"]
+    filtros = [f"[{i}:v]scale=1080:1920,setsar=1,fps=30,format=yuv420p[v{i}]" for i in range(n)]
+    ultimo = "v0"
+    for i in range(1, n):
+        filtros.append(f"[{ultimo}][v{i}]xfade=transition=fade:duration={trans}:offset={i * (seg - trans):.2f}[x{i}]")
+        ultimo = f"x{i}"
+    total = n * (seg - trans) + trans
+    cmd += ["-filter_complex", ";".join(filtros), "-map", f"[{ultimo}]", "-map", f"{n}:a", "-t", f"{total:.2f}",
+            "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p", "-r", "30",
+            "-c:a", "aac", "-b:a", "128k", "-shortest", "-movflags", "+faststart", str(saida)]
+    r = subprocess.run(cmd, capture_output=True, text=True)
+    if r.returncode != 0:
+        raise RuntimeError("Falha ao criar o video: " + r.stderr[-400:])
+
+
+def gerar_colecao(itens, titulo, sem_capa=False, seg=2.5, musica=None):
+    """itens = [(pasta_do_produto, produto)]. Cria em SAIDA/_colecao: carrossel (feed), video (Reels e Story) e legendas."""
+    import shutil
+    if not itens:
+        print("  ! colecao: nenhum produto gerado, nada a juntar"); return
+    out = SAIDA / "_colecao"
+    if out.exists():
+        shutil.rmtree(out)
+    out.mkdir(parents=True)
+    precos = [float(p.get("price") or 0) for _, p in itens if float(p.get("price") or 0) > 0]
+    pmin = preco_br(min(precos)) if precos else None
+    n = len(itens)
+    slides = []
+    if not sem_capa:
+        capa = montar_capa(tamanho_do_modelo("feed"), titulo, n, pmin, "feed")
+        capa.save(out / "carrossel_00_capa.jpg", quality=93)
+        slides.append(out / "carrossel_00_capa.jpg")
+    limite = 10 - len(slides)
+    for i, (pasta, p) in enumerate(itens[:limite], 1):
+        dest = out / f"carrossel_{i:02d}.jpg"
+        shutil.copy(pasta / "feed.jpg", dest)
+        slides.append(dest)
+    if n > limite:
+        print(f"  ! o carrossel do Instagram aceita 10 imagens: ficaram {len(slides)} slides (o video leva os {n} produtos)")
+    quadros = []
+    capa_s = montar_capa(tamanho_do_modelo("story"), titulo, n, pmin, "story")
+    capa_s.save(out / "video_00_capa.jpg", quality=93)
+    quadros.append(out / "video_00_capa.jpg")
+    for i, (pasta, p) in enumerate(itens, 1):
+        dest = out / f"video_{i:02d}.jpg"
+        shutil.copy(pasta / "story.jpg", dest)
+        quadros.append(dest)
+    montar_video(quadros, out / "video.mp4", seg, 0.4, musica)
+    nomes = "\n".join(f"{i}. {unescape(p['name'])} - R$ {preco_br(p.get('price'))}" for i, (_, p) in enumerate(itens, 1))
+    tags = "#brindescorporativos #brindespersonalizados #marketingpromocional #divulgarcriacoes #brindes"
+    base = f"{titulo.upper()}: {n} modelos para personalizar com a sua marca! \U0001F3AF\n\n{nomes}\n\nA partir de R$ {pmin}\nPeça seu orçamento pelo site, link na bio."
+    wpp = str(CFG["loja"].get("whatsapp") or "")
+    if wpp:
+        base += f"\nWhatsApp: {wpp}"
+    (out / "legenda_carrossel.txt").write_text(base + f"\n\n{tags}", encoding="utf-8")
+    (out / "legenda_reels.txt").write_text(base + f"\n\n{tags}", encoding="utf-8")
+    print(f"\nColecao pronta em: {out}\n  carrossel: {len(slides)} slides | video: {len(quadros)} quadros ({out / 'video.mp4'})")
+
+
 def processar(produto, rgba, sem_ia, nomes, cenario=None, estilo="cartao", mostrar_qtd=False, gravacao=None, minimo_forcado=None):
     if estilo in ("padrao", "cartao"):
         nome = unescape(produto["name"])
@@ -801,7 +926,7 @@ def processar(produto, rgba, sem_ia, nomes, cenario=None, estilo="cartao", mostr
                           gravacao or texto_gravacao(info.get("tecnica")), estilo == "cartao", fmt).save(pasta / f"{fmt}.jpg", quality=93)
         gravar_legenda(pasta, produto, nome, info)
         print(f"  ok -> {pasta}")
-        return
+        return pasta
     prompt = prompt_cenario(produto, cenario)
     base = None
     if not sem_ia:
@@ -850,6 +975,11 @@ def main():
     ap.add_argument("--tema", help="tema/campanha: nome da pasta em temas/ (ex.: --tema novembro-azul)")
     ap.add_argument("--pasta", help="nome da subpasta do lote dentro de saida (ex.: --pasta novembro-azul). Sem isso, usa data e hora")
     ap.add_argument("--legenda-modelo", help="arquivo de modelo da legenda (padrao: legenda_modelo.txt)")
+    ap.add_argument("--colecao", action="store_true", help="alem das artes de cada produto, cria o carrossel (feed) e o video (Reels e Story) com todos eles")
+    ap.add_argument("--titulo", help="titulo da capa da colecao (ex.: --titulo \"CANECAS PERSONALIZADAS\"); padrao: nome da categoria")
+    ap.add_argument("--sem-capa", action="store_true", help="carrossel sem a capa (10 produtos em vez de 9 + capa)")
+    ap.add_argument("--seg", type=float, default=2.5, help="segundos de cada produto no video (padrao 2,5)")
+    ap.add_argument("--musica", help="arquivo de audio (mp3) para o video (opcional; sem isso o video sai sem som)")
     ap.add_argument("--sem-ia", action="store_true")
     ap.add_argument("--demo", action="store_true")
     ap.add_argument("--formatos", nargs="+", default=["feed", "story"])
@@ -869,7 +999,7 @@ def main():
     else:
         SAIDA = base_saida / (time.strftime("%Y-%m-%d_%H-%M") + (f"_{a.tema}" if a.tema else ""))
     print(f"  Pasta deste lote: {SAIDA}")
-    print('gerador.py versao 13.1 (1 "A PARTIR DE" so, foto sem margem branca, --zoom) - arquivo: ' + str(Path(__file__).resolve()))
+    print('gerador.py versao 14.0 (1 "A PARTIR DE" so, foto sem margem branca, --zoom) - arquivo: ' + str(Path(__file__).resolve()))
     if a.ids:   # aceita 93014,80131,1380 ou 93014 80131 1380
         a.ids = [int(x) for tok in a.ids for x in re.split(r"[,;\s]+", tok) if x.strip().isdigit()]
 
@@ -883,6 +1013,7 @@ def main():
             if i not in achados:
                 print(f"! ID {i}: nao encontrado na loja (confira se e o ID do produto e se esta publicado)")
     feitos, pulados = 0, 0
+    feitas = []
     for p in produtos:
         print(p["name"])
         if a.continuar and list(SAIDA.glob(f"{p.get('id', 0)}-*/feed.jpg")):
@@ -895,11 +1026,22 @@ def main():
         print(f"  usando foto {i + 1} de {len(p['images'])}")
         try:
             img = baixar_imagem(p["images"][i]["src"])
-            processar(p, img if a.estilo == "cartao" else recortar(img), a.sem_ia, a.formatos, a.cenario, a.estilo, a.mostrar_qtd, a.gravacao, a.minimo)
+            pasta_p = processar(p, img if a.estilo == "cartao" else recortar(img), a.sem_ia, a.formatos, a.cenario, a.estilo, a.mostrar_qtd, a.gravacao, a.minimo)
+            if pasta_p:
+                feitas.append((pasta_p, p))
             feitos += 1
             time.sleep(max(0.0, a.pausa))
         except Exception as e:
             print(f"  ! erro neste produto: {e}"); pulados += 1
+    if a.colecao:
+        if a.estilo != "cartao" or not {"feed", "story"} <= set(a.formatos):
+            print("  ! a colecao precisa do estilo padrao (quadro branco) e dos dois formatos (feed e story)")
+        else:
+            titulo = a.titulo or (unescape(feitas[0][1]["categories"][0]["name"]) if feitas and feitas[0][1].get("categories") else (a.busca or "NOSSOS BRINDES"))
+            try:
+                gerar_colecao(feitas, titulo, a.sem_capa, a.seg, a.musica)
+            except Exception as e:
+                print(f"  ! erro ao montar a colecao: {e}")
     print(f"\nPronto: {feitos} produto(s) gerado(s), {pulados} pulado(s). Artes em: {SAIDA}")
 
 

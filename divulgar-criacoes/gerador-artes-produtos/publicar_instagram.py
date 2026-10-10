@@ -49,8 +49,9 @@ def lote_mais_recente():
 
 def enviar_para_o_site(cfg, arquivo, lote):
     nome = f"{lote.name}-{arquivo.parent.name}-{arquivo.name}".replace(" ", "-")
+    mime = "video/mp4" if arquivo.suffix.lower() == ".mp4" else "image/jpeg"
     r = requests.post(cfg["wp_url"].rstrip("/") + "/wp-json/wp/v2/media", auth=(cfg["wp_usuario"], cfg["wp_senha_app"]),
-                      headers={"Content-Disposition": f'attachment; filename="{nome}"', "Content-Type": "image/jpeg"},
+                      headers={"Content-Disposition": f'attachment; filename="{nome}"', "Content-Type": mime},
                       data=arquivo.read_bytes(), timeout=120)
     if r.status_code >= 300:
         raise RuntimeError(f"Falha ao enviar a imagem para o site ({r.status_code}): {r.text[:200]}")
@@ -102,6 +103,87 @@ def planejar(lote, produtos, formatos, horarios, inicio, so_uteis):
     print(f"Agenda criada: {len(agenda)} post(s), de {min(agenda.values()) if agenda else '-'} ate {ultimo}.\nArquivo: {lote / 'agenda.json'} (voce pode abrir e ajustar as datas na mao).")
 
 
+def _esperar(cfg, cont, tentativas=90, espera=5):
+    """Espera o Instagram terminar de processar a midia (video pode levar minutos)."""
+    api = cfg.get("api_base") or API
+    for _ in range(tentativas):
+        st = requests.get(f"{api}/{cont}", params={"fields": "status_code", "access_token": cfg["access_token"]}, timeout=30).json()
+        if st.get("status_code") == "FINISHED":
+            return
+        if st.get("status_code") in ("ERROR", "EXPIRED"):
+            raise RuntimeError(f"Instagram nao processou a midia: {st}")
+        time.sleep(espera)
+    raise RuntimeError("Tempo esgotado esperando o Instagram processar a midia.")
+
+
+def _criar(cfg, dados):
+    api = cfg.get("api_base") or API
+    j = requests.post(f"{api}/{cfg['ig_user_id']}/media", data={**dados, "access_token": cfg["access_token"]}, timeout=120).json()
+    if "id" not in j:
+        raise RuntimeError(f"Instagram recusou: {j}")
+    return j["id"]
+
+
+def _publicar_container(cfg, cont):
+    api = cfg.get("api_base") or API
+    j = requests.post(f"{api}/{cfg['ig_user_id']}/media_publish", data={"creation_id": cont, "access_token": cfg["access_token"]}, timeout=120).json()
+    if "id" not in j:
+        raise RuntimeError(f"Nao foi possivel publicar: {j}")
+    return j["id"]
+
+
+def publicar_carrossel(cfg, urls, legenda):
+    filhos = []
+    for u in urls:
+        c = _criar(cfg, {"image_url": u, "is_carousel_item": "true"})
+        _esperar(cfg, c)
+        filhos.append(c)
+    pai = _criar(cfg, {"media_type": "CAROUSEL", "children": ",".join(filhos), "caption": legenda})
+    _esperar(cfg, pai)
+    return _publicar_container(cfg, pai)
+
+
+def publicar_video(cfg, url_video, legenda, story):
+    dados = {"media_type": "STORIES", "video_url": url_video} if story else {"media_type": "REELS", "video_url": url_video, "caption": legenda, "share_to_feed": "true"}
+    c = _criar(cfg, dados)
+    _esperar(cfg, c)
+    return _publicar_container(cfg, c)
+
+
+def publicar_colecao(cfg, lote, partes, simular):
+    col = lote / "_colecao"
+    if not col.exists():
+        sys.exit(f"Nao achei {col}. Gere com: python gerador.py --colecao ...")
+    ja = lote / "publicados.json"
+    feitos = json.loads(ja.read_text(encoding="utf-8")) if ja.exists() else {}
+    slides = sorted(col.glob("carrossel_*.jpg"))
+    video = col / "video.mp4"
+    leg = (col / "legenda_carrossel.txt").read_text(encoding="utf-8") if (col / "legenda_carrossel.txt").exists() else ""
+    legr = (col / "legenda_reels.txt").read_text(encoding="utf-8") if (col / "legenda_reels.txt").exists() else leg
+    print(f"Colecao: {len(slides)} slides no carrossel | video: {'sim' if video.exists() else 'NAO'} | partes: {', '.join(partes)} | modo: {'PUBLICANDO' if not simular else 'SIMULACAO (nada sera postado)'}\n")
+    if simular:
+        print("Legenda do carrossel/Reels:\n    " + leg.replace("\n", "\n    "))
+        return
+    url_video = None
+    for parte in partes:
+        chave = f"_colecao/{parte}"
+        if chave in feitos:
+            print(f"- {parte}: ja publicado, pulando"); continue
+        try:
+            if parte == "carrossel":
+                urls = [enviar_para_o_site(cfg, s, lote) for s in slides]
+                feitos[chave] = publicar_carrossel(cfg, urls, leg)
+            else:
+                if url_video is None:
+                    url_video = enviar_para_o_site(cfg, video, lote)
+                feitos[chave] = publicar_video(cfg, url_video, legr, parte == "story")
+            ja.write_text(json.dumps(feitos, indent=1), encoding="utf-8")
+            print(f"- {parte}: publicado (id {feitos[chave]})")
+        except Exception as e:
+            print(f"- {parte}: ERRO - {e}", file=sys.stderr)
+        time.sleep(15)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--lote", help="pasta do lote dentro de saida (padrao: o mais recente)")
@@ -109,6 +191,8 @@ def main():
     ap.add_argument("--limite", type=int, default=0, help="publica no maximo N produtos (0 = todos)")
     ap.add_argument("--intervalo", type=int, default=90, help="segundos de espera entre posts (padrao 90)")
     ap.add_argument("--publicar", action="store_true", help="publica de verdade (sem isso, so simula)")
+    ap.add_argument("--colecao", action="store_true", help="publica a colecao do lote (pasta _colecao): carrossel no feed, Reels e Story em video")
+    ap.add_argument("--so", choices=["carrossel", "reels", "story"], action="append", help="com --colecao: publica so essa parte (pode repetir)")
     ap.add_argument("--planejar", action="store_true", help="cria o agenda.json do lote (nao posta nada)")
     ap.add_argument("--horarios", default="09:00,12:30,18:00", help="horarios dos posts, separados por virgula")
     ap.add_argument("--inicio", help="primeiro dia da agenda, AAAA-MM-DD (padrao: amanha)")
@@ -123,6 +207,10 @@ def main():
     if a.limite:
         produtos = produtos[:a.limite]
     formatos = ["feed", "story"] if a.formato == "ambos" else [a.formato]
+    if a.colecao:
+        partes = a.so or ["carrossel", "reels", "story"]
+        publicar_colecao(carregar_config() if a.publicar else {}, lote, partes, not a.publicar)
+        return
     if a.planejar:
         planejar(lote, produtos, formatos, [h.strip() for h in a.horarios.split(",") if h.strip()], a.inicio, a.dias_uteis)
         return

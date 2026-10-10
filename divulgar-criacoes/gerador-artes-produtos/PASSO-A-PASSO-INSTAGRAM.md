@@ -28,3 +28,20 @@ O fluxo completo: **gerar artes → planejar a agenda → publicar sozinho**.
 - Stories pela API só funcionam em conta profissional e somem em 24 horas, como sempre.
 - Se o firewall do site (Wordfence) bloquear o envio das imagens, libere o IP do seu computador ou envie as imagens pela biblioteca de mídia manualmente.
 - Revise as legendas: o `legenda.txt` é gerado automaticamente e pode ser editado antes de publicar.
+
+## Coleção: carrossel + Reels + Story de uma categoria (versão 14)
+Uma categoria vira 3 publicações: um **carrossel** no feed (capa + produtos), um **vídeo no Reels** e o **mesmo vídeo como Story**.
+
+1. Uma vez, instale o criador de vídeo: `pip install imageio-ffmpeg`
+2. Gere o lote com a opção `--colecao`:
+   `python gerador.py --busca caneca --limite 10 --so-estoque --colecao --titulo "CANECAS PERSONALIZADAS" --pasta colecao-canecas`
+   (sem `--titulo`, a capa usa o nome da categoria do primeiro produto)
+3. Em `saida\colecao-canecas\_colecao` ficam: `carrossel_00_capa.jpg`, `carrossel_01.jpg`..., `video.mp4` e as legendas. Confira.
+   - O carrossel do Instagram aceita no máximo 10 imagens: capa + 9 produtos. Com `--sem-capa`, são os 10 produtos. O vídeo leva todos os produtos.
+   - Para usar uma música sua no vídeo: `--musica caminho\arquivo.mp3`. Sem isso, o vídeo sai sem som.
+   - `--seg 3` muda o tempo de cada produto no vídeo (padrão 2,5 segundos).
+4. Simule: `python publicar_instagram.py --lote saida\colecao-canecas --colecao`
+5. Publique tudo: `python publicar_instagram.py --lote saida\colecao-canecas --colecao --publicar`
+   Ou só uma parte: `--so carrossel`, `--so reels` ou `--so story` (pode repetir).
+
+Observações: o Reels e o Story levam alguns minutos para o Instagram processar o vídeo. O script espera e mostra "publicado (id ...)". O Instagram não permite escolher música da biblioteca pela API: se quiser música do Instagram, adicione depois pelo app.
