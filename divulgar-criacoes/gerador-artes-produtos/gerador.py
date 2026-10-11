@@ -1417,7 +1417,7 @@ def main():
     else:
         SAIDA = base_saida / (time.strftime("%Y-%m-%d_%H-%M") + (f"_{a.tema}" if a.tema else ""))
     print(f"  Pasta deste lote: {SAIDA}")
-    print('gerador.py versao 17.3 (--redes/--linkedin; 1 "A PARTIR DE" so, foto sem margem branca, --zoom) - arquivo: ' + str(Path(__file__).resolve()))
+    print('gerador.py versao 17.4 (--redes/--linkedin; 1 "A PARTIR DE" so, foto sem margem branca, --zoom) - arquivo: ' + str(Path(__file__).resolve()))
     if a.ids:   # aceita 93014,80131,1380 ou 93014 80131 1380
         a.ids = [int(x) for tok in a.ids for x in re.split(r"[,;\s]+", tok) if x.strip().isdigit()]
 
@@ -1435,7 +1435,9 @@ def main():
     for p in produtos:
         print(p["name"])
         if a.continuar and list(SAIDA.glob(f"{p.get('id', 0)}-*/feed.jpg")):
-            print("  ja existe, pulando"); pulados += 1; continue
+            print("  ja existe, pulando"); pulados += 1
+            feitas.append((list(SAIDA.glob(f"{p.get('id', 0)}-*/feed.jpg"))[0].parent, p))     # entra na colecao mesmo assim
+            continue
         if a.so_estoque and (p.get("estoque") or p.get("stock_status")) == "outofstock":
             print("  sem estoque, pulando"); pulados += 1; continue
         if not p.get("images"):
