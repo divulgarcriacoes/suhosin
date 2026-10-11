@@ -626,6 +626,49 @@ def extrair_cores(produto, maximo=10):
     return achadas[:maximo]
 
 
+def buscar_cores_site(produtos):
+    """Pega no site a tabela 'Cores disponiveis' de cada produto (a mesma da pagina) e guarda em produto['cores_site'].
+    Se o site nao responder (snippet inativo), nada muda e o gerador usa as cores das fotos."""
+    ids = [str(p.get("id")) for p in produtos if p.get("id")]
+    if not ids:
+        return
+    try:
+        r = requests.get(CFG["loja"]["url"].rstrip("/") + "/wp-json/dc/v1/cores", params={"ids": ",".join(ids)},
+                         headers={"User-Agent": "Mozilla/5.0 (gerador-artes)"}, timeout=40)
+        dados = r.json() if r.ok else {}
+    except Exception:
+        dados = {}
+    if not isinstance(dados, dict) or not dados:
+        print("  (cores do site indisponiveis; usando as cores das fotos)")
+        return
+    for p in produtos:
+        linhas = dados.get(str(p.get("id"))) or []
+        if linhas:
+            p["cores_site"] = linhas
+
+
+def _hex_do_rotulo(rotulo):
+    """'VERDE / PRATA' -> cor do primeiro nome que existir em COR_HEX (tenta 2 palavras, depois 1)."""
+    for parte in re.split(r"[/,+&]", _sem_acento(rotulo)):
+        toks = re.findall(r"[a-z]+", parte)
+        for n in (2, 1):
+            for i in range(len(toks) - n + 1):
+                nome = " ".join(toks[i:i + n])
+                if nome in COR_HEX:
+                    return COR_HEX[nome]
+    return None
+
+
+def cores_do_site(produto, maximo=10):
+    """[(rotulo, hex)] a partir da tabela do site; cor sem equivalente em COR_HEX fica cinza."""
+    saida = []
+    for l in produto.get("cores_site") or []:
+        rot = " ".join(str(l.get("label", "")).split())
+        if rot:
+            saida.append((rot, _hex_do_rotulo(rot) or "#B8BEC8"))
+    return saida[:maximo]
+
+
 def cor_da_foto(img):
     """Cor do produto na foto principal (a foto de capa nao traz a cor no nome do arquivo). Retorna (nome, hex) ou None."""
     try:
@@ -1316,10 +1359,11 @@ def processar(produto, rgba, sem_ia, nomes, cenario=None, estilo="cartao", mostr
         if not all(info.get(k) for k in ("minimo", "qtd_estoque")):
             pag = ler_pagina(produto.get("permalink"))
             info.setdefault("minimo", pag.get("minimo")); info.setdefault("qtd_estoque", pag.get("qtd")); info.setdefault("tecnica", pag.get("tecnica"))
-        cores_prod = None if SEM_CORES else (extrair_cores(produto) or None)
+        site = [] if SEM_CORES else cores_do_site(produto)
+        cores_prod = None if SEM_CORES else (site or extrair_cores(produto) or None)
         if not cores_prod and CORES_DA_FOTO and not SEM_CORES:     # sem cor nos nomes das fotos: tenta achar pela foto principal
             cores_prod = cores_da_foto_multi(rgba) or None
-        if cores_prod:      # a cor da foto principal (a da capa) tambem entra, se ainda nao estiver na lista
+        if cores_prod and not site:      # a cor da foto principal (a da capa) tambem entra, se ainda nao estiver na lista
             cf = cor_da_foto(rgba)
             if cf and cf[0] not in [n for n, _ in cores_prod]:
                 cores_prod = ([cf] + cores_prod)[:10]
@@ -1417,7 +1461,7 @@ def main():
     else:
         SAIDA = base_saida / (time.strftime("%Y-%m-%d_%H-%M") + (f"_{a.tema}" if a.tema else ""))
     print(f"  Pasta deste lote: {SAIDA}")
-    print('gerador.py versao 17.4 (--redes/--linkedin; 1 "A PARTIR DE" so, foto sem margem branca, --zoom) - arquivo: ' + str(Path(__file__).resolve()))
+    print('gerador.py versao 17.5 (cores do site; --redes/--linkedin; 1 "A PARTIR DE" so, foto sem margem branca, --zoom) - arquivo: ' + str(Path(__file__).resolve()))
     if a.ids:   # aceita 93014,80131,1380 ou 93014 80131 1380
         a.ids = [int(x) for tok in a.ids for x in re.split(r"[,;\s]+", tok) if x.strip().isdigit()]
 
@@ -1425,6 +1469,8 @@ def main():
         rgba, prod = produto_demo()
         processar(prod, rgba, True, a.formatos, None, a.estilo, a.mostrar_qtd, a.gravacao); return
     produtos = buscar_produtos(a.limite, a.produto_id, a.categoria, a.ids, a.busca, a.sku, a.ordem, a.preco_min, a.preco_max)
+    if a.estilo in ("cartao", "padrao") and not a.sem_cores:
+        buscar_cores_site(produtos)
     if a.ids:   # avisa os IDs que a loja nao devolveu (nao e produto, esta oculto ou e rascunho)
         achados = {int(p.get("id", 0)) for p in produtos}
         for i in a.ids:
