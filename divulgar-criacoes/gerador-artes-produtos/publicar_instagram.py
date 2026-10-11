@@ -71,7 +71,7 @@ def publicar(cfg, url_imagem, legenda, story):
         raise RuntimeError(f"Instagram recusou a imagem: {j}")
     cont = j["id"]
     for _ in range(20):                                   # espera o Instagram processar a imagem
-        st = requests.get(f"{API}/{cont}", params={"fields": "status_code", "access_token": cfg["access_token"]}, timeout=30).json()
+        st = requests.get(f"{API}/{cont}", params={"fields": "status_code,status", "access_token": cfg["access_token"]}, timeout=30).json()
         if st.get("status_code") == "FINISHED":
             break
         if st.get("status_code") in ("ERROR", "EXPIRED"):
@@ -144,10 +144,17 @@ def publicar_carrossel(cfg, urls, legenda):
 
 
 def publicar_video(cfg, url_video, legenda, story):
-    dados = {"media_type": "STORIES", "video_url": url_video} if story else {"media_type": "REELS", "video_url": url_video, "caption": legenda, "share_to_feed": "true"}
-    c = _criar(cfg, dados)
-    _esperar(cfg, c)
-    return _publicar_container(cfg, c)
+    dados = {"media_type": "STORIES", "video_url": url_video} if story else {"media_type": "REELS", "video_url": url_video, "caption": legenda[:2150], "share_to_feed": "true"}
+    for tentativa in (1, 2):      # o Instagram as vezes devolve ERROR sem motivo: tenta mais uma vez
+        try:
+            c = _criar(cfg, dados)
+            _esperar(cfg, c)
+            return _publicar_container(cfg, c)
+        except RuntimeError as e:
+            if tentativa == 2 or "nao processou" not in str(e):
+                raise
+            print("    o Instagram nao processou o video; tentando de novo em 30 segundos...")
+            time.sleep(30)
 
 
 def publicar_colecao(cfg, lote, partes, simular):
