@@ -757,6 +757,25 @@ def _painel_cores(fundo, cores, px0, py0, px1, py1, k):
         y += diam + vao
 
 
+def achar_pilula_verde(fundo):
+    """Se o fundo do tema ja traz o selo verde de estoque desenhado, devolve a caixa dele (x0, y0, x1, y1) em pixels."""
+    try:
+        import numpy as np
+        a = np.array(fundo.convert("RGB"), dtype=np.int16)
+        r, g, b = a[..., 0], a[..., 1], a[..., 2]
+        m = (r >= 170) & (r <= 228) & (g >= 228) & (b >= 178) & (b <= 230)
+        if m.sum() < 400:
+            return None
+        ys, xs = np.where(m)
+        x0, x1, y0, y1 = int(xs.min()), int(xs.max()) + 1, int(ys.min()), int(ys.max()) + 1
+        w, h = x1 - x0, y1 - y0
+        if w / h < 2.2 or w > fundo.width * .6 or h > fundo.height * .08:
+            return None
+        return (x0, y0, x1, y1)
+    except Exception:
+        return None
+
+
 def montar_tema(produto_rgba, tam, nome, preco, codigo=None, qtd=None, minimo=None, gravacao=None, cartao=True, formato="feed", cores=None):
     """Arte de um tema com layout proprio (tema.json -> "layout"). Posicoes em fracao da largura (x) e da altura (y) da imagem."""
     W, H = tam
@@ -820,17 +839,28 @@ def montar_tema(produto_rgba, tam, nome, preco, codigo=None, qtd=None, minimo=No
                 d.text((x + 3 * k, ty + 3 * k), l, font=f, fill=(0, 0, 0, 120))
             d.text((x, ty), l, font=f, fill=cor_nome, stroke_width=max(1, int(f.size * .01)), stroke_fill=cor_nome)
             ty += f.size * .9
-    # --- selo de estoque
+    # --- selo de estoque (se o fundo ja traz o selo desenhado, o texto vai centralizado nele, grande, e o selo e refeito por cima)
     if qtd and L.get("estoque"):
         teto = int(CFG["loja"].get("estoque_maximo", 50000))
         t = (f"+{teto:,} em estoque" if int(qtd) > teto else f"{int(qtd):,} em estoque").replace(",", ".")
-        f = fonte(int(24 * k))
-        w = d.textlength(t, font=f) + 40 * k
-        sx, sy = px(L["estoque"][0]), py(L["estoque"][1])
-        al = L["estoque"][2] if len(L["estoque"]) > 2 else "l"
-        x0 = sx if al == "l" else (sx - w if al == "r" else sx - w / 2)
-        d.rounded_rectangle((x0, sy, x0 + w, sy + 34 * k), int(17 * k), fill="#C9F5D3")
-        d.text((x0 + 20 * k, sy + 17 * k - f.size * .6), t, font=f, fill="#1E7A3A")
+        cx = achar_pilula_verde(fundo)
+        if cx:
+            x0, y0, x1, y1 = cx
+            h_, w_ = y1 - y0, x1 - x0
+            d.rounded_rectangle((x0, y0, x1, y1), int(h_ / 2), fill="#C9F5D3")
+            f = fonte(int(h_ * .56))
+            while d.textlength(t, font=f) > w_ * .9 and f.size > 10:
+                f = fonte(int(f.size - 2))
+            _, t0, _, t1 = d.textbbox((0, 0), "8", font=f)
+            d.text(((x0 + x1) / 2 - d.textlength(t, font=f) / 2, (y0 + y1) / 2 - (t0 + t1) / 2), t, font=f, fill="#1E7A3A")
+        else:
+            f = fonte(int(28 * k))
+            w = d.textlength(t, font=f) + 44 * k
+            sx, sy = px(L["estoque"][0]), py(L["estoque"][1])
+            al = L["estoque"][2] if len(L["estoque"]) > 2 else "l"
+            x0 = sx if al == "l" else (sx - w if al == "r" else sx - w / 2)
+            d.rounded_rectangle((x0, sy, x0 + w, sy + 40 * k), int(20 * k), fill="#C9F5D3")
+            d.text((x0 + 22 * k, sy + 20 * k - f.size * .6), t, font=f, fill="#1E7A3A")
     # --- bloco do preco
     if L.get("preco"):
         bx0, by0, bx1, by1 = caixa(L["preco"])
@@ -1376,7 +1406,7 @@ def main():
     else:
         SAIDA = base_saida / (time.strftime("%Y-%m-%d_%H-%M") + (f"_{a.tema}" if a.tema else ""))
     print(f"  Pasta deste lote: {SAIDA}")
-    print('gerador.py versao 17.1 (1 "A PARTIR DE" so, foto sem margem branca, --zoom) - arquivo: ' + str(Path(__file__).resolve()))
+    print('gerador.py versao 17.2 (1 "A PARTIR DE" so, foto sem margem branca, --zoom) - arquivo: ' + str(Path(__file__).resolve()))
     if a.ids:   # aceita 93014,80131,1380 ou 93014 80131 1380
         a.ids = [int(x) for tok in a.ids for x in re.split(r"[,;\s]+", tok) if x.strip().isdigit()]
 
