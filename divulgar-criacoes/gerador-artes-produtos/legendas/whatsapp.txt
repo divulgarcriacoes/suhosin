@@ -1,0 +1,8 @@
+*{nome}*
+Código: {codigo}
+A partir de R$ {preco} a unidade
+Pedido mínimo: {minimo} unidades
+{gravacao}
+
+Quer um orçamento com a sua marca? Responda esta mensagem ou veja no site:
+{link}

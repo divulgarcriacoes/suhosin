@@ -1133,6 +1133,7 @@ def preco_br(v):
 
 
 LEGENDA_MODELO = "legenda_modelo.txt"      # --legenda-modelo: outro arquivo de modelo (ex.: legenda_modelo_descontraido.txt)
+REDES = []      # --redes linkedin facebook ...: alem da legenda do Instagram, grava legenda_<rede>.txt (modelos em legendas/)
 LEGENDA_PADRAO = (
     "Brinde que valoriza a sua marca! 🎯\n\n{nome}\nCódigo: {codigo}\nA partir de R$ {preco} a unidade\n"
     "Pedido mínimo: {minimo} unidades\n{gravacao}\n\nPeça seu orçamento pelo site, link na bio.\nWhatsApp: {whatsapp}\n\n{hashtags}"
@@ -1155,16 +1156,23 @@ def gravar_legenda(pasta, produto, nome, info):
         "categoria": cats[0] if cats else "", "link": produto.get("permalink") or "",
         "whatsapp": str(CFG["loja"].get("whatsapp") or ""), "hashtags": " ".join(tags),
     }
+    campos["hashtags3"] = " ".join(tags[:3])
+
+    def preencher(modelo):
+        saida = []
+        for lin in modelo.splitlines():
+            usados = re.findall(r"\{(\w+)\}", lin)
+            if usados and any(not campos.get(u, "") for u in usados):
+                continue
+            saida.append(re.sub(r"\{(\w+)\}", lambda m: campos.get(m.group(1), ""), lin))
+        return re.sub(r"\n{3,}", "\n\n", "\n".join(saida)).strip()
+
     f = AQUI / LEGENDA_MODELO
-    modelo = f.read_text(encoding="utf-8") if f.exists() else LEGENDA_PADRAO
-    saida = []
-    for lin in modelo.splitlines():
-        usados = re.findall(r"\{(\w+)\}", lin)
-        if usados and any(not campos.get(u, "") for u in usados):
-            continue
-        saida.append(re.sub(r"\{(\w+)\}", lambda m: campos.get(m.group(1), ""), lin))
-    txt = re.sub(r"\n{3,}", "\n\n", "\n".join(saida)).strip()
-    (pasta / "legenda.txt").write_text(txt, encoding="utf-8")
+    (pasta / "legenda.txt").write_text(preencher(f.read_text(encoding="utf-8") if f.exists() else LEGENDA_PADRAO), encoding="utf-8")
+    for rede in REDES:
+        fr = AQUI / "legendas" / f"{rede}.txt"
+        if fr.exists():
+            (pasta / f"legenda_{rede}.txt").write_text(preencher(fr.read_text(encoding="utf-8")), encoding="utf-8")
     (pasta / "info.json").write_text(json.dumps({"id": produto.get("id"), "nome": nome, "sku": produto.get("sku"),
                                                   "link": produto.get("permalink"), **{k: v for k, v in info.items() if v}}, ensure_ascii=False, indent=1), encoding="utf-8")
 
@@ -1376,6 +1384,8 @@ def main():
     ap.add_argument("--tema", help="tema/campanha: nome da pasta em temas/ (ex.: --tema novembro-azul)")
     ap.add_argument("--pasta", help="nome da subpasta do lote dentro de saida (ex.: --pasta novembro-azul). Sem isso, usa data e hora")
     ap.add_argument("--legenda-modelo", help="arquivo de modelo da legenda (padrao: legenda_modelo.txt)")
+    ap.add_argument("--linkedin", action="store_true", help="atalho para --redes linkedin")
+    ap.add_argument("--redes", nargs="+", choices=["linkedin", "facebook", "whatsapp", "pinterest", "tiktok", "google"], default=[], help="grava tambem a legenda de cada rede (legenda_<rede>.txt), pronta para colar")
     ap.add_argument("--colecao", action="store_true", help="alem das artes de cada produto, cria o carrossel (feed) e o video (Reels e Story) com todos eles")
     ap.add_argument("--titulo", help="titulo da capa da colecao (ex.: --titulo \"CANECAS PERSONALIZADAS\"); padrao: nome da categoria")
     ap.add_argument("--sem-capa", action="store_true", help="carrossel sem a capa (10 produtos em vez de 9 + capa)")
@@ -1395,7 +1405,8 @@ def main():
     CORES_DA_FOTO = a.cores_da_foto
     if a.tema:
         ativar_tema(a.tema)
-    global SAIDA, LEGENDA_MODELO
+    global SAIDA, LEGENDA_MODELO, REDES
+    REDES = list(dict.fromkeys(a.redes + (["linkedin"] if a.linkedin else [])))
     if a.legenda_modelo:
         LEGENDA_MODELO = a.legenda_modelo
     base_saida = AQUI / "saida"
@@ -1406,7 +1417,7 @@ def main():
     else:
         SAIDA = base_saida / (time.strftime("%Y-%m-%d_%H-%M") + (f"_{a.tema}" if a.tema else ""))
     print(f"  Pasta deste lote: {SAIDA}")
-    print('gerador.py versao 17.2 (1 "A PARTIR DE" so, foto sem margem branca, --zoom) - arquivo: ' + str(Path(__file__).resolve()))
+    print('gerador.py versao 17.3 (--redes/--linkedin; 1 "A PARTIR DE" so, foto sem margem branca, --zoom) - arquivo: ' + str(Path(__file__).resolve()))
     if a.ids:   # aceita 93014,80131,1380 ou 93014 80131 1380
         a.ids = [int(x) for tok in a.ids for x in re.split(r"[,;\s]+", tok) if x.strip().isdigit()]
 

@@ -1,0 +1,3 @@
+{nome} personalizado | Brindes corporativos {categoria}
+Ideia de brinde personalizado com a sua marca: {nome}. A partir de R$ {preco} a unidade, pedido mínimo de {minimo} unidades. {gravacao}
+Link para orçamento: {link}
