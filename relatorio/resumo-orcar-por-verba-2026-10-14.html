@@ -1,0 +1,96 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Resumo - Orçar por verba e WYDA - 14/10/2026</title>
+<style>
+@page{size:A4;margin:16mm 14mm}
+body{font-family:Helvetica,Arial,sans-serif;color:#1c1c1a;font-size:11px;line-height:1.45}
+h1{font-size:22px;margin:0 0 2px}h2{font-size:15px;margin:20px 0 6px;border-bottom:2px solid #f5821f;padding-bottom:3px}
+h3{font-size:12px;margin:12px 0 4px}
+table{width:100%;border-collapse:collapse;margin:6px 0 10px}th,td{border:1px solid #ddd;padding:4px 6px;text-align:left;vertical-align:top}
+th{background:#faf3ea}.ok{color:#1f6b2e;font-weight:700}.pend{color:#b45309;font-weight:700}.sub{color:#666}
+.box{background:#fff4e8;border:1px solid #f5c690;border-radius:6px;padding:8px 10px;margin:8px 0}
+li{margin:2px 0}
+</style></head><body>
+<h1>Orçar por verba e orçamento WYDA</h1>
+<div class="sub">Divulgar Criações · resumo do trabalho de 13 e 14/10/2026 · tudo o que foi feito está salvo no site (snippets em EMCP Tools → Sandbox)</div>
+
+<div class="box"><b>Para amanhã, em 4 passos:</b><br>
+1) Em <b>EMCP Tools → Sandbox</b>, desativar e ativar de novo: <b>94936, 94937, 94938, 94939, 94919</b>.<br>
+2) Subir as fotos do Caderno A5 (05071) e das garrafas 18939 e 18829.<br>
+3) Abrir <b>Ferramentas → Orçamento WYDA 2026</b>, conferir a tabela e gerar os orçamentos de <b>50 e 100 unidades</b>.<br>
+4) Testar o formulário de verba em janela anônima e mandar os prints.</div>
+
+<h2>1. Regras de negócio que você ensinou (já no sistema)</h2>
+<ul>
+<li>Em cada item: Econômica ≤ Equilibrada ≤ Completa.</li>
+<li>Produção nunca tem valor maior que Diretoria no mesmo item (mesma categoria).</li>
+<li>A gravação já está no preço do produto (sem custo de gravação separado).</li>
+<li>O pedido mínimo do produto vale sempre; se o cliente digitar menos, volta ao mínimo e é avisado.</li>
+<li>Faixas de quantidade mandam no preço. Exemplo da mochila 01354: 75 a 104 un. = R$ 98,10; 105 un. = R$ 95,15.</li>
+<li>Colaboradores com poucas categorias: mais itens de cada categoria, em faixa de presente de colaborador (não um item caro).</li>
+<li>Tamanho e foto vêm do fornecedor (XBZ); cada cor tem a sua foto.</li>
+<li>Estética: categorias em letras maiúsculas; categoria em negrito, subcategoria normal.</li>
+<li>Visão do cliente: uma pergunta por vez, sem campo técnico, categorias com foto, avisos claros.</li>
+</ul>
+
+<h2>2. Snippets (o que cada um faz)</h2>
+<table><tr><th>ID</th><th>O que faz</th><th>Situação</th></tr>
+<tr><td>94869 · 94903 · 94904 · 94905 · 94906</td><td>Base do orçamento por verba: grupos, ocasião, formulário em etapas, busca de itens</td><td class="ok">ativos</td></tr>
+<tr><td>94907</td><td>Regras de preço entre propostas e entre grupos (Produção ≤ Diretoria)</td><td class="ok">ativo</td></tr>
+<tr><td>94908 · 94909</td><td>Escolher categorias (cartões com foto e subcategorias) ou itens (busca e faixa de valor)</td><td class="ok">ativos</td></tr>
+<tr><td>94913</td><td>Ao trocar Colaboradores/Feiras/Ação comercial, limpa o nome automático do grupo anterior</td><td class="ok">ativo</td></tr>
+<tr><td>94914</td><td>Aviso de verba: vermelho (passou), azul (falta) com sugestão de 3 itens, verde (fechou); bloqueia só acima de 50%</td><td class="ok">ativo</td></tr>
+<tr><td>94915</td><td>Pedido mínimo com aviso na hora</td><td class="ok">ativo</td></tr>
+<tr><td>94918</td><td>Colaboradores: mais itens por categoria escolhida</td><td class="ok">ativo</td></tr>
+<tr><td>94920</td><td>Aviso da próxima faixa de desconto (ex.: faltam 5 un. para R$ 95,15) com botão Usar</td><td class="ok">ativo</td></tr>
+<tr><td>94919</td><td>Tela Ferramentas → Orçamento WYDA 2026: compara preços com o ano passado e gera orçamentos de 50 e 100 un. com opções</td><td class="pend">reativar (código mudou)</td></tr>
+<tr><td>94921</td><td>Tela Ferramentas → SEO: 404 mais acessados e palavras nas posições 11 a 20</td><td class="pend">conferir se aparece</td></tr>
+<tr><td>94927</td><td>Tela Ferramentas → XBZ sem medidas e sem foto (diagnóstico, só leitura)</td><td class="pend">conferir se aparece</td></tr>
+<tr><td>94930</td><td>Orçar por lista: layout moderno (etapas, + e −, botões de material, arrastar arquivo)</td><td class="ok">ativo (aprovado: "bonito")</td></tr>
+<tr><td>94936</td><td>Campos maiores, arredondados e mais espaçados no formulário de verba (corrigido o cartão Colaboradores)</td><td class="pend">reativar</td></tr>
+<tr><td>94937</td><td>Investimento do grupo com decimais (5.000,00)</td><td class="pend">ativar</td></tr>
+<tr><td>94938</td><td>Avisa na hora quando a categoria não tem produto na faixa de valor do grupo e bloqueia o envio</td><td class="pend">ativar</td></tr>
+<tr><td>94939</td><td>Corrige a volta à página (botão Voltar): as categorias voltam a carregar</td><td class="pend">ativar</td></tr>
+</table>
+<p class="sub">Observação: o sistema só deixa eu salvar snippets como rascunho; a ativação é sempre feita por você em EMCP Tools → Sandbox.</p>
+
+<h2>3. Orçamento WYDA (repetição do ano passado)</h2>
+<p>O cliente pediu <b>50 e 100 unidades</b>. Itens e produtos escolhidos (preços do catálogo; o valor real vem da tela do 94919):</p>
+<table><tr><th>Item</th><th>Produto (SKU)</th><th>Ano passado</th><th>Obs.</th></tr>
+<tr><td>Squeeze esportiva inox</td><td>Karsten M (94378)</td><td>R$ 22,40</td><td></td></tr>
+<tr><td>Guarda-chuva</td><td>Automático (19197)</td><td>R$ 74,40</td><td></td></tr>
+<tr><td>Caderno A5 plástico</td><td>05071</td><td>R$ 12,90</td><td class="pend">sem foto</td></tr>
+<tr><td>Caneca</td><td>Cerâmica 330 ml (13282) + opções 88899 e 09198</td><td>R$ 39,40</td><td>foto laranja</td></tr>
+<tr><td>Garrafa inox 750 ml</td><td>18939 + opções 18829, 14541 e squeeze 18821</td><td>R$ 34,90</td><td class="pend">18939 e 18829 sem foto</td></tr>
+<tr><td>Mochila 22 L</td><td>Nylon 22 L (01354) + opções 01318 e Delfos</td><td>R$ 98,90</td><td class="pend">01318 saiu sem preço: trocar (ex.: 01320)</td></tr>
+<tr><td>Sacola tipo mochila</td><td>Carnaby (92910) + opções Rules e Pemba</td><td>R$ 9,90</td><td>laranja: Carnaby 915 un., Rules 4.064; Pemba laranja sem estoque</td></tr>
+<tr><td>Fone de ouvido</td><td>12789</td><td>R$ 12,90</td><td></td></tr>
+<tr><td>Caderneta emborrachada</td><td>12514N (a mais cara, escolhida). O 12514 é o do PDF (18,1 x 13,1 cm)</td><td>R$ 17,90</td><td>12514N: 17,6 x 12,8 cm</td></tr>
+<tr><td>Caneta metálica</td><td>01018</td><td>R$ 3,90</td><td></td></tr></table>
+<p>Já conferido na tela: mochila a 100 un. = <b>R$ 98,10</b> (ano passado R$ 98,90); garrafa 18939 = R$ 31,20. O preço do seletor é igual ao do motor.
+Orçamento de teste de 50 un. já gerado (link /orcamento-lista/C3zTtlcT.../): total entre R$ 13.405,00 e R$ 15.547,50.</p>
+<p><b>Produtos ajustados no catálogo:</b> caderneta 12514 (descrição com altura, largura, espessura e medidas de gravação, como na XBZ). O 05067 foi revertido ao texto original.</p>
+
+<h2>4. Pendências por prioridade</h2>
+<ol>
+<li><b>WYDA:</b> fotos (05071, 18939, 18829), trocar a mochila USB sem preço, reativar o 94919 e gerar 50 e 100 un.; conferir comigo antes de enviar.</li>
+<li><b>Formulário de verba:</b> ativar 94936, 94937, 94938, 94939 e testar (Colaboradores, Feiras, Ação comercial).</li>
+<li><b>Guardar o preenchimento</b> quando o erro devolve a página em branco (ainda não feito).</li>
+<li><b>Página /orcar-por-verba/:</b> ainda em rascunho; publicar e colocar no menu.</li>
+<li><b>Foto por cor:</b> a XBZ manda uma foto por cor, mas o plugin guarda só a primeira; trocar a foto ao clicar na cor.</li>
+<li><b>Orçamento pronto</b> com layout moderno (foto grande, tamanho, cor, opções lado a lado, pagamento) e botão <b>Repetir pedido anterior</b>.</li>
+<li><b>Catálogo XBZ:</b> rodar o diagnóstico (94927) e corrigir produtos sem medidas e sem foto; a foto da XBZ dá erro 403 ao baixar.</li>
+<li><b>Medição:</b> contagem por etapa do formulário e pergunta final ("foi fácil?").</li>
+</ol>
+
+<h2>5. Endereços úteis</h2>
+<ul>
+<li>Tela WYDA: divulgarcriacoes.com.br/wp-admin/tools.php?page=dc-wyda-2026</li>
+<li>SEO (404 e palavras): divulgarcriacoes.com.br/wp-admin/tools.php?page=dc-seo-404</li>
+<li>XBZ sem medidas e sem foto: divulgarcriacoes.com.br/wp-admin/tools.php?page=dc-xbz-diag</li>
+</ul>
+<h2>6. Cuidados</h2>
+<ul>
+<li>Preços de catálogo são para 15 unidades; só a tela WYDA (motor) mostra o valor real da quantidade.</li>
+<li>Antes de enviar ao cliente, conferir o PDF linha por linha com o do ano passado.</li>
+<li>Se algo não aparecer depois de ativar: janela anônima ou Ctrl+F5 (o WP Rocket guarda cache).</li>
+</ul>
+</body></html>
