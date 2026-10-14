@@ -1,0 +1,2009 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Campanha dos Reis Magos</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Young+Serif&family=Cormorant+Garamond:ital,wght@1,500;1,600&display=swap">
+<style>
+/* Layout: site em abas (Início, Painel, Obra, Transparência) sobre um fundo azul-noite com acento dourado da estrela dos Reis Magos. */
+:root {
+  --bg: #efe3d0;
+  --surface: #f9f2e5;
+  --ink: #0b1a3a;
+  --muted: #6a5a45;
+  --line: #d9c6a5;
+  --brand: #0a2150;
+  --brand-ink: #ffffff;
+  --star: #a7660f;
+  --gold: #b36f14;
+  --gold-light: #e8bc79;
+  --navy-deep: #031433;
+  --star-soft: #f3e2bd;
+  --good: #2f6b3f;
+  --warn: #9a4a12;
+  --track: #e4d4b8;
+  --font-display: "Young Serif", Georgia, serif;
+  --font-script: "Cormorant Garamond", Georgia, serif;
+  --font-body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #031126; --surface: #0a1d44; --ink: #f3e8d3; --muted: #b9aa8d; --line: #1d3162;
+    --brand: #8fabe6; --brand-ink: #031126; --star: #e8bc79; --star-soft: #2b2410;
+    --good: #6cc58a; --warn: #f0a24a; --track: #17295a; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #031126; --surface: #0a1d44; --ink: #f3e8d3; --muted: #b9aa8d; --line: #1d3162;
+  --brand: #8fabe6; --brand-ink: #031126; --star: #e8bc79; --star-soft: #2b2410;
+  --good: #6cc58a; --warn: #f0a24a; --track: #17295a; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.55; margin: 0; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text-wrap: balance; line-height: 1.15; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.num { font-variant-numeric: tabular-nums; }
+.label { font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+
+.sample { background: var(--star-soft); color: var(--ink); border-bottom: 1px solid var(--line); font-size: 12.5px; text-align: center; padding: 7px 0; }
+.sample strong { color: var(--star); }
+
+header.top { background: var(--navy-deep); color: #f6ecd9; border-bottom: 3px solid var(--gold); position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; }
+.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 10px; flex-wrap: wrap; }
+.brandmark { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: 18px; }
+.brandmark svg { flex: none; }
+nav.tabs { display: flex; gap: 4px; overflow-x: auto; max-width: 100%; }
+nav.tabs button { font: inherit; font-weight: 600; font-size: 14px; background: none; border: 0; color: #cdbf9f; padding: 8px 14px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+nav.tabs button:hover { color: #fff; background: rgba(255,255,255,.1); }
+nav.tabs button[aria-selected="true"] { color: #0b1a3a; background: var(--gold-light); }
+.brandmark .sub2 { color: #cdbf9f !important; }
+:focus-visible { outline: 3px solid var(--star); outline-offset: 2px; }
+
+main { padding-block: 28px 56px; }
+section.view[hidden] { display: none; }
+.stack { display: grid; gap: 20px; }
+.stack > * { min-width: 0; }
+.grid2 { display: grid; grid-template-columns: 1.6fr 1fr; gap: 20px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.grid2 > *, .grid3 > *, .grid4 > * { min-width: 0; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
+.panel h3 { font-size: 18px; margin-bottom: 4px; }
+.panel .sub { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
+
+.kpi .v { font-family: var(--font-display); font-size: 30px; line-height: 1.1; margin-top: 6px; }
+.kpi .d { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+.kpi .d b { color: var(--good); font-weight: 600; }
+
+.bar { height: 12px; border-radius: 99px; background: var(--track); overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--brand); border-radius: 99px; }
+.bar.star > i { background: var(--star); }
+.bar.thin { height: 8px; }
+
+/* Início */
+.hero { background: radial-gradient(ellipse at 12% 0%, #1b3a7a 0%, #0a2150 38%, #031433 100%); color: #f6ecd9; border-radius: 16px; padding: 40px 32px; display: grid; grid-template-columns: 1.3fr 1fr; gap: 32px; align-items: center; }
+.hero > * { min-width: 0; }
+.hero h1 { font-size: clamp(30px, 5vw, 46px); }
+.hero p { opacity: .9; max-width: 52ch; margin: 14px 0 0; }
+.hero .eyebrow { color: var(--gold-light); }
+.donate { background: var(--surface); color: var(--ink); border-radius: 12px; padding: 20px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.chips button { font: inherit; font-weight: 600; background: var(--bg); color: var(--ink); border: 1px solid var(--line); padding: 8px 14px; border-radius: 8px; cursor: pointer; }
+.chips button[aria-pressed="true"] { background: var(--gold-light); border-color: var(--gold); color: #0b1a3a; }
+.btn { font: inherit; font-weight: 700; background: linear-gradient(180deg, #e8bc79, #c98a2c); color: #0b1a3a; border: 0; padding: 12px 18px; border-radius: 10px; cursor: pointer; width: 100%; }
+.btn:hover { filter: brightness(1.06); }
+.field { display: grid; gap: 4px; margin-bottom: 10px; }
+.field input, .field select { font: inherit; padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); width: 100%; }
+.note { font-size: 12.5px; color: var(--muted); margin-top: 10px; }
+.msg { margin-top: 10px; font-size: 13.5px; font-weight: 600; color: var(--good); }
+
+.cotas { display: grid; gap: 14px; }
+.cota { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: baseline; }
+.cota .nm { font-weight: 600; }
+.cota .pr { color: var(--muted); font-size: 13px; }
+.cota .bar { grid-column: 1 / -1; }
+
+/* Gráfico */
+.chart { width: 100%; height: auto; display: block; }
+.chart text { fill: var(--muted); font-family: var(--font-body); font-size: 11px; }
+.legend { display: flex; gap: 16px; font-size: 12.5px; color: var(--muted); margin-top: 8px; flex-wrap: wrap; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+
+.hbars { display: grid; gap: 12px; }
+.hbars .row { display: grid; gap: 4px; }
+.hbars .top { display: flex; justify-content: space-between; font-size: 13.5px; }
+
+/* Tabelas */
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: left; font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td.r, th.r { text-align: right; }
+tr:last-child td { border-bottom: 0; }
+.pill { display: inline-block; font-size: 11.5px; font-weight: 700; padding: 2px 9px; border-radius: 99px; background: var(--track); color: var(--ink); }
+.pill.pix { background: color-mix(in srgb, var(--good) 18%, transparent); color: var(--good); }
+.pill.card { background: color-mix(in srgb, var(--brand) 18%, transparent); color: var(--brand); }
+.pill.bol { background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn); }
+.pill.done { background: color-mix(in srgb, var(--good) 18%, transparent); color: var(--good); }
+.pill.go { background: color-mix(in srgb, var(--star) 24%, transparent); color: var(--warn); }
+.pill.wait { background: var(--track); color: var(--muted); }
+
+/* Obra */
+.steps { display: grid; gap: 0; }
+.step { display: grid; grid-template-columns: 28px 1fr; gap: 14px; position: relative; padding-bottom: 22px; }
+.step:last-child { padding-bottom: 0; }
+.step::before { content: ""; position: absolute; left: 13px; top: 28px; bottom: 0; width: 2px; background: var(--line); }
+.step:last-child::before { display: none; }
+.dot { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--line); background: var(--surface); display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--muted); }
+.dot.done { background: var(--good); border-color: var(--good); color: #fff; }
+.dot.go { border-color: var(--star); color: var(--star); }
+.step .hd { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: baseline; }
+.step .hd b { font-size: 16px; }
+.step .meta { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--muted); margin-top: 6px; }
+.photos { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.photo { aspect-ratio: 4 / 3; border-radius: 8px; background: var(--track); display: grid; place-items: center; text-align: center; font-size: 12px; color: var(--muted); padding: 8px; border: 1px dashed var(--line); }
+
+footer { background: var(--navy-deep); border-top: 3px solid var(--gold); padding-block: 20px; color: #cdbf9f; font-size: 13px; }
+footer .script { color: var(--gold-light) !important; }
+main h2, .panel h3 { color: var(--brand); }
+
+/* Identidade da campanha */
+.script { font-family: var(--font-script); font-style: italic; font-weight: 600; }
+h1 .script { color: var(--gold-light); display: block; font-size: 1.15em; }
+.pillars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.pil { display: grid; justify-items: center; text-align: center; gap: 2px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 10px; }
+.pil svg, .how svg, .eco svg { fill: none; stroke: var(--star); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.pil svg { width: 34px; height: 34px; margin-bottom: 4px; }
+.pil b { font-family: var(--font-display); font-weight: 400; font-size: 17px; }
+.pil span { color: var(--muted); font-size: 13px; }
+.box { background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+.qrbox { display: flex; gap: 16px; align-items: center; }
+.qr { width: 84px; height: 84px; flex: none; border-radius: 6px; background:
+  conic-gradient(var(--ink) 25%, transparent 0 50%, var(--ink) 0 75%, transparent 0) 0 0 / 14px 14px, var(--surface); border: 6px solid var(--surface); outline: 1px solid var(--line); }
+.how { display: flex; gap: 12px; align-items: center; font-size: 14px; }
+.how svg { width: 38px; height: 38px; }
+.imgcard { border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: var(--surface); }
+.imgcard img { display: block; width: 100%; height: auto; }
+.imgcard.wide img { max-height: 360px; object-fit: cover; object-position: 50% 60%; }
+.imgcard .cap { font-size: 12.5px; color: var(--muted); padding: 8px 12px; }
+.concepts { display: grid; gap: 12px; }
+.concept { border-left: 3px solid var(--star); padding: 2px 0 2px 14px; display: grid; gap: 2px; }
+.concept b { font-family: var(--font-display); font-weight: 400; font-size: 17px; }
+.concept span { color: var(--muted); font-size: 14px; }
+.eco { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13.5px; }
+.eco > div { display: flex; gap: 10px; align-items: center; }
+.eco svg { width: 30px; height: 30px; }
+.pray { display: grid; grid-template-columns: 200px 1fr; gap: 24px; }
+.pray > * { min-width: 0; }
+.pray p, .pray ul { margin: 0 0 10px; font-size: 14.5px; }
+.pray ul { padding-left: 20px; }
+.pray .imgcard img { height: 100%; object-fit: cover; }
+
+
+/* Ajustes de tela pequena */
+.frow3 { grid-template-columns: 1fr 1fr 2fr; align-items: end; }
+@media (max-width: 860px) { .frow3 { grid-template-columns: 1fr; } }
+@media (max-width: 560px) {
+  .grid4 { gap: 10px; }
+  .kpi .v { font-size: 22px; overflow-wrap: anywhere; }
+  .panel { padding: 16px; }
+}
+
+/* Ampliar fotos */
+.imgcard img { cursor: zoom-in; }
+.imgcard { position: relative; }
+.imgcard .zoom { position: absolute; top: 10px; right: 10px; background: rgba(3,20,51,.78); color: #f6ecd9; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 99px; pointer-events: none; }
+.lb { position: fixed; inset: 0; z-index: 50; background: rgba(3,12,30,.92); display: grid; place-items: center; padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.lb figure { margin: 0; display: grid; gap: 10px; justify-items: center; max-width: 100%; }
+.lb img { width: min(96vw, 1200px); max-height: 82vh; height: auto; object-fit: contain; border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,.5); background: #000; }
+.lb figcaption { color: #f6ecd9; font-size: 14px; text-align: center; max-width: 70ch; }
+.lb .lb-x, .lb .lb-n { position: absolute; border: 0; background: rgba(246,236,217,.14); color: #f6ecd9; font: inherit; font-size: 22px; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; }
+.lb .lb-x { top: max(14px, env(safe-area-inset-top, 0px)); right: max(14px, env(safe-area-inset-right, 0px)); }
+.lb .lb-n { top: 50%; transform: translateY(-50%); }
+.lb .lb-p { left: max(10px, env(safe-area-inset-left, 0px)); }
+.lb .lb-q { right: max(10px, env(safe-area-inset-right, 0px)); }
+.lb button:hover { background: rgba(246,236,217,.28); }
+
+/* Doação em material */
+.mt-layout { display: grid; grid-template-columns: 1.7fr 1fr; gap: 20px; align-items: start; }
+.mt-layout > * { min-width: 0; }
+.mt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+.mt-grid > * { min-width: 0; }
+.mt { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 8px; align-content: start; }
+.mt h3 { font-size: 16px; color: var(--brand); line-height: 1.25; }
+.mt .pr { font-family: var(--font-display); font-size: 24px; color: var(--star); line-height: 1; }
+.mt .pr small { font-family: var(--font-body); font-size: 12px; color: var(--muted); margin-left: 4px; }
+.mt .by { font-size: 12px; color: var(--muted); }
+.stepper { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; background: var(--bg); }
+.stepper button { font: inherit; font-weight: 700; width: 34px; height: 34px; border: 0; background: none; color: var(--ink); cursor: pointer; }
+.stepper button:hover { background: var(--track); }
+.stepper span { min-width: 36px; text-align: center; font-weight: 600; }
+.cartbox { position: sticky; top: 90px; display: grid; gap: 12px; }
+.cline { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; font-size: 13.5px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.cline .q { color: var(--muted); font-size: 12.5px; }
+.ctotal { display: flex; justify-content: space-between; align-items: baseline; font-size: 15px; }
+.ctotal b { font-family: var(--font-display); font-weight: 400; font-size: 26px; color: var(--brand); }
+.supp-head { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; background: var(--navy-deep); color: #f6ecd9; border-radius: 14px; padding: 18px 20px; border-bottom: 3px solid var(--gold); }
+.supp-head .mono { width: 56px; height: 56px; font-size: 24px; }
+.supp-head h2 { color: #f6ecd9 !important; font-size: 24px; }
+.supp-head .sub2 { font-size: 13px; color: #cdbf9f; }
+.supp-head select { font: inherit; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--gold); background: #0a2150; color: #f6ecd9; margin-left: auto; }
+.pinput { font: inherit; width: 90px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); text-align: right; }
+@media (max-width: 860px) { .mt-layout { grid-template-columns: 1fr; } .cartbox { position: static; } }
+
+/* Administração */
+.admin-banner { display: flex; gap: 10px; align-items: center; background: var(--navy-deep); color: #f6ecd9; border-radius: 12px; padding: 12px 16px; font-size: 13.5px; }
+.admin-banner b { color: var(--gold-light); }
+.rq { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; grid-template-columns: 1fr auto; gap: 12px 20px; align-items: center; }
+.rq > * { min-width: 0; }
+.rq h3 { font-size: 17px; color: var(--brand); }
+.rq .meta { font-size: 13px; color: var(--muted); margin-top: 3px; }
+.rq .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.rq .dec { display: grid; gap: 8px; min-width: 210px; }
+.rq select { font: inherit; font-size: 13px; padding: 7px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); width: 100%; }
+.btn2.ok { background: var(--good); border-color: var(--good); color: #fff; }
+.btn2.no { color: var(--warn); border-color: var(--warn); }
+.pill.bad { background: color-mix(in srgb, var(--warn) 20%, transparent); color: var(--warn); }
+@media (max-width: 700px) { .rq { grid-template-columns: 1fr; } .rq .dec { min-width: 0; } }
+
+/* Parceiros */
+.pt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.pt-grid > * { min-width: 0; }
+.pt { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: grid; gap: 10px; align-content: start; }
+.pt-top { display: flex; gap: 12px; align-items: center; }
+.mono { width: 46px; height: 46px; border-radius: 12px; flex: none; display: grid; place-items: center; font-family: var(--font-display); font-size: 20px; color: #fff; }
+.pt h3 { font-size: 18px; color: var(--brand); }
+.pt .off { font-family: var(--font-display); font-size: 34px; line-height: 1; color: var(--star); }
+.pt .off small { font-family: var(--font-body); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-left: 6px; }
+.pt p { margin: 0; font-size: 14px; }
+.pt .rules { font-size: 12.5px; color: var(--muted); }
+.pt .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.ticket { border: 2px dashed var(--gold); border-radius: 10px; background: var(--star-soft); padding: 10px 12px; display: grid; gap: 6px; }
+.ticket .code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 20px; font-weight: 700; letter-spacing: .06em; color: var(--ink); }
+.ticket.used { opacity: .55; border-color: var(--line); }
+.ticket.used .code { text-decoration: line-through; }
+.btn2:disabled { opacity: .6; cursor: not-allowed; }
+.pt-bar { display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; }
+.pt-bar label { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.pt-bar input { width: 18px; height: 18px; accent-color: var(--brand); }
+.pt-stats { display: flex; gap: 22px; }
+.pt-stats b { font-family: var(--font-display); font-weight: 400; font-size: 24px; color: var(--brand); display: block; line-height: 1.1; }
+.pt-stats span { font-size: 12px; color: var(--muted); }
+
+/* Eventos */
+.evt-next { border-radius: 16px; padding: 26px 28px; color: #f6ecd9; background: radial-gradient(ellipse at 12% 0%, #1b3a7a 0%, #0a2150 40%, #031433 100%); display: grid; grid-template-columns: auto 1fr auto; gap: 24px; align-items: center; }
+.evt-next > * { min-width: 0; }
+.evt-next .cd { text-align: center; border: 1px solid var(--gold-light); border-radius: 12px; padding: 12px 18px; }
+.evt-next .cd b { display: block; font-family: var(--font-display); font-weight: 400; font-size: 38px; line-height: 1; color: var(--gold-light); }
+.evt-next .cd span { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+.evt-next h2 { font-size: 26px; color: #f6ecd9 !important; margin: 4px 0 6px; }
+.evt-next .when { font-size: 14px; opacity: .92; }
+.evt-month { font-family: var(--font-display); font-size: 20px; color: var(--brand); margin: 8px 0 -4px; }
+.evt-month::first-letter { text-transform: uppercase; }
+.evt { display: grid; grid-template-columns: 78px 1fr; gap: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+.evt > * { min-width: 0; }
+.evdate { text-align: center; background: var(--star-soft); border-radius: 10px; padding: 8px 4px; align-self: start; }
+.evdate .dd { font-family: var(--font-display); font-size: 30px; line-height: 1; }
+.evdate .mm { font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-top: 2px; }
+.evdate .wd { font-size: 11px; color: var(--muted); }
+.evt h3 { font-size: 18px; color: var(--brand); }
+.evt .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+.evt .info { display: flex; gap: 6px 18px; flex-wrap: wrap; font-size: 13.5px; color: var(--muted); margin: 6px 0 8px; }
+.evt p { margin: 0 0 10px; font-size: 14px; }
+.evt .actions { margin-top: 0; align-items: center; }
+.evt .going { font-size: 12.5px; color: var(--muted); }
+.btn2.on { background: var(--good); border-color: var(--good); color: #fff; }
+a.btn2 { text-decoration: none; display: inline-block; }
+@media (max-width: 700px) { .evt-next { grid-template-columns: 1fr; } .evt { grid-template-columns: 1fr; } .evdate { display: flex; gap: 10px; align-items: baseline; justify-content: flex-start; padding: 8px 12px; } }
+
+/* Livro de Ouro */
+.book { background: var(--surface); border: 3px double var(--gold); border-radius: 14px; padding: 28px 24px; }
+.book .bk-head { text-align: center; margin-bottom: 18px; }
+.book .bk-head .script { font-size: 34px; color: var(--star); display: block; line-height: 1.1; }
+.book .bk-head .label { color: var(--muted); }
+.book .rule { height: 1px; background: linear-gradient(90deg, transparent, var(--gold), transparent); margin: 14px auto; max-width: 320px; }
+.bk-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px 36px; }
+.bk-list > * { min-width: 0; }
+.bk-item { display: grid; gap: 1px; padding: 10px 0; border-bottom: 1px dotted var(--line); }
+.bk-item .nm { font-family: var(--font-script); font-style: italic; font-weight: 600; font-size: 22px; color: var(--brand); line-height: 1.2; }
+.bk-item .dt { font-size: 12.5px; color: var(--muted); }
+.bk-item.new .nm::after { content: " novo"; font-family: var(--font-body); font-style: normal; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; background: var(--gold-light); color: #0b1a3a; border-radius: 99px; padding: 1px 8px; margin-left: 8px; vertical-align: 3px; }
+.seal { display: inline-block; margin-top: 12px; padding: 6px 14px; border: 1px solid var(--gold-light); border-radius: 99px; font-size: 13px; color: var(--gold-light); }
+.rule-box { background: var(--star-soft); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; font-size: 14px; }
+@media (max-width: 700px) { .bk-list { grid-template-columns: 1fr; } }
+
+/* Família doadora */
+.fam-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 20px; align-items: start; }
+.fam-grid > * { min-width: 0; }
+.perks { display: grid; gap: 12px; margin-top: 14px; }
+.perk { display: flex; gap: 12px; align-items: flex-start; font-size: 14px; }
+.perk svg { width: 28px; height: 28px; flex: none; fill: none; stroke: var(--star); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.perk b { display: block; }
+.perk span { color: var(--muted); }
+.frow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.frow > * { min-width: 0; }
+.checks { display: grid; gap: 8px; margin: 12px 0; font-size: 14px; }
+.checks label { display: flex; gap: 10px; align-items: flex-start; }
+.checks input { width: 18px; height: 18px; accent-color: var(--brand); flex: none; margin-top: 2px; }
+.cert { position: relative; border-radius: 14px; overflow: hidden; color: #f6ecd9; text-align: center; padding: 34px 24px; background: radial-gradient(ellipse at 50% 0%, #1b3a7a 0%, #0a2150 45%, #031433 100%); border: 3px solid var(--gold); outline: 1px solid var(--gold-light); outline-offset: -9px; }
+.cert .kicker { font-size: 11.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-light); font-weight: 700; }
+.cert .fname { font-family: var(--font-display); font-size: clamp(26px, 5vw, 38px); margin: 8px 0 4px; line-height: 1.15; }
+.cert .verse { font-family: var(--font-script); font-style: italic; font-size: 20px; color: var(--gold-light); margin: 10px 0; }
+.cert .meta { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; font-size: 13.5px; margin-top: 14px; }
+.cert .meta b { display: block; font-family: var(--font-display); font-weight: 400; font-size: 22px; color: var(--gold-light); }
+.next-steps { display: grid; gap: 12px; counter-reset: st; margin-top: 14px; }
+.next-steps li { list-style: none; display: grid; grid-template-columns: 28px 1fr; gap: 12px; align-items: start; font-size: 14px; }
+.next-steps li::before { counter-increment: st; content: counter(st); width: 28px; height: 28px; border-radius: 50%; background: var(--gold-light); color: #0b1a3a; font-weight: 700; display: grid; place-items: center; }
+.next-steps { padding: 0; margin-bottom: 0; }
+.mural { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+.mural .fm { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+.mural .fm b { display: block; font-family: var(--font-display); font-weight: 400; font-size: 16px; }
+.mural .fm span { color: var(--muted); font-size: 12.5px; }
+.mural .fm.new { border-color: var(--gold); background: var(--star-soft); }
+@media (max-width: 860px) { .fam-grid, .frow { grid-template-columns: 1fr; } }
+
+/* Capela como torre de evolução */
+.ch-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.ch-head .big { font-family: var(--font-display); font-size: 26px; color: var(--brand); }
+.chapel { position: relative; border-radius: 12px; overflow: hidden; background: var(--track); border: 1px solid var(--line); aspect-ratio: 1000 / 540; }
+.chapel img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; max-width: none; }
+.ch-base { filter: grayscale(1) contrast(.8) brightness(1.1); opacity: .4; }
+.ch-edge { position: absolute; left: 0; right: 0; height: 3px; background: var(--gold-light); box-shadow: 0 0 14px 2px var(--gold-light); transform: translateY(1.5px); z-index: 1; }
+.ch-zone { position: absolute; left: 0; right: 0; border-top: 1px dashed rgba(255,255,255,.85); box-shadow: 0 -1px 0 rgba(3,20,51,.3); z-index: 2; }
+.ch-tag { position: absolute; left: 8px; bottom: 4px; font-size: 11px; font-weight: 700; background: rgba(3,20,51,.8); color: #f6ecd9; padding: 2px 9px; border-radius: 99px; white-space: nowrap; }
+.ch-zone.mine { background: rgba(232,188,121,.3); outline: 2px solid var(--gold-light); outline-offset: -2px; }
+.ch-zone.mine .ch-tag { background: var(--gold); color: #fff; }
+.clist { display: grid; gap: 0; margin-top: 12px; }
+.clist .cl { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; align-items: baseline; }
+.clist .cl:last-child { border-bottom: 0; }
+.clist .tt { font-weight: 600; }
+.clist .ts { color: var(--muted); text-align: right; }
+.clist .ts b { color: var(--ink); }
+@media (max-width: 560px) { .clist .cl { grid-template-columns: 1fr; } .clist .ts { text-align: left; } .ch-tag { font-size: 10px; padding: 1px 7px; } }
+
+/* Torres de evolução (estilos antigos, sem uso) */
+.towers { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.towers > * { min-width: 0; }
+.tower { display: grid; gap: 6px; }
+.trow { display: grid; grid-template-columns: 120px 1fr; gap: 14px; align-items: center; }
+.trow > * { min-width: 0; }
+.spire { height: 52px; width: 120px; clip-path: polygon(50% 0, 100% 100%, 0 100%); background: linear-gradient(to top, var(--tc) var(--p), var(--track) var(--p)); }
+.tblock { height: 62px; border: 1px solid var(--line); border-radius: 3px; position: relative; background: linear-gradient(to top, var(--tc) var(--p), var(--track) var(--p)); }
+.tblock::after { content: ""; position: absolute; left: 50%; bottom: 8px; width: 22px; height: 30px; margin-left: -11px; border-radius: 11px 11px 0 0; background: var(--surface); opacity: .85; }
+.tblock.mine { box-shadow: 0 0 0 2px var(--surface), 0 0 0 5px var(--brand); }
+.trow .tt { font-weight: 600; line-height: 1.3; }
+.trow .ts { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.trow .ts b { color: var(--ink); }
+.tcap { font-size: 13px; color: var(--muted); margin-top: 12px; }
+
+/* Área do doador */
+.next { display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: center; }
+.next .when { text-align: center; background: var(--star-soft); border-radius: 12px; padding: 12px 18px; }
+.next .when .dd { font-family: var(--font-display); font-size: 34px; line-height: 1; }
+.next .when .mm { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-top: 2px; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.btn2 { font: inherit; font-weight: 600; font-size: 14px; background: var(--surface); color: var(--ink); border: 1px solid var(--line); padding: 9px 14px; border-radius: 9px; cursor: pointer; }
+.btn2:hover { background: var(--track); }
+.btn2.main { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
+.prefs { display: grid; gap: 10px; margin: 12px 0; }
+.prefs label { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.prefs input, .master input { width: 18px; height: 18px; accent-color: var(--brand); flex: none; }
+.master { display: flex; align-items: center; gap: 10px; font-weight: 600; padding: 12px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); }
+.sched { font-size: 13px; color: var(--muted); display: grid; gap: 4px; margin-top: 4px; }
+.sched b { color: var(--ink); }
+.phone { max-width: 290px; margin: 0 auto; border: 6px solid var(--ink); border-radius: 30px; background: linear-gradient(160deg, #0a2150, #031433); padding: 26px 12px 16px; min-height: 380px; color: #fff; }
+.phone .clock { text-align: center; font-family: var(--font-display); font-size: 40px; line-height: 1; }
+.phone .date { text-align: center; font-size: 12px; opacity: .8; margin: 4px 0 16px; }
+.notifs { display: grid; gap: 8px; }
+.notif { background: rgba(249,242,229,.96); color: #0b1a3a; border-radius: 14px; padding: 9px 12px; font-size: 12.5px; line-height: 1.4; }
+.notif .app { display: flex; justify-content: space-between; font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: #5a6478; font-weight: 700; margin-bottom: 2px; }
+.notif b { display: block; font-size: 13px; }
+.notif.fresh { animation: pop .5s ease; }
+@keyframes pop { from { transform: translateY(-10px); opacity: 0; } to { transform: none; opacity: 1; } }
+.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-size: 14px; font-weight: 600; z-index: 20; max-width: calc(100% - 32px); }
+.inbox { display: grid; gap: 0; }
+.inbox .it { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); align-items: start; font-size: 14px; }
+.inbox .it:last-child { border-bottom: 0; }
+.inbox .ic { width: 8px; height: 8px; border-radius: 50%; background: var(--star); margin-top: 7px; }
+.inbox .ic.read { background: var(--line); }
+.inbox .tm { font-size: 12px; color: var(--muted); white-space: nowrap; }
+
+@media (max-width: 860px) {
+  .towers, .pillars { grid-template-columns: 1fr; }
+  .pray { grid-template-columns: 1fr; }
+  .pray .imgcard img { max-height: 300px; }
+  #v-capela .grid2, #participar .grid2 { grid-template-columns: 1fr !important; }
+  .next { grid-template-columns: 1fr; }
+  .grid2, .hero { grid-template-columns: 1fr; }
+  .grid4 { grid-template-columns: repeat(2, 1fr); }
+  .grid3 { grid-template-columns: 1fr; }
+  .photos { grid-template-columns: repeat(2, 1fr); }
+  .hero { padding: 28px 20px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .bar > i { transition: width .6s ease; }
+}
+</style>
+
+<div class="sample"><span class="wrap"><strong>MODELO</strong> · textos e imagens vêm do folheto da campanha; valores, doadores, etapas e datas da obra são exemplos</span></div>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brandmark">
+      <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.5l2.6 7.1 7.4.5-5.7 4.7 1.9 7.3L12 17.1l-6.2 4 1.9-7.3L2 9.1l7.4-.5z" fill="var(--star)"/></svg>
+      <span style="line-height:1.15">Paróquia São Luís Gonzaga<br><span class="sub2" style="font-family:var(--font-body);font-size:11px;letter-spacing:.08em;text-transform:uppercase">São Roque | SP · Aqui você é família!</span></span>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Seções do site">
+      <button role="tab" id="t-inicio" aria-selected="true" data-view="inicio">Início</button>
+      <button role="tab" id="t-capela" aria-selected="false" data-view="capela">A capela</button>
+      <button role="tab" id="t-eventos" aria-selected="false" data-view="eventos">Eventos</button>
+      <button role="tab" id="t-painel" aria-selected="false" data-view="painel">Painel de doações</button>
+      <button role="tab" id="t-obra" aria-selected="false" data-view="obra">Avanço da obra</button>
+      <button role="tab" id="t-transp" aria-selected="false" data-view="transp">Transparência</button>
+      <button role="tab" id="t-familia" aria-selected="false" data-view="familia">Família doadora</button>
+      <button role="tab" id="t-livro" aria-selected="false" data-view="livro">Livro de Ouro</button>
+      <button role="tab" id="t-parceiros" aria-selected="false" data-view="parceiros">Parceiros</button>
+      <button role="tab" id="t-materiais" aria-selected="false" data-view="materiais">Doe material</button>
+      <button role="tab" id="t-fornecedor" aria-selected="false" data-view="fornecedor">Área do fornecedor</button>
+      <button role="tab" id="t-doador" aria-selected="false" data-view="doador">Área do doador</button>
+      <button role="tab" id="t-admin" aria-selected="false" data-view="admin">Administração</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- INÍCIO -->
+<section class="view" id="v-inicio">
+  <div class="stack">
+    <div class="hero">
+      <div>
+        <div class="label eyebrow">Campanha dos Reis Magos</div>
+        <h1 style="margin-top:10px">Um presente para <span class="script">a Casa de Deus</span></h1>
+        <p>Há mais de 40 anos nossa comunidade vive sua fé, sonha e luta por uma capela. Agora, esse sonho começa a se realizar! Juntos, com oração, união e generosidade, vamos construir um lugar digno para acolher, celebrar e adorar o Menino Jesus.</p>
+        <p class="script" style="font-size:20px;opacity:.95;margin-top:12px">“Vimos a sua estrela e viemos adorá-lo.” <span style="font-size:15px;opacity:.8">Mt 2,2</span></p>
+        <div style="margin-top:22px;max-width:460px">
+          <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:8px">
+            <span><b class="num" id="h-raised"></b> arrecadados</span>
+            <span class="num" id="h-pct"></span>
+          </div>
+          <div class="bar star" style="background:rgba(255,255,255,.2)"><i id="h-bar" style="width:0"></i></div>
+          <div style="font-size:13px;opacity:.85;margin-top:8px">Meta: <span class="num" id="h-goal"></span> · <span class="num" id="h-donors"></span> doadores</div>
+        </div>
+      </div>
+      <form class="donate" id="donate-form" novalidate>
+        <h3 style="font-size:20px">Quero contribuir</h3>
+        <div class="chips" role="group" aria-label="Valor da doação">
+          <button type="button" aria-pressed="false" data-v="25">R$ 25</button>
+          <button type="button" aria-pressed="true" data-v="50">R$ 50</button>
+          <button type="button" aria-pressed="false" data-v="100">R$ 100</button>
+          <button type="button" aria-pressed="false" data-v="250">R$ 250</button>
+        </div>
+        <div class="field"><label for="d-valor" class="label">Outro valor (R$)</label><input id="d-valor" type="number" min="5" step="1" value="50"></div>
+        <div class="field"><label for="d-forma" class="label">Forma de pagamento</label>
+          <select id="d-forma"><option>Pix</option><option>Cartão de crédito</option><option>Boleto</option></select></div>
+        <div class="field"><label for="d-rec" class="label">Frequência</label>
+          <select id="d-rec"><option>Doação única</option><option>Mensal</option></select></div>
+        <button class="btn" type="submit">Doar agora</button>
+        <div class="msg" id="d-msg" role="status" hidden></div>
+        <p class="note" style="color:var(--star);font-weight:600">Doação mensal: a família entra no Livro de Ouro e recebe missas por 1 ano.</p>
+        <p class="note">No site real, este botão leva ao pagamento seguro. Aqui é só o modelo.</p>
+      </form>
+    </div>
+
+    <div class="imgcard wide"><img src="img/capela.jpg" alt="Ilustração da capela ao entardecer, com os três Reis Magos a camelo caminhando em direção a ela"><div class="cap">A capela em honra ao Menino Jesus, vista no projeto da campanha</div></div>
+
+    <div class="pillars">
+      <div class="pil"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v20M6 8h12"/></svg><b>Fé</b><span>que nos move</span></div>
+      <div class="pil"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M3 20c0-3.5 2.2-6 5-6s5 2.5 5 6M11 20c0-3.5 2.2-6 5-6s5 2.5 5 6"/></svg><b>União</b><span>que fortalece</span></div>
+      <div class="pil"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9.5C10.5 6 5 6.5 5 10.5c0 3 4 5.5 7 8 3-2.500 7-5 7-8 0-4-5.500-4.500-7-1z"/><path d="M2 21h8l4-2 5-1"/></svg><b>Generosidade</b><span>que transforma</span></div>
+    </div>
+
+    <div>
+      <h2 style="font-size:26px">A capela em construção</h2>
+      <p style="color:var(--muted);margin:6px 0 0">As duas torres de evolução são a própria capela. Na primeira ela ganha cor conforme a obra avança. Na segunda, conforme o dinheiro chega e é aplicado em cada etapa.</p>
+    </div>
+    <div class="towers">
+      <div class="panel">
+        <h3>Torre da obra</h3>
+        <p class="sub">Colorido é o que já foi construído.</p>
+        <div class="tower" id="tower-obra"></div>
+        <p class="tcap" id="cap-obra"></p>
+      </div>
+      <div class="panel">
+        <h3>Torre da arrecadação</h3>
+        <p class="sub">Colorido é o que já foi financiado. As ofertas preenchem de baixo para cima.</p>
+        <div class="tower" id="tower-fund"></div>
+        <p class="tcap" id="cap-fund"></p>
+      </div>
+    </div>
+
+    <div class="panel" id="participar">
+      <h2 style="font-size:24px">Como participar?</h2>
+      <p style="margin:6px 0 18px;color:var(--muted)">Sua contribuição, oração e sacrifício são presentes valiosos para Deus!</p>
+      <div class="grid2" style="grid-template-columns:1fr 1fr">
+        <div class="box">
+          <div class="label" style="color:var(--star)">Doação recorrente</div>
+          <p style="margin:6px 0 0"><b>Acima de R$ 50,00</b> · valor livre</p>
+          <p class="note">Escolha o valor e a periodicidade que cabem no seu coração.</p>
+          <p class="note" style="color:var(--star);font-weight:600">Quem doa de forma recorrente entra no Livro de Ouro, com missas rezadas por 1 ano nas intenções das famílias doadoras.</p>
+        </div>
+        <div class="box qrbox">
+          <div class="qr" aria-hidden="true"></div>
+          <div>
+            <div class="label" style="color:var(--star)">Faça sua doação</div>
+            <p style="margin:4px 0 0">Pelo QR Code ou pelo Pix</p>
+            <p class="note num" style="margin-top:4px">CNPJ 00.000.000/0000-00<br>(exemplo, trocar pelo da paróquia)</p>
+          </div>
+        </div>
+      </div>
+      <div class="actions" style="margin:16px 0 0"><button class="btn2 main" type="button" data-gotab="materiais">Doe material de obra: compre cimento, areia, telhas e mais direto de empresas parceiras</button></div>
+      <div class="grid3" style="margin-top:18px">
+        <div class="how"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.500C5 15 3 11.500 3 8.500 3 6 5 4.500 7 4.500c2 0 3.500 1 5 3 1.500-2 3-3 5-3 2 0 4 1.500 4 4 0 3-2 6.500-9 12z"/></svg><span>Com sua ajuda, construímos nossa capela.</span></div>
+        <div class="how"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="8" height="5"/><rect x="13" y="4" width="8" height="5"/><rect x="3" y="11" width="5" height="5"/><rect x="10" y="11" width="8" height="5"/><rect x="3" y="18" width="8" height="3"/></svg><span>Cada doação é um tijolo deste sonho coletivo.</span></div>
+        <div class="how"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v3M4.500 6l2 2M19.500 6l-2 2M5 12c1.500 0 3 1 4 2l3 3 3-3c1-1 2.500-2 4-2"/><path d="M3 21l6-5M21 21l-6-5"/></svg><span>Deus multiplica cada gesto de amor e generosidade.</span></div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="panel">
+        <h3>Escolha uma cota</h3>
+        <p class="sub">Cada doação é um tijolo deste sonho coletivo. As cotas abaixo são exemplos.</p>
+        <div class="cotas" id="cotas"></div>
+      </div>
+      <div class="panel">
+        <h3>Últimas ofertas</h3>
+        <p class="sub">Doadores podem optar por aparecer como anônimos.</p>
+        <div id="mini-feed" class="hbars" style="gap:10px"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PAINEL -->
+<section class="view" id="v-painel" hidden>
+  <div class="stack">
+    <div>
+      <h2 style="font-size:28px">Painel de doações</h2>
+      <p style="color:var(--muted);margin:6px 0 0">Atualizado a cada nova doação confirmada.</p>
+    </div>
+
+    <div class="grid4" id="kpis"></div>
+
+    <div class="panel">
+      <h3>Meta da campanha</h3>
+      <div style="display:flex;justify-content:space-between;font-size:14px;margin:10px 0 8px">
+        <span><b class="num" id="m-raised"></b> de <span class="num" id="m-goal"></span></span>
+        <span class="num" id="m-pct"></span>
+      </div>
+      <div class="bar"><i id="m-bar" style="width:0"></i></div>
+      <p class="note" id="m-forecast"></p>
+    </div>
+
+    <div class="panel" id="proj">
+      <h3>Projeção de entrada de valores</h3>
+      <p class="sub">Defina o início e o término da campanha. A projeção usa o ritmo de arrecadação desde o primeiro dia e mostra onde a campanha chega no término.</p>
+      <div class="frow frow3">
+        <div class="field"><label class="label" for="pj-ini">Início da campanha</label><input id="pj-ini" type="date" value="2026-08-10"></div>
+        <div class="field"><label class="label" for="pj-fim">Término da campanha</label><input id="pj-fim" type="date" value="2027-01-06"></div>
+        <div class="field"><span class="label">Cenário</span>
+          <div class="chips" style="margin:6px 0 0" role="group" aria-label="Cenário de projeção" id="pj-sc">
+            <button type="button" aria-pressed="false" data-sc="0.8">Ritmo −20%</button>
+            <button type="button" aria-pressed="true" data-sc="1">Ritmo atual</button>
+            <button type="button" aria-pressed="false" data-sc="1.2">Ritmo +20%</button>
+          </div></div>
+      </div>
+      <div class="grid4" id="pj-kpis" style="margin:6px 0 16px"></div>
+      <div class="msg" id="pj-note" style="margin:0 0 14px;color:var(--ink);font-weight:500"></div>
+      <svg class="chart" id="pj-chart" viewBox="0 0 640 300" role="img" aria-label="Arrecadação acumulada e projeção até o término da campanha"></svg>
+      <div class="legend"><span><i style="background:var(--brand)"></i>Arrecadado</span><span><i style="background:var(--star)"></i>Projeção</span><span><i style="background:var(--good)"></i>Meta</span></div>
+      <div class="tablewrap" style="margin-top:16px"><table>
+        <thead><tr><th>Mês</th><th class="r">Realizado</th><th class="r">Projetado</th><th class="r">Acumulado no fim do mês</th><th class="r">% da meta</th></tr></thead>
+        <tbody id="pj-table"></tbody>
+      </table></div>
+      <p class="note">Projeção simples: mantém o ritmo médio diário. Não considera eventos como o almoço beneficente, a Missa do Galo e a Festa de Reis, que costumam aumentar as entradas.</p>
+    </div>
+
+    <div class="grid2">
+      <div class="panel">
+        <h3>Arrecadação por semana</h3>
+        <p class="sub">Barras: valor da semana. Linha: total acumulado.</p>
+        <svg class="chart" id="chart" viewBox="0 0 640 300" role="img" aria-label="Arrecadação semanal e acumulada"></svg>
+        <div class="legend"><span><i style="background:var(--brand)"></i>Semana</span><span><i style="background:var(--star)"></i>Acumulado</span></div>
+      </div>
+      <div class="stack">
+        <div class="panel">
+          <h3>Forma de pagamento</h3>
+          <p class="sub">Parcela do total arrecadado.</p>
+          <div class="hbars" id="methods"></div>
+        </div>
+        <div class="panel">
+          <h3>Perfil das ofertas</h3>
+          <p class="sub">Tamanho de cada doação.</p>
+          <div class="hbars" id="sizes"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Doações recentes</h3>
+      <p class="sub">Nomes abreviados para preservar a privacidade.</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Data</th><th>Doador</th><th>Forma</th><th>Cota</th><th class="r">Valor</th></tr></thead>
+          <tbody id="feed"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- OBRA -->
+<section class="view" id="v-obra" hidden>
+  <div class="stack">
+    <div>
+      <h2 style="font-size:28px">Avanço da obra</h2>
+      <p style="color:var(--muted);margin:6px 0 0">Etapas, custos previstos e realizados, com fotos de cada fase.</p>
+    </div>
+
+    <div class="grid3">
+      <div class="panel kpi"><div class="label">Obra concluída</div><div class="v num" id="o-pct"></div><div class="d">Média ponderada pelo custo de cada etapa</div></div>
+      <div class="panel kpi"><div class="label">Gasto até hoje</div><div class="v num" id="o-spent"></div><div class="d" id="o-budget"></div></div>
+      <div class="panel kpi"><div class="label">Previsão de entrega</div><div class="v">Dez/2027</div><div class="d">Se o ritmo de doações se mantiver</div></div>
+    </div>
+
+    <div class="grid2">
+      <div class="panel">
+        <h3>Etapas</h3>
+        <p class="sub">Orçado versus realizado em cada fase.</p>
+        <div class="steps" id="steps"></div>
+      </div>
+      <div class="stack">
+        <div class="panel">
+          <h3>Registro fotográfico</h3>
+          <p class="sub">Fotos com data, enviadas pelo responsável da obra.</p>
+          <div class="photos" id="photos"></div>
+        </div>
+        <div class="panel">
+          <h3>Diário da obra</h3>
+          <div class="hbars" id="diary" style="gap:12px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRANSPARÊNCIA -->
+<section class="view" id="v-transp" hidden>
+  <div class="stack">
+    <div>
+      <h2 style="font-size:28px">Transparência</h2>
+      <p style="color:var(--muted);margin:6px 0 0">Todo o dinheiro que entra e sai, publicado com comprovante.</p>
+    </div>
+
+    <div class="grid4" id="tkpis"></div>
+
+    <div class="grid2">
+      <div class="panel">
+        <h3>Para onde foi o dinheiro</h3>
+        <p class="sub">Despesas por categoria.</p>
+        <div class="hbars" id="cats"></div>
+      </div>
+      <div class="panel">
+        <h3>Responsáveis</h3>
+        <p class="sub">Quem aprova cada pagamento.</p>
+        <div class="hbars" style="gap:12px" id="people"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Livro de saídas</h3>
+      <p class="sub">Cada pagamento tem nota fiscal ou recibo.</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Comprovante</th><th class="r">Valor</th></tr></thead>
+          <tbody id="ledger"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Prestações de contas mensais</h3>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Mês</th><th class="r">Entradas</th><th class="r">Saídas</th><th class="r">Saldo</th><th>Arquivo</th></tr></thead>
+          <tbody id="months"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- A CAPELA -->
+<section class="view" id="v-capela" hidden>
+  <div class="stack">
+    <div class="grid2" style="grid-template-columns:1fr 1.2fr;align-items:center">
+      <div class="panel">
+        <div class="label" style="color:var(--star)">Nossa história</div>
+        <h2 style="font-size:28px;margin:6px 0 12px">Quarenta anos de caminhada</h2>
+        <p style="margin:0 0 10px">Há 40 anos nossa comunidade caminha unida na fé, celebrando a vida, os sacramentos e o amor de Deus.</p>
+        <p style="margin:0 0 10px">Foram muitas conquistas, muitas lutas e muitos sonhos. Hoje, confiantes na providência divina, iniciamos a realização do grande desejo de ter a nossa capela, verdadeiro lar de encontro com o Senhor.</p>
+        <p class="script" style="font-size:26px;color:var(--star);margin:12px 0 0">Este é o sonho de todos nós!</p>
+      </div>
+      <div class="imgcard"><img src="img/fotos.jpg" alt="Fotografias antigas da comunidade da paróquia"><div class="cap">Registros de quatro décadas da comunidade</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="label" style="color:var(--star)">A arquitetura</div>
+      <h2 style="font-size:26px;margin:6px 0 8px">Fé que se torna espaço</h2>
+      <p style="color:var(--muted);margin:0 0 18px;max-width:70ch">O projeto da nova capela foi inspirado nos elementos que nos levam ao mistério do Natal: a gruta de Belém, a manjedoura e a estrela guia.</p>
+      <div class="grid2" style="grid-template-columns:1.5fr 1fr;align-items:center">
+        <div class="imgcard"><img src="img/interior.jpg" alt="Projeto do interior da capela, com altar, crucifixo e bancos de madeira"><div class="cap">Projeto do interior da capela</div></div>
+        <div class="concepts">
+          <div class="concept"><b>A gruta de Belém</b><span>Acolhimento, simplicidade e amor.</span></div>
+          <div class="concept"><b>A manjedoura</b><span>Lugar onde Deus se faz presente entre nós.</span></div>
+          <div class="concept"><b>A estrela guia</b><span>Luz que orienta nossa caminhada e missão.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="label" style="color:var(--star)">Um ambiente de paz e sustentabilidade</div>
+      <div class="grid2" style="grid-template-columns:1fr 1fr;align-items:center;margin-top:10px">
+        <div>
+          <p style="margin:0 0 16px">Nossa capela será implantada em um terreno arborizado, em harmonia com a natureza, utilizando soluções que cuidam da criação de Deus.</p>
+          <div class="eco">
+            <div><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>Iluminação natural</div>
+            <div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19c0-8 5-13 14-14 0 9-5 14-14 14zM5 19l8-8"/></svg>Ventilação adequada</div>
+            <div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c3 4.500 6 7.500 6 11a6 6 0 0 1-12 0c0-3.500 3-6.500 6-11z"/></svg>Captação de água da chuva</div>
+            <div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16l-2 10H6zM12 7v10M8 7l-1 10M16 7l1 10M5 12h14"/></svg>Eficiência energética (solar)</div>
+            <div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9l3-5 3 5M17 15l-3 5-3-5M4 15l-1 4 4 1M20 9l1-4-4-1"/></svg>Uso consciente dos recursos</div>
+          </div>
+        </div>
+        <div class="imgcard"><img src="img/aerea.jpg" alt="Vista aérea da capela em terreno arborizado"><div class="cap">Implantação da capela no terreno</div></div>
+      </div>
+    </div>
+
+    <div class="panel pray">
+      <div class="imgcard"><img src="img/presepio.jpg" alt="Sagrada Família: Maria e José com o Menino Jesus na manjedoura"></div>
+      <div>
+        <div class="label" style="color:var(--star)">Oração</div>
+        <h2 style="font-size:24px;margin:6px 0 12px">Para a construção da capela em honra ao Menino Jesus</h2>
+        <p>Santíssima Trindade, nós te adoramos, te glorificamos, te damos graças, porque inspiraste a nossa paróquia com o desejo de construir uma capela em honra ao Menino Jesus.</p>
+        <p>Este projeto fazemos nosso, e te pedimos que, com a Tua ajuda e com o esforço de todos nós, possamos torná-lo realidade.</p>
+        <p>Recordamos que o Menino Deus, ao vir ao mundo, não encontrou lugar digno para nascer e teve que repousar numa simples manjedoura. Que esse gesto de amor inspire nossos corações a lhe preparar, agora, uma casa onde seja amado, acolhido e adorado, e assim possamos honrar sua divina infância.</p>
+        <p>A exemplo dos três Reis Magos, queremos nos oferecer:</p>
+        <ul>
+          <li><b>Ouro:</b> nossa contribuição para que a nossa caridade ilumine nossas vidas;</li>
+          <li><b>Incenso:</b> nossas orações para que o perfume delas suba até ti;</li>
+          <li><b>Mirra:</b> nossos sacrifícios e nossas dores de cada dia.</li>
+        </ul>
+        <p>Todas essas ofertas serão um tijolo para construir a Tua casa, que será lugar de louvor perpétuo e sacrifício de comunhão.</p>
+        <p>Glória ao Pai, ao Filho e ao Espírito Santo. Como era no princípio, agora e sempre. Amém.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAMÍLIA DOADORA -->
+<section class="view" id="v-familia" hidden>
+  <div class="stack">
+    <div>
+      <div class="label" style="color:var(--star)">Aqui você é família</div>
+      <h2 style="font-size:28px;margin-top:6px">Seja uma família doadora</h2>
+      <p style="color:var(--muted);margin:6px 0 0;max-width:62ch">Sua família assume um pedacinho da capela, todo mês, e acompanha de perto onde cada oferta é aplicada.</p>
+    </div>
+
+    <div class="fam-grid" id="fam-main">
+      <div class="panel">
+        <h3>Cadastro da família</h3>
+        <p class="sub">Leva menos de dois minutos. Nada é cobrado nesta etapa.</p>
+        <form id="fam-form" novalidate>
+          <div class="frow">
+            <div class="field"><label class="label" for="f-nome">Nome da família</label><input id="f-nome" type="text" placeholder="Ex.: Família Oliveira" autocomplete="off"></div>
+            <div class="field"><label class="label" for="f-resp">Responsável</label><input id="f-resp" type="text" placeholder="Nome completo" autocomplete="name"></div>
+          </div>
+          <div class="frow">
+            <div class="field"><label class="label" for="f-whats">WhatsApp</label><input id="f-whats" type="tel" placeholder="(11) 90000-0000" autocomplete="tel"></div>
+            <div class="field"><label class="label" for="f-email">E-mail</label><input id="f-email" type="email" placeholder="voce@email.com" autocomplete="email"></div>
+          </div>
+          <div class="field"><label class="label" for="f-membros">Pessoas na família</label>
+            <select id="f-membros"><option>1</option><option>2</option><option>3</option><option selected>4</option><option>5</option><option>6 ou mais</option></select></div>
+          <div class="label">Oferta mensal</div>
+          <div class="chips" role="group" aria-label="Valor mensal">
+            <button type="button" aria-pressed="false" data-fv="50">R$ 50</button>
+            <button type="button" aria-pressed="true" data-fv="100">R$ 100</button>
+            <button type="button" aria-pressed="false" data-fv="200">R$ 200</button>
+            <button type="button" aria-pressed="false" data-fv="500">R$ 500</button>
+          </div>
+          <div class="frow">
+            <div class="field"><label class="label" for="f-valor">Outro valor (a partir de R$ 50)</label><input id="f-valor" type="number" min="50" step="10" value="100"></div>
+            <div class="field"><label class="label" for="f-dia">Dia do vencimento</label><select id="f-dia"><option>5</option><option>10</option><option>15</option><option>20</option><option>25</option></select></div>
+          </div>
+          <div class="field"><label class="label" for="f-int">Intenção da família (opcional)</label><textarea id="f-int" rows="2" placeholder="Ex.: pela saúde dos nossos pais, em ação de graças…" style="font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);width:100%;resize:vertical"></textarea></div>
+          <div class="checks">
+            <label><input type="checkbox" id="f-push" checked> Quero receber avisos no celular (lembrete do vencimento e novidades da obra)</label>
+            <label><input type="checkbox" id="f-mural" checked> Podem mostrar o nome da minha família no mural e no Livro de Ouro</label>
+          </div>
+          <button class="btn" type="submit">Entrar para a família doadora</button>
+          <div class="msg" id="f-msg" role="status" style="color:var(--warn)" hidden></div>
+          <p class="note">No site real, os dados vão para o cadastro da paróquia e a primeira oferta é paga por Pix ou cartão.</p>
+        </form>
+      </div>
+
+      <div class="stack">
+        <div class="panel">
+          <h3>O que sua família recebe</h3>
+          <div class="perks">
+            <div class="perk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5c3-1.500 6-1.500 9 1 3-2.500 6-2.500 9-1v14c-3-1.500-6-1.500-9 1-3-2.500-6-2.500-9-1zM12 6v14"/></svg><div><b>Livro de Ouro e missas por 1 ano</b><span>A família entra no Livro de Ouro e, durante um ano, são rezadas missas nas intenções das famílias doadoras.</span></div></div>
+            <div class="perk"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="8" height="5"/><rect x="13" y="4" width="8" height="5"/><rect x="3" y="11" width="5" height="5"/><rect x="10" y="11" width="8" height="5"/><rect x="3" y="18" width="8" height="3"/></svg><div><b>Tijolos com o nome da família</b><span>Cada oferta mensal assenta tijolos na capela, e você vê em qual etapa.</span></div></div>
+            <div class="perk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8zM10 20a2 2 0 0 0 4 0"/></svg><div><b>Avisos no celular</b><span>Lembrete antes do vencimento, fotos e etapas concluídas.</span></div></div>
+            <div class="perk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.600 5.500 6 .8-4.400 4.200 1.100 6-5.300-2.900-5.300 2.900 1.100-6L3.400 9.300l6-.8z"/></svg><div><b>Certificado de família doadora</b><span>Para guardar ou compartilhar no WhatsApp.</span></div></div>
+            <div class="perk"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M3 20c0-3.500 2.200-6 5-6s5 2.500 5 6M11 20c0-3.500 2.200-6 5-6s5 2.500 5 6"/></svg><div><b>Lugar no mural</b><span>O nome da família aparece entre os doadores, se vocês quiserem.</span></div></div>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Famílias que já entraram</h3>
+          <p class="sub">Nomes de exemplo.</p>
+          <div class="mural" id="mural"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="fam-ok" hidden>
+      <div class="stack">
+        <div class="cert" id="cert"></div>
+        <div class="grid2" style="grid-template-columns:1fr 1fr">
+          <div class="panel">
+            <h3>Próximos passos</h3>
+            <ol class="next-steps">
+              <li><span><b>Pague a primeira oferta.</b> Pix com copia e cola ou cartão. O Pix confirma na hora.</span></li>
+              <li><span><b>Ative os avisos no celular.</b> Autorize uma vez e pronto: lembretes e novidades da obra chegam sozinhos.</span></li>
+              <li><span><b>Acompanhe sua família na capela.</b> Veja onde cada oferta foi aplicada na área do doador.</span></li>
+            </ol>
+            <div class="actions">
+              <button class="btn2 main" type="button" id="fam-go">Ir para a área do doador</button>
+              <button class="btn2" type="button" id="fam-back">Cadastrar outra família</button>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>Mensagem enviada por WhatsApp</h3>
+            <p class="sub">Prévia do que a família recebe logo depois de entrar.</p>
+            <div class="notif" style="background:var(--bg);color:var(--ink);border:1px solid var(--line);font-size:14px;max-width:none" id="fam-wa"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DOE MATERIAL -->
+<section class="view" id="v-materiais" hidden>
+  <div class="stack">
+    <div>
+      <div class="label" style="color:var(--star)">Doação em material de obra</div>
+      <h2 style="font-size:28px;margin-top:6px">Doe um tijolo de verdade</h2>
+      <p style="color:var(--muted);margin:6px 0 0;max-width:68ch">Escolha o material que a obra precisa e pague direto à empresa parceira. Ela emite a nota fiscal em nome da paróquia e entrega na obra. Você acompanha tudo, da compra à entrega. Empresas, preços e quantidades são exemplos.</p>
+    </div>
+    <div class="grid3" id="mt-kpis"></div>
+    <div class="chips" role="group" aria-label="Etapa da obra" id="mt-filters"></div>
+    <div class="mt-layout">
+      <div class="mt-grid" id="mt-list"></div>
+      <div class="cartbox">
+        <div class="panel">
+          <h3>Sua doação em material</h3>
+          <div id="mt-cart"></div>
+          <div class="ctotal" style="margin-top:12px"><span>Total</span><b class="num" id="mt-total"></b></div>
+          <button class="btn" type="button" id="mt-go" style="margin-top:12px">Finalizar doação</button>
+          <div class="msg" id="mt-msg" role="status" hidden></div>
+          <p class="note">O pagamento vai direto para a empresa fornecedora. No site real, o pedido só vira "pago" quando o Pix é confirmado.</p>
+        </div>
+        <div class="panel">
+          <h3>Meus pedidos</h3>
+          <div class="hbars" id="mt-orders" style="gap:10px;margin-top:10px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ÁREA DO FORNECEDOR -->
+<section class="view" id="v-fornecedor" hidden>
+  <div class="stack">
+    <div class="supp-head">
+      <div class="mono" id="fn-mono"></div>
+      <div><h2 id="fn-name"></h2><div class="sub2">Fornecedor parceiro de materiais · empresa de exemplo</div></div>
+      <select id="fn-sel" aria-label="Ver como fornecedor"></select>
+    </div>
+    <div class="admin-banner"><span>Esta é a área exclusiva da empresa parceira, com login próprio no site real. Ela vê só os pedidos dela, atualiza a entrega e anexa a nota fiscal em nome da paróquia.</span></div>
+    <div class="grid4" id="fn-kpis"></div>
+    <div class="panel">
+      <h3>Pedidos de doação</h3>
+      <p class="sub">Cada pedido é de um doador e já vem pago. Atualize a situação para o doador acompanhar.</p>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Data</th><th>Doador</th><th>Itens</th><th class="r">Valor</th><th>Situação</th><th>Ação</th></tr></thead>
+        <tbody id="fn-orders"></tbody>
+      </table></div>
+      <p class="note">Entrega na obra: endereço do terreno da capela (exemplo). Nota fiscal em nome da Paróquia São Luís Gonzaga.</p>
+    </div>
+    <div class="panel">
+      <h3>Seu catálogo para a campanha</h3>
+      <p class="sub">Defina o preço de cada material. Os doadores veem o valor atualizado na hora.</p>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Material</th><th>Etapa da obra</th><th class="r">Preço (R$)</th><th class="r">Necessário</th><th class="r">Já doado</th></tr></thead>
+        <tbody id="fn-cat"></tbody>
+      </table></div>
+    </div>
+  </div>
+</section>
+
+<!-- ADMINISTRAÇÃO -->
+<section class="view" id="v-admin" hidden>
+  <div class="stack">
+    <div>
+      <div class="label" style="color:var(--star)">Só para a administração da campanha</div>
+      <h2 style="font-size:28px;margin-top:6px">Autorização de vouchers</h2>
+      <p style="color:var(--muted);margin:6px 0 0;max-width:66ch">Nenhum código é liberado sem a sua decisão. Confira a doação da pessoa, veja se ela está dentro da regra do voucher e autorize ou recuse.</p>
+    </div>
+    <div class="admin-banner"><span>No site real, esta área exige login de administrador e cada decisão fica registrada com <b>quem decidiu e quando</b>.</span></div>
+    <div class="grid3" id="ad-kpis"></div>
+    <div class="stack" id="ad-pend"></div>
+    <div class="panel">
+      <h3>Histórico de decisões</h3>
+      <p class="sub">Tudo que já foi autorizado ou recusado.</p>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Data</th><th>Doador</th><th>Empresa</th><th>Decisão</th><th>Motivo</th></tr></thead>
+        <tbody id="ad-hist"></tbody>
+      </table></div>
+    </div>
+  </div>
+</section>
+
+<!-- PARCEIROS -->
+<section class="view" id="v-parceiros" hidden>
+  <div class="stack">
+    <div>
+      <div class="label" style="color:var(--star)">Comércio que apoia a capela</div>
+      <h2 style="font-size:28px;margin-top:6px">Empresas parceiras</h2>
+      <p style="color:var(--muted);margin:6px 0 0;max-width:66ch">Quem doa pode pedir vouchers de desconto em empresas da cidade que acreditam na campanha. <b>Todo voucher é liberado depois da autorização da administração.</b> As empresas, descontos e regras abaixo são exemplos.</p>
+    </div>
+
+    <div class="pt-bar">
+      <div class="pt-stats"><div><b class="num" id="pt-n"></b><span>empresas parceiras</span></div><div><b class="num" id="pt-v"></b><span>vouchers resgatados</span></div></div>
+      <label><input type="checkbox" id="pt-guest"> Simular visitante que ainda não doou</label>
+    </div>
+
+    <div class="chips" role="group" aria-label="Ramo de atividade" id="pt-filters"></div>
+    <div class="pt-grid" id="pt-list"></div>
+
+    <div class="panel">
+      <h3>Sua empresa quer ser parceira?</h3>
+      <p class="sub">Você oferece um desconto aos doadores. Em troca, a empresa aparece nesta página e no mural da campanha, e os doadores passam a conhecer o seu negócio.</p>
+      <form id="pt-form" novalidate>
+        <div class="frow">
+          <div class="field"><label class="label" for="pf-nome">Nome da empresa</label><input id="pf-nome" type="text" autocomplete="organization"></div>
+          <div class="field"><label class="label" for="pf-ramo">Ramo de atividade</label><input id="pf-ramo" type="text" placeholder="Ex.: padaria, ótica, mecânica"></div>
+        </div>
+        <div class="frow">
+          <div class="field"><label class="label" for="pf-resp">Responsável e WhatsApp</label><input id="pf-resp" type="text" placeholder="Nome e telefone"></div>
+          <div class="field"><label class="label" for="pf-desc">Desconto que pode oferecer</label>
+            <select id="pf-desc"><option>5%</option><option>10%</option><option selected>15%</option><option>20%</option><option>Brinde ou cortesia</option></select></div>
+        </div>
+        <button class="btn" type="submit" style="max-width:320px">Quero ser parceira</button>
+        <div class="msg" id="pf-msg" role="status" hidden></div>
+        <p class="note">No site real, o pedido chega à coordenação da campanha, que combina as regras do voucher com a empresa.</p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- EVENTOS -->
+<section class="view" id="v-eventos" hidden>
+  <div class="stack">
+    <div>
+      <div class="label" style="color:var(--star)">Vida da comunidade</div>
+      <h2 style="font-size:28px;margin-top:6px">Eventos da paróquia</h2>
+      <p style="color:var(--muted);margin:6px 0 0;max-width:64ch">Celebrações, encontros e ações da campanha. Confirme presença e peça um lembrete no celular. Datas, horários e locais abaixo são exemplos.</p>
+    </div>
+    <div class="evt-next" id="evt-next"></div>
+    <div class="chips" role="group" aria-label="Tipo de evento" id="evt-filters">
+      <button type="button" aria-pressed="true" data-cat="todos">Todos</button>
+      <button type="button" aria-pressed="false" data-cat="Celebração">Celebrações</button>
+      <button type="button" aria-pressed="false" data-cat="Arrecadação">Arrecadação</button>
+      <button type="button" aria-pressed="false" data-cat="Comunidade">Comunidade</button>
+      <button type="button" aria-pressed="false" data-cat="Obra">Obra</button>
+    </div>
+    <div class="stack" id="evt-list"></div>
+  </div>
+</section>
+
+<!-- LIVRO DE OURO -->
+<section class="view" id="v-livro" hidden>
+  <div class="stack">
+    <div class="grid2" style="grid-template-columns:1.2fr 1fr;align-items:stretch">
+      <div class="panel">
+        <div class="label" style="color:var(--star)">Gratidão em forma de oração</div>
+        <h2 style="font-size:28px;margin:6px 0 10px">Livro de Ouro</h2>
+        <p style="margin:0 0 10px">Toda família que faz uma <b>doação recorrente</b> tem o nome inscrito no Livro de Ouro da paróquia.</p>
+        <p style="margin:0">Durante <b>1 ano</b>, são rezadas missas nas intenções das famílias doadoras.</p>
+      </div>
+      <div class="panel">
+        <h3>Missas pelas famílias</h3>
+        <div class="grid2" style="grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+          <div class="kpi"><div class="label">Famílias inscritas</div><div class="v num" id="lv-n"></div></div>
+          <div class="kpi"><div class="label">Missas rezadas</div><div class="v num" id="lv-m"></div></div>
+        </div>
+        <div class="rule-box" style="margin-top:14px">Próxima missa pelas famílias doadoras: <b>data e horário a definir com a paróquia</b> (exemplo).</div>
+      </div>
+    </div>
+
+    <div class="book">
+      <div class="bk-head">
+        <span class="label">Paróquia São Luís Gonzaga · São Roque | SP</span>
+        <span class="script">Livro de Ouro</span>
+        <span class="label">Famílias doadoras da capela em honra ao Menino Jesus</span>
+        <div class="rule"></div>
+        <div class="field" style="max-width:320px;margin:0 auto"><label class="label" for="lv-q" style="text-align:center">Procurar uma família</label><input id="lv-q" type="search" placeholder="Digite o sobrenome" autocomplete="off"></div>
+      </div>
+      <div class="bk-list" id="lv-list"></div>
+      <p class="note" style="text-align:center;margin-top:16px">Entra no Livro quem faz doação recorrente. Nomes só aparecem se a família autorizar.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ÁREA DO DOADOR -->
+<section class="view" id="v-doador" hidden>
+  <div class="stack">
+    <div>
+      <h2 style="font-size:28px">Olá, Maria</h2>
+      <p style="color:var(--muted);margin:6px 0 0">Veja o que suas ofertas ajudaram a construir e quando vence a próxima. Doadora de exemplo.</p>
+    </div>
+
+    <div class="grid4" id="dn-kpis"></div>
+
+    <div class="panel">
+      <h3>Próxima oferta</h3>
+      <div class="next" style="margin-top:12px">
+        <div class="when"><div class="dd num" id="dn-dd"></div><div class="mm" id="dn-mm"></div></div>
+        <div>
+          <div style="font-size:18px;font-weight:600" id="dn-next-title"></div>
+          <div style="color:var(--muted);font-size:14px;margin-top:2px" id="dn-next-sub"></div>
+          <div class="actions">
+            <button class="btn2 main" type="button" data-act="pagar">Pagar agora com Pix</button>
+            <button class="btn2" type="button" data-act="valor">Alterar valor</button>
+            <button class="btn2" type="button" data-act="pausar">Pausar</button>
+          </div>
+          <div class="msg" id="dn-act-msg" role="status" hidden></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Livro de Ouro</h3>
+      <div id="dn-livro" style="margin-top:10px"></div>
+    </div>
+
+    <div class="grid2">
+      <div class="panel">
+        <h3>Onde suas ofertas foram aplicadas</h3>
+        <p class="sub">A capela da arrecadação, com as etapas que você ajudou a financiar destacadas em dourado.</p>
+        <div class="tower" id="dn-tower"></div>
+      </div>
+      <div class="panel">
+        <h3>Suas ofertas</h3>
+        <p class="sub">Cada uma está ligada a uma etapa da obra.</p>
+        <div class="hbars" id="dn-list" style="gap:12px"></div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="panel">
+        <h3>Avisos no celular</h3>
+        <p class="sub">Escolha o que quer receber. Pode mudar quando quiser.</p>
+        <label class="master"><input type="checkbox" id="push-master"> <span id="push-master-label">Receber avisos neste celular</span></label>
+        <div class="prefs" id="prefs">
+          <label><input type="checkbox" id="p-d3" checked> Lembrete 3 dias antes do vencimento</label>
+          <label><input type="checkbox" id="p-d0" checked> Aviso no dia do vencimento</label>
+          <label><input type="checkbox" id="p-late" checked> Aviso se a oferta não for confirmada</label>
+          <label><input type="checkbox" id="p-obra" checked> Etapa da obra concluída</label>
+          <label><input type="checkbox" id="p-foto" checked> Novas fotos da obra</label>
+          <label><input type="checkbox" id="p-contas"> Prestação de contas publicada</label>
+        </div>
+        <div class="label">Seus próximos avisos</div>
+        <div class="sched" id="sched"></div>
+        <div class="actions" style="align-items:center">
+          <select id="test-type" class="btn2" aria-label="Tipo de aviso de teste">
+            <option value="d3">Lembrete de vencimento</option>
+            <option value="obra">Etapa concluída</option>
+            <option value="foto">Nova foto da obra</option>
+            <option value="contas">Prestação de contas</option>
+          </select>
+          <button class="btn2 main" type="button" id="test-send">Enviar aviso de teste</button>
+        </div>
+        <p class="note">No site real, os avisos usam notificação push do navegador (PWA) ou um serviço como OneSignal. O doador autoriza uma vez no celular.</p>
+      </div>
+      <div class="stack">
+        <div class="panel">
+          <h3>Assim chega no celular</h3>
+          <p class="sub">Prévia da tela bloqueada.</p>
+          <div class="phone">
+            <div class="clock num">09:41</div>
+            <div class="date">quarta-feira, 14 de outubro</div>
+            <div class="notifs" id="phone-notifs"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Caixa de avisos</h3>
+          <div class="inbox" id="inbox"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<footer><div class="wrap"><span class="script" style="font-size:20px;color:var(--star)">Deus ama quem dá com alegria!</span> 2Cor 9,7<br>Paróquia São Luís Gonzaga · São Roque | SP · “Aqui você é família!” · Endereço e telefone da paróquia aqui</div></footer>
+
+<script>
+(function () {
+  var brl = function (n) { return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }); };
+  var $ = function (id) { return document.getElementById(id); };
+  var sum = function (a) { return a.reduce(function (s, x) { return s + x; }, 0); };
+
+  // ---- Dados de exemplo ----
+  var GOAL = 850000, DONORS = 487;
+  var MASSES = 3; // missas rezadas até hoje (exemplo)
+  var ME = { donor: "Família Souza", tipo: "Família doadora", total: 550 }; // doadora de exemplo
+  var weeks = [
+    ["10/08", 18200], ["17/08", 24500], ["24/08", 21800], ["31/08", 32100], ["07/09", 29400],
+    ["14/09", 41200], ["21/09", 38600], ["28/09", 35900], ["05/10", 47300], ["12/10", 23450]
+  ];
+  var RAISED = sum(weeks.map(function (w) { return w[1]; }));
+  var methods = [["Pix", 190600, "var(--good)"], ["Cartão", 90600, "var(--brand)"], ["Boleto", 31250, "var(--warn)"]];
+  var sizes = [["Até R$ 50", 212], ["R$ 51 a R$ 200", 187], ["R$ 201 a R$ 1.000", 74], ["Acima de R$ 1.000", 14]];
+  var cotas = [
+    ["Tijolo", 5, 14000, 20000], ["Metro de piso", 120, 310, 900], ["Banco da nave (2 lugares)", 450, 58, 120],
+    ["Vitral", 2500, 7, 12], ["Sino", 9000, 0, 1]
+  ];
+  var feed = [
+    ["12/10", "Maria S.", "Pix", "Tijolo", 100], ["12/10", "Anônimo", "Cartão", "Metro de piso", 360],
+    ["11/10", "João P.", "Pix", "Geral", 50], ["11/10", "Família Oliveira", "Boleto", "Banco da nave", 900],
+    ["10/10", "Ana C.", "Pix", "Tijolo", 25], ["10/10", "Anônimo", "Pix", "Geral", 200],
+    ["09/10", "Carlos M.", "Cartão", "Vitral", 2500], ["09/10", "Beatriz L.", "Pix", "Geral", 75]
+  ];
+  var steps = [
+    ["Terreno e projeto", 100, 120000, 118400, "done", "Concluída em mar/2026"],
+    ["Fundação", 65, 180000, 109200, "go", "Em andamento · previsão nov/2026"],
+    ["Estrutura e paredes", 0, 240000, 0, "wait", "Início previsto jan/2027"],
+    ["Cobertura", 0, 150000, 0, "wait", "Início previsto jun/2027"],
+    ["Acabamento e altar", 0, 160000, 0, "wait", "Início previsto set/2027"]
+  ];
+  var ledger = [
+    ["03/10", "Concreto usinado, fundação (lote 2)", "Material", "NF 4821", 38400],
+    ["28/09", "Mão de obra, quinzena", "Mão de obra", "Recibo 112", 21000],
+    ["20/09", "Aço CA-50 para fundação", "Material", "NF 4770", 26800],
+    ["12/09", "Laudo de sondagem do solo", "Projetos e taxas", "NF 311", 4200],
+    ["05/09", "Mão de obra, quinzena", "Mão de obra", "Recibo 108", 21000],
+    ["29/08", "Taxa de alvará da prefeitura", "Projetos e taxas", "Guia 7732", 3800]
+  ];
+  var months = [["Agosto", 64500, 61200, "ago.pdf"], ["Setembro", 125400, 98700, "set.pdf"], ["Outubro (parcial)", 70550, 67700, "out.pdf"]];
+  var cats = [["Material de construção", 118400], ["Mão de obra", 84000], ["Projetos e taxas", 25200]];
+  var people = [["Pe. Denis", "Pároco · aprova pagamentos"], ["Valéria", "Coordenação da campanha"], ["Conselho econômico", "Confere as contas todo mês"]];
+  var diary = [["12/10", "Concretagem da sapata B concluída."], ["05/10", "Armação do bloco central liberada pelo engenheiro."], ["28/09", "Escavação finalizada em toda a área."]];
+
+  var spent = sum(steps.map(function (s) { return s[3]; }));
+  var budget = sum(steps.map(function (s) { return s[2]; }));
+  var weeklyAvg = RAISED / weeks.length;
+
+  // ---- Início ----
+  var pct = Math.round(RAISED / GOAL * 100);
+  $("h-raised").textContent = brl(RAISED);
+  $("h-pct").textContent = pct + "%";
+  $("h-goal").textContent = brl(GOAL);
+  $("h-donors").textContent = DONORS;
+  $("m-raised").textContent = brl(RAISED);
+  $("m-goal").textContent = brl(GOAL);
+  $("m-pct").textContent = pct + "%";
+  requestAnimationFrame(function () { $("h-bar").style.width = pct + "%"; $("m-bar").style.width = pct + "%"; });
+
+  var chips = document.querySelectorAll(".chips button");
+  chips.forEach(function (b) {
+    b.addEventListener("click", function () {
+      chips.forEach(function (c) { c.setAttribute("aria-pressed", "false"); });
+      b.setAttribute("aria-pressed", "true");
+      $("d-valor").value = b.dataset.v;
+    });
+  });
+  $("donate-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var v = Number($("d-valor").value);
+    var m = $("d-msg");
+    m.hidden = false;
+    var rec = $("d-rec").value === "Mensal";
+    m.textContent = rec && v < 50 ? "A doação recorrente começa em R$ 50,00. Para valores menores, escolha doação única."
+      : v >= 5 ? "Obrigado! No site real, o pagamento de " + brl(v) + " por " + $("d-forma").value + " abriria agora." : "O valor mínimo é R$ 5.";
+  });
+
+  $("cotas").innerHTML = cotas.map(function (c) {
+    var p = Math.round(c[2] / c[3] * 100);
+    return '<div class="cota"><span class="nm">' + c[0] + '</span><span class="pr num">' + brl(c[1]) + ' cada</span>' +
+      '<div class="bar thin star"><i style="width:' + p + '%"></i></div>' +
+      '<span class="pr num" style="grid-column:1/-1">' + c[2].toLocaleString("pt-BR") + ' de ' + c[3].toLocaleString("pt-BR") + ' doadas</span></div>';
+  }).join("");
+
+  $("mini-feed").innerHTML = feed.slice(0, 5).map(function (f) {
+    return '<div class="top" style="display:flex;justify-content:space-between;gap:8px;font-size:14px"><span>' + f[1] + ' <span style="color:var(--muted)">· ' + f[0] + '</span></span><b class="num">' + brl(f[4]) + '</b></div>';
+  }).join("");
+
+  // ---- Painel ----
+  var avgTicket = Math.round(RAISED / DONORS);
+  var kp = [
+    ["Arrecadado", brl(RAISED), "<b>+" + brl(weeks[weeks.length - 1][1]) + "</b> esta semana"],
+    ["Meta", brl(GOAL), "Faltam " + brl(GOAL - RAISED)],
+    ["Doadores", String(DONORS), "Oferta média de " + brl(avgTicket)],
+    ["Média por semana", brl(Math.round(weeklyAvg)), "Últimas " + weeks.length + " semanas"]
+  ];
+  $("kpis").innerHTML = kp.map(function (k) {
+    return '<div class="panel kpi"><div class="label">' + k[0] + '</div><div class="v num">' + k[1] + '</div><div class="d">' + k[2] + '</div></div>';
+  }).join("");
+
+  // gráfico: barras semanais + linha acumulada, uma escala por eixo
+  (function () {
+    var W = 640, H = 300, L = 54, R = 54, T = 16, B = 34;
+    var iw = W - L - R, ih = H - T - B;
+    var cum = [], acc = 0;
+    weeks.forEach(function (w) { acc += w[1]; cum.push(acc); });
+    var maxBar = 60000, maxCum = 350000;
+    var bw = iw / weeks.length;
+    var s = "";
+    [0, 20000, 40000, 60000].forEach(function (t) {
+      var y = T + ih - t / maxBar * ih;
+      s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y + '" y2="' + y + '" stroke="var(--line)" stroke-width="1"/>';
+      s += '<text x="' + (L - 8) + '" y="' + (y + 4) + '" text-anchor="end">' + (t / 1000) + ' mil</text>';
+    });
+    [0, 100000, 200000, 300000].forEach(function (t) {
+      var y = T + ih - t / maxCum * ih;
+      s += '<text x="' + (W - R + 8) + '" y="' + (y + 4) + '" text-anchor="start">' + (t / 1000) + ' mil</text>';
+    });
+    weeks.forEach(function (w, i) {
+      var h = w[1] / maxBar * ih, x = L + i * bw + bw * 0.18;
+      s += '<rect x="' + x + '" y="' + (T + ih - h) + '" width="' + bw * 0.64 + '" height="' + h + '" rx="3" fill="var(--brand)"><title>' + w[0] + ': ' + brl(w[1]) + '</title></rect>';
+      s += '<text x="' + (L + i * bw + bw / 2) + '" y="' + (H - 12) + '" text-anchor="middle">' + w[0] + '</text>';
+    });
+    var pts = cum.map(function (c, i) { return (L + i * bw + bw / 2) + "," + (T + ih - c / maxCum * ih); });
+    s += '<polyline points="' + pts.join(" ") + '" fill="none" stroke="var(--star)" stroke-width="2.5" stroke-linejoin="round"/>';
+    var last = pts[pts.length - 1].split(",");
+    s += '<circle cx="' + last[0] + '" cy="' + last[1] + '" r="4.5" fill="var(--star)"/>';
+    $("chart").innerHTML = s;
+  })();
+
+  function hbars(el, rows, total, color) {
+    $(el).innerHTML = rows.map(function (r) {
+      var p = Math.round(r[1] / total * 100);
+      return '<div class="row"><div class="top"><span>' + r[0] + '</span><span class="num"><b>' + (r[3] || p + "%") + '</b></span></div>' +
+        '<div class="bar thin"><i style="width:' + p + '%;background:' + (r[2] || color) + '"></i></div></div>';
+    }).join("");
+  }
+  hbars("methods", methods.map(function (m) { return [m[0], m[1], m[2], brl(m[1]) + " · " + Math.round(m[1] / RAISED * 100) + "%"]; }), RAISED);
+  hbars("sizes", sizes.map(function (m) { return [m[0], m[1], null, m[1] + " doações"]; }), sum(sizes.map(function (x) { return x[1]; })), "var(--brand)");
+
+  var pillClass = { "Pix": "pix", "Cartão": "card", "Boleto": "bol" };
+  $("feed").innerHTML = feed.map(function (f) {
+    return "<tr><td class='num'>" + f[0] + "</td><td>" + f[1] + "</td><td><span class='pill " + pillClass[f[2]] + "'>" + f[2] + "</span></td><td>" + f[3] + "</td><td class='r num'><b>" + brl(f[4]) + "</b></td></tr>";
+  }).join("");
+
+  // ---- Obra ----
+  var weighted = sum(steps.map(function (s) { return s[1] / 100 * s[2]; })) / budget;
+  $("o-pct").textContent = Math.round(weighted * 100) + "%";
+  $("o-spent").textContent = brl(spent);
+  $("o-budget").textContent = "de " + brl(budget) + " orçados";
+  var stLabel = { done: "Concluída", go: "Em andamento", wait: "A iniciar" };
+  $("steps").innerHTML = steps.map(function (s, i) {
+    return '<div class="step"><div class="dot ' + s[4] + '">' + (s[4] === "done" ? "✓" : (i + 1)) + '</div><div>' +
+      '<div class="hd"><b>' + s[0] + '</b><span class="pill ' + s[4] + '">' + stLabel[s[4]] + '</span></div>' +
+      '<div class="bar thin" style="margin-top:8px"><i style="width:' + s[1] + '%;background:' + (s[4] === "done" ? "var(--good)" : "var(--star)") + '"></i></div>' +
+      '<div class="meta num"><span>' + s[1] + '% feito</span><span>Orçado ' + brl(s[2]) + '</span><span>Gasto ' + brl(s[3]) + '</span></div>' +
+      '<div class="meta"><span>' + s[5] + '</span></div></div></div>';
+  }).join("");
+  $("photos").innerHTML = ["12/10 · Sapata B", "05/10 · Armação", "28/09 · Escavação", "15/09 · Terreno limpo"].map(function (t) {
+    return '<div class="photo">Foto<br>' + t + '</div>';
+  }).join("");
+  $("diary").innerHTML = diary.map(function (d) {
+    return '<div class="row"><div class="label num">' + d[0] + '</div><div>' + d[1] + '</div></div>';
+  }).join("");
+
+  // ---- Transparência ----
+  var tk = [
+    ["Entradas", brl(RAISED), "Desde 10/08"],
+    ["Saídas", brl(spent), "Todas com comprovante"],
+    ["Saldo em caixa", brl(RAISED - spent), "Disponível para as próximas etapas"],
+    ["Em obra", Math.round(spent / RAISED * 100) + "%", "Do arrecadado já aplicado"]
+  ];
+  $("tkpis").innerHTML = tk.map(function (k) {
+    return '<div class="panel kpi"><div class="label">' + k[0] + '</div><div class="v num">' + k[1] + '</div><div class="d">' + k[2] + '</div></div>';
+  }).join("");
+  var catTotal = sum(cats.map(function (c) { return c[1]; }));
+  hbars("cats", cats.map(function (c) { return [c[0], c[1], null, brl(c[1])]; }), catTotal, "var(--brand)");
+  $("people").innerHTML = people.map(function (p) {
+    return '<div class="row"><b>' + p[0] + '</b><div style="color:var(--muted);font-size:13px">' + p[1] + '</div></div>';
+  }).join("");
+  $("ledger").innerHTML = ledger.map(function (l) {
+    return "<tr><td class='num'>" + l[0] + "</td><td>" + l[1] + "</td><td>" + l[2] + "</td><td><span class='pill'>" + l[3] + "</span></td><td class='r num'><b>" + brl(l[4]) + "</b></td></tr>";
+  }).join("");
+  $("months").innerHTML = months.map(function (m) {
+    return "<tr><td>" + m[0] + "</td><td class='r num'>" + brl(m[1]) + "</td><td class='r num'>" + brl(m[2]) + "</td><td class='r num'><b>" + brl(m[1] - m[2]) + "</b></td><td><span class='pill'>" + m[3] + "</span></td></tr>";
+  }).join("");
+
+  // ---- Torres de evolução ----
+  // As ofertas preenchem as etapas em ordem: cada etapa só começa a ser financiada quando a anterior fecha.
+  var fundPct = [], before = 0;
+  steps.forEach(function (s) {
+    var got = Math.max(0, Math.min(RAISED - before, s[2]));
+    fundPct.push(Math.round(got / s[2] * 100));
+    before += s[2];
+  });
+  var fundAmt = steps.map(function (s, i) { return Math.round(s[2] * fundPct[i] / 100); });
+
+  function drawTower(elId, kind, mine) {
+    // A capela do folheto é a torre: cinza no começo, ganha cor de baixo para cima.
+    // Cada etapa ocupa uma faixa da altura proporcional ao seu orçamento.
+    var cum = 0, zones = steps.map(function (s, i) {
+      var z = { i: i, from: cum, w: s[2] / budget * 100, p: kind === "obra" ? s[1] : fundPct[i] };
+      cum += z.w; return z;
+    });
+    var overall = sum(zones.map(function (z) { return z.w * z.p / 100; }));
+    var big = kind === "obra" ? Math.round(overall) + "% construída" : Math.round(overall) + "% arrecadada";
+    var html = '<div class="ch-head"><span class="big">' + big + '</span><span class="label">' + (kind === "obra" ? "evolução da obra" : "evolução da arrecadação") + '</span></div>' +
+      '<div class="chapel" role="img" aria-label="Capela ' + big + '">' +
+      '<img class="ch-base" src="img/capela_torre.jpg" alt="">' +
+      '<img class="ch-fill" src="img/capela_torre.jpg" alt="" style="clip-path:inset(' + (100 - overall).toFixed(1) + '% 0 0 0)">' +
+      '<div class="ch-edge" style="bottom:' + overall.toFixed(1) + '%"></div>';
+    zones.forEach(function (z) {
+      var name = steps[z.i][0], m = mine && mine[name];
+      html += '<div class="ch-zone' + (m ? " mine" : "") + '" style="bottom:' + z.from.toFixed(1) + '%;height:' + z.w.toFixed(1) + '%"><span class="ch-tag">' + name + ' · ' + z.p + '%' + (m ? ' · sua oferta' : '') + '</span></div>';
+    });
+    html += '</div><div class="clist">';
+    for (var i = steps.length - 1; i >= 0; i--) {
+      var s = steps[i], p = zones[i].p, m = mine && mine[s[0]];
+      var sub = kind === "obra"
+        ? "<b>" + p + "%</b> construída · " + stLabel[s[4]].toLowerCase()
+        : "<b>" + p + "%</b> financiada · " + brl(fundAmt[i]) + " de " + brl(s[2]);
+      html += '<div class="cl"><div><span class="tt">' + s[0] + '</span>' + (m ? ' <span class="pill go">Sua oferta: ' + brl(m) + '</span>' : "") + '</div><div class="ts">' + sub + '</div></div>';
+    }
+    $(elId).innerHTML = html + '</div>';
+  }
+  drawTower("tower-obra", "obra");
+  drawTower("tower-fund", "fund");
+  var stageNow = steps.filter(function (s) { return s[4] === "go"; })[0];
+  $("cap-obra").textContent = "Em obra agora: " + stageNow[0] + ", com " + stageNow[1] + "% pronta.";
+  var fundingNow = steps.filter(function (s, i) { return fundPct[i] > 0 && fundPct[i] < 100; })[0];
+  $("cap-fund").textContent = "As ofertas de hoje estão sendo aplicadas em: " + fundingNow[0] + ".";
+
+  // ---- Área do doador (dados de exemplo) ----
+  var myDonations = [
+    ["12/08", "Pix", 100, "Terreno e projeto"],
+    ["05/09", "Pix", 100, "Terreno e projeto"],
+    ["20/09", "Cartão", 250, "Fundação"],
+    ["05/10", "Pix", 100, "Fundação"]
+  ];
+  var MONTHLY = 100, DUE = new Date(2026, 10, 5);
+  var myTotal = sum(myDonations.map(function (d) { return d[2]; }));
+  var mine = {};
+  myDonations.forEach(function (d) { mine[d[3]] = (mine[d[3]] || 0) + d[2]; });
+  drawTower("dn-tower", "fund", mine);
+
+  var today = new Date();
+  var dayMs = 86400000;
+  var daysLeft = Math.ceil((DUE - today) / dayMs);
+  var dueTxt = DUE.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+  var dShort = function (off) { var d = new Date(DUE.getTime() - off * dayMs); return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }); };
+  $("dn-dd").textContent = String(DUE.getDate()).padStart(2, "0");
+  $("dn-mm").textContent = DUE.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "") + " " + DUE.getFullYear();
+  $("dn-next-title").textContent = brl(MONTHLY) + " · oferta mensal por Pix";
+  $("dn-next-sub").textContent = daysLeft > 0 ? "Vence em " + daysLeft + " dias (" + dueTxt + "). Será aplicada na " + fundingNow[0] + "." : "Vence hoje (" + dueTxt + ").";
+
+  var dk = [
+    ["Total doado", brl(myTotal), myDonations.length + " ofertas desde " + myDonations[0][0]],
+    ["Etapas apoiadas", String(Object.keys(mine).length), Object.keys(mine).join(" e ")],
+    ["Sua parte da meta", (myTotal / GOAL * 100).toFixed(2).replace(".", ",") + "%", "De " + brl(GOAL) + " no total"],
+    ["Próximo vencimento", dueTxt.slice(0, 5), "em " + daysLeft + " dias"]
+  ];
+  $("dn-kpis").innerHTML = dk.map(function (k) {
+    return '<div class="panel kpi"><div class="label">' + k[0] + '</div><div class="v num">' + k[1] + '</div><div class="d">' + k[2] + '</div></div>';
+  }).join("");
+
+  var stageByName = {};
+  steps.forEach(function (s, i) { stageByName[s[0]] = { s: s, f: fundPct[i] }; });
+  $("dn-list").innerHTML = myDonations.slice().reverse().map(function (d) {
+    var st = stageByName[d[3]];
+    return '<div class="row"><div class="top"><span><b class="num">' + brl(d[2]) + '</b> <span style="color:var(--muted)">· ' + d[0] + ' · ' + d[1] + '</span></span><span class="pill ' + st.s[4] + '">' + stLabel[st.s[4]] + '</span></div>' +
+      '<div style="font-size:13.5px">Aplicada em <b>' + d[3] + '</b>, hoje com ' + st.s[1] + '% construída.</div></div>';
+  }).join("");
+
+  document.querySelectorAll("[data-act]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var t = { pagar: "No site real, abre o Pix de " + brl(MONTHLY) + " com copia e cola.", valor: "No site real, você escolhe o novo valor mensal.", pausar: "No site real, a oferta mensal é pausada e você pode retomar depois." }[b.dataset.act];
+      var m = $("dn-act-msg"); m.hidden = false; m.textContent = t;
+    });
+  });
+
+  // Livro de Ouro na área da doadora
+  (function () {
+    var since = new Date(2026, 8, 5), until = plusYear(since);
+    var done = Math.max(0, Math.min(100, Math.round((today - since) / (until - since) * 100)));
+    $("dn-livro").innerHTML =
+      '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline"><span class="script" style="font-size:26px;color:var(--star)">Família Souza</span><span class="pill done">Inscrita no Livro de Ouro</span></div>' +
+      '<p style="margin:6px 0 12px;color:var(--muted);font-size:14px">Por causa da oferta mensal, desde ' + fmt(since) + ', são rezadas missas nas intenções da família até <b style="color:var(--ink)">' + fmt(until) + '</b>.</p>' +
+      '<div class="bar thin star"><i style="width:' + done + '%"></i></div>' +
+      '<div class="note num">' + done + '% do ano de missas concluído · ' + MASSES + ' missas rezadas até hoje</div>';
+  })();
+
+  // Avisos push (simulados)
+  $("sched").innerHTML =
+    "<span>" + dShort(3) + " às 09:00 · <b>lembrete</b>: sua oferta vence em 3 dias</span>" +
+    "<span>" + dShort(0) + " às 08:00 · <b>vencimento</b>: hoje é o dia da sua oferta</span>" +
+    "<span>" + new Date(DUE.getTime() + 2 * dayMs).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }) + " às 10:00 · <b>se não confirmada</b>: segue pendente</span>";
+  $("phone-notifs").insertAdjacentHTML("beforeend", "");
+  $("test-send").dataset.ready = "1";
+
+  var msgs = {
+    d3: ["Sua oferta vence em 3 dias", "Oferta mensal de " + brl(MONTHLY) + " em " + dShort(0) + ". Toque para pagar com Pix."],
+    obra: ["Etapa concluída", "A Fundação chegou a 100%. Veja as fotos e o que sua oferta ajudou a construir."],
+    foto: ["Nova foto da obra", "Sapata B concluída. Veja o registro de hoje."],
+    contas: ["Prestação de contas publicada", "O relatório de outubro já está disponível, com todos os comprovantes."]
+  };
+  var inboxSeed = [
+    ["Oferta de " + brl(100) + " confirmada. Obrigado!", "05/10", true],
+    ["Prestação de contas de setembro publicada.", "02/10", true],
+    ["Nova foto: sapata B concluída.", "12/10", false],
+    ["Fundação chegou a 65%.", "12/10", false]
+  ];
+  function renderInbox() {
+    $("inbox").innerHTML = inboxSeed.map(function (n) {
+      return '<div class="it"><span class="ic' + (n[2] ? " read" : "") + '"></span><span>' + n[0] + '</span><span class="tm">' + n[1] + '</span></div>';
+    }).join("");
+  }
+  renderInbox();
+
+  var toastTimer;
+  function toast(t) {
+    var el = $("toast"); el.textContent = t; el.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.hidden = true; }, 2800);
+  }
+  var phoneDate = today.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
+  document.querySelector(".phone .date").textContent = phoneDate;
+
+  $("push-master").addEventListener("change", function () {
+    $("push-master-label").textContent = this.checked ? "Avisos ativados neste celular" : "Receber avisos neste celular";
+    if (this.checked) toast("Avisos ativados (simulação)");
+  });
+  $("test-send").addEventListener("click", function () {
+    if (!$("push-master").checked) { toast("Ative os avisos neste celular primeiro"); return; }
+    var key = $("test-type").value, m = msgs[key];
+    $("phone-notifs").insertAdjacentHTML("afterbegin",
+      '<div class="notif fresh"><div class="app"><span>Campanha dos Reis Magos</span><span>agora</span></div><b>' + m[0] + '</b>' + m[1] + '</div>');
+    var all = $("phone-notifs").children;
+    while (all.length > 3) $("phone-notifs").removeChild(all[all.length - 1]);
+    inboxSeed.unshift([m[0] + ".", "agora", false]);
+    renderInbox();
+    toast("Aviso de teste enviado");
+  });
+
+  // ---- Projeção de entrada de valores ----
+  var DAY = 86400000, MON = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+  var pjSc = 1;
+  function pDate(v) { var a = v.split("-"); return new Date(+a[0], +a[1] - 1, +a[2]); }
+  var wk = weeks.map(function (w) { var a = w[0].split("/"); return { d: new Date(2026, +a[1] - 1, +a[0]), v: w[1] }; });
+  var lastD = wk[wk.length - 1].d;
+  function renderProj() {
+    var ini = pDate($("pj-ini").value), fim = pDate($("pj-fim").value);
+    if (isNaN(ini) || isNaN(fim) || fim <= ini) { $("pj-note").textContent = "O término precisa ser depois do início."; return; }
+    var total = Math.round((fim - ini) / DAY), elapsed = Math.max(1, Math.round((lastD - ini) / DAY));
+    var rate = RAISED / elapsed, rateF = rate * pjSc;
+    var left = Math.max(0, Math.round((fim - lastD) / DAY));
+    var projEnd = RAISED + rateF * left;
+    var needDay = left > 0 ? Math.max(0, GOAL - RAISED) / left : 0;
+    var pct = Math.round(projEnd / GOAL * 100);
+    var kp = [
+      ["Duração", total + " dias", fmt(ini) + " a " + fmt(fim)],
+      ["Ritmo médio", brl(Math.round(rateF)) + "/dia", pjSc === 1 ? "Desde o início da campanha" : "Cenário " + (pjSc < 1 ? "−20%" : "+20%")],
+      ["Projeção no término", brl(Math.round(projEnd)), pct + "% da meta de " + brl(GOAL)],
+      ["Para bater a meta", brl(Math.round(needDay)) + "/dia", left > 0 ? "Faltam " + left + " dias de campanha" : "Campanha encerrada"]
+    ];
+    $("pj-kpis").innerHTML = kp.map(function (k) { return '<div class="panel kpi"><div class="label">' + k[0] + '</div><div class="v num" style="font-size:24px">' + k[1] + '</div><div class="d">' + k[2] + '</div></div>'; }).join("");
+    var note;
+    if (left === 0) note = "A campanha já terminou: arrecadou " + brl(RAISED) + ", " + Math.round(RAISED / GOAL * 100) + "% da meta.";
+    else if (projEnd >= GOAL) { var hit = new Date(lastD.getTime() + (GOAL - RAISED) / rateF * DAY); note = "Nesse ritmo, a meta de " + brl(GOAL) + " é atingida por volta de " + fmt(hit) + ", antes do término."; }
+    else note = "Nesse ritmo, a campanha termina com " + brl(Math.round(projEnd)) + ", faltando " + brl(Math.round(GOAL - projEnd)) + ". Para fechar a meta é preciso arrecadar " + brl(Math.round(needDay)) + " por dia, " + Math.round((needDay / rateF - 1) * 100) + "% acima do ritmo deste cenário.";
+    $("pj-note").textContent = note;
+    $("m-forecast").textContent = note;
+
+    // gráfico: eixo x = tempo, eixo y = acumulado
+    var W = 640, H = 300, L = 54, R = 70, T = 16, B = 34, iw = W - L - R, ih = H - T - B;
+    var x1 = new Date(Math.max(fim.getTime(), lastD.getTime()));
+    var ymax = Math.max(GOAL, projEnd) * 1.08, step = ymax > 900000 ? 200000 : 100000;
+    var X = function (d) { return L + (d - ini) / (x1 - ini) * iw; };
+    var Y = function (v) { return T + ih - v / (Math.ceil(ymax / step) * step) * ih; };
+    var top = Math.ceil(ymax / step) * step, g = "";
+    for (var t = 0; t <= top; t += step) {
+      g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(t) + '" y2="' + Y(t) + '" stroke="var(--line)"/><text x="' + (L - 8) + '" y="' + (Y(t) + 4) + '" text-anchor="end">' + (t / 1000) + ' mil</text>';
+    }
+    var m0 = new Date(ini.getFullYear(), ini.getMonth() + 1, 1);
+    for (var m = m0; m <= x1; m = new Date(m.getFullYear(), m.getMonth() + 1, 1)) {
+      g += '<line x1="' + X(m) + '" x2="' + X(m) + '" y1="' + T + '" y2="' + (T + ih) + '" stroke="var(--line)" stroke-dasharray="2 4"/><text x="' + X(m) + '" y="' + (H - 12) + '" text-anchor="middle">' + MON[m.getMonth()].slice(0, 3) + '</text>';
+    }
+    g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(GOAL) + '" y2="' + Y(GOAL) + '" stroke="var(--good)" stroke-width="1.5" stroke-dasharray="6 4"/><text x="' + (W - R + 6) + '" y="' + (Y(GOAL) + 4) + '" style="fill:var(--good);font-weight:700">Meta</text>';
+    var cum = 0, pts = [L + "," + Y(0)];
+    wk.forEach(function (w) { cum += w.v; pts.push(X(w.d) + "," + Y(cum)); });
+    g += '<polyline points="' + pts.join(" ") + '" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linejoin="round"/>';
+    if (left > 0) {
+      g += '<line x1="' + X(lastD) + '" y1="' + Y(RAISED) + '" x2="' + X(fim) + '" y2="' + Y(projEnd) + '" stroke="var(--star)" stroke-width="2.5" stroke-dasharray="7 5"/>';
+      g += '<circle cx="' + X(fim) + '" cy="' + Y(projEnd) + '" r="4.5" fill="var(--star)"/><text x="' + (X(fim) + 6) + '" y="' + (Y(projEnd) + 4) + '" style="fill:var(--star);font-weight:700">' + Math.round(projEnd / 1000) + ' mil</text>';
+    }
+    g += '<circle cx="' + X(lastD) + '" cy="' + Y(RAISED) + '" r="4.5" fill="var(--brand)"/>';
+    $("pj-chart").innerHTML = g;
+
+    // tabela por mês
+    var rows = "", acc = 0, mm = new Date(ini.getFullYear(), ini.getMonth(), 1);
+    while (mm <= fim) {
+      var ms = new Date(mm.getFullYear(), mm.getMonth(), 1), me = new Date(mm.getFullYear(), mm.getMonth() + 1, 1);
+      var real = sum(wk.filter(function (w) { return w.d >= ms && w.d < me; }).map(function (w) { return w.v; }));
+      var a = Math.max(ms.getTime(), lastD.getTime()), b = Math.min(me.getTime(), fim.getTime());
+      var proj = b > a ? Math.round((b - a) / DAY * rateF) : 0;
+      acc += real + proj;
+      rows += "<tr><td></td><td class='r num'>" + (real ? brl(real) : "—") + "</td><td class='r num'>" + (proj ? brl(proj) : "—") + "</td><td class='r num'><b>" + brl(acc) + "</b></td><td class='r num'>" + Math.round(acc / GOAL * 100) + "%</td></tr>";
+      mm = me;
+    }
+    $("pj-table").innerHTML = rows;
+    var trs = $("pj-table").querySelectorAll("tr"), mm2 = new Date(ini.getFullYear(), ini.getMonth(), 1);
+    trs.forEach(function (tr) { tr.children[0].textContent = MON[mm2.getMonth()] + " " + mm2.getFullYear(); tr.children[0].style.textTransform = "capitalize"; mm2 = new Date(mm2.getFullYear(), mm2.getMonth() + 1, 1); });
+  }
+  $("pj-ini").addEventListener("input", renderProj);
+  $("pj-fim").addEventListener("input", renderProj);
+  document.querySelectorAll("#pj-sc button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      pjSc = Number(b.dataset.sc);
+      document.querySelectorAll("#pj-sc button").forEach(function (c) { c.setAttribute("aria-pressed", String(c === b)); });
+      renderProj();
+    });
+  });
+  renderProj();
+
+  // ---- Doação em material (fornecedores fictícios) ----
+  var fornecedores = [
+    { n: "Depósito Pedra Viva", cor: "#6b4a2a" },
+    { n: "Casa do Acabamento", cor: "#2d5f9a" }
+  ];
+  var mats = [
+    { id: 1, n: "Cimento CP-II 50 kg", un: "saco", p: 38, etapa: "Fundação", meta: 1200, doado: 480, f: 0 },
+    { id: 2, n: "Areia média", un: "m³", p: 130, etapa: "Fundação", meta: 90, doado: 38, f: 0 },
+    { id: 3, n: "Brita 1", un: "m³", p: 140, etapa: "Fundação", meta: 70, doado: 31, f: 0 },
+    { id: 4, n: "Vergalhão 10 mm (barra 12 m)", un: "barra", p: 46, etapa: "Fundação", meta: 600, doado: 410, f: 0 },
+    { id: 5, n: "Bloco de concreto 14×19×39", un: "cento", p: 420, etapa: "Estrutura e paredes", meta: 180, doado: 6, f: 0 },
+    { id: 6, n: "Telha termoacústica", un: "m²", p: 85, etapa: "Cobertura", meta: 900, doado: 0, f: 1 },
+    { id: 7, n: "Porcelanato 60×60", un: "m²", p: 79, etapa: "Acabamento e altar", meta: 600, doado: 0, f: 1 },
+    { id: 8, n: "Porta de madeira maciça", un: "unidade", p: 640, etapa: "Acabamento e altar", meta: 6, doado: 0, f: 1 },
+    { id: 9, n: "Tinta acrílica 18 L", un: "lata", p: 390, etapa: "Acabamento e altar", meta: 40, doado: 0, f: 1 }
+  ];
+  function matBy(id) { return mats.filter(function (m) { return m.id === id; })[0]; }
+  var cart = {}, mtEtapa = "todas", orders = [], oseq = 10, fnWho = 0;
+  function mkOrder(id, f, donor, lines, status, daysAgo, nf) {
+    var items = lines.map(function (l) { var m = matBy(l[0]); return { id: m.id, n: m.n, un: m.un, q: l[1], p: m.p }; });
+    return { id: id, f: f, donor: donor, items: items, total: sum(items.map(function (i) { return i.q * i.p; })), status: status, nf: nf || "", when: new Date(Date.now() - daysAgo * 86400000) };
+  }
+  orders = [
+    mkOrder(1, 0, "Família Oliveira", [[1, 20]], "entregue", 6, "NF 5120"),
+    mkOrder(2, 0, "Carlos M.", [[2, 4], [3, 4]], "separado", 2),
+    mkOrder(3, 1, "Beatriz L.", [[6, 10]], "pago", 1),
+    mkOrder(4, 0, "João P.", [[4, 15]], "pago", 0)
+  ];
+  var stPill = { pago: ["go", "Pago"], separado: ["card", "Separado"], entregue: ["done", "Entregue na obra"] };
+  function renderMateriais() {
+    var cartIds = Object.keys(cart).filter(function (k) { return cart[k] > 0; });
+    var totalDon = sum(orders.map(function (o) { return o.total; }));
+    $("mt-kpis").innerHTML = [["Doado em material", brl(totalDon), orders.length + " pedidos"], ["Empresas fornecedoras", String(fornecedores.length), "Pagamento direto, nota fiscal em nome da paróquia"], ["Entregues na obra", String(orders.filter(function (o) { return o.status === "entregue"; }).length), "Com nota fiscal anexada"]]
+      .map(function (k) { return '<div class="panel kpi"><div class="label">' + k[0] + '</div><div class="v num">' + k[1] + '</div><div class="d">' + k[2] + '</div></div>'; }).join("");
+    var et = ["todas"].concat(steps.map(function (x) { return x[0]; }).filter(function (n) { return mats.some(function (m) { return m.etapa === n; }); }));
+    $("mt-filters").innerHTML = et.map(function (e) { return '<button type="button" aria-pressed="' + (e === mtEtapa) + '" data-metapa="' + e + '">' + (e === "todas" ? "Todas as etapas" : e) + '</button>'; }).join("");
+    var rows = mats.filter(function (m) { return mtEtapa === "todas" || m.etapa === mtEtapa; });
+    $("mt-list").innerHTML = rows.map(function (m) {
+      var pc = Math.min(100, Math.round(m.doado / m.meta * 100)), q = cart[m.id] || 0;
+      return '<article class="mt"><div class="tags"><span class="pill go">' + m.etapa + '</span></div><h3 class="mn"></h3>' +
+        '<div class="pr">' + brl(m.p) + '<small>por ' + m.un + '</small></div>' +
+        '<div class="bar thin star"><i style="width:' + pc + '%"></i></div><div class="by num">' + m.doado.toLocaleString("pt-BR") + ' de ' + m.meta.toLocaleString("pt-BR") + ' ' + m.un + ' doados (' + pc + '%)</div>' +
+        '<div class="by fb"></div>' +
+        '<div class="actions" style="margin:4px 0 0"><div class="stepper"><button type="button" data-mdec="' + m.id + '" aria-label="Diminuir">−</button><span class="num">' + q + '</span><button type="button" data-minc="' + m.id + '" aria-label="Aumentar">+</button></div></div></article>';
+    }).join("");
+    var cs = $("mt-list").querySelectorAll(".mt");
+    rows.forEach(function (m, i) { cs[i].querySelector(".mn").textContent = m.n; cs[i].querySelector(".fb").textContent = "Fornecedor: " + fornecedores[m.f].n; });
+    $("mt-cart").innerHTML = cartIds.length ? cartIds.map(function (k) { return '<div class="cline"><span class="cn"></span><b class="num">' + brl(matBy(+k).p * cart[k]) + '</b><span class="q num">' + cart[k] + ' × ' + brl(matBy(+k).p) + ' · ' + matBy(+k).etapa + '</span></div>'; }).join("") : '<p class="note" style="margin:0">Use o + nos materiais para montar sua doação.</p>';
+    $("mt-cart").querySelectorAll(".cn").forEach(function (el, i) { el.textContent = matBy(+cartIds[i]).n; });
+    $("mt-total").textContent = brl(sum(cartIds.map(function (k) { return matBy(+k).p * cart[k]; })));
+    $("mt-go").disabled = !cartIds.length;
+    var mine = orders.filter(function (o) { return o.donor === ME.donor; }).sort(function (a, b) { return b.when - a.when; });
+    $("mt-orders").innerHTML = mine.length ? mine.map(function (o) {
+      return '<div class="row"><div class="top"><span><b class="num">' + brl(o.total) + '</b> <span style="color:var(--muted)">· ' + fmt(o.when) + '</span></span><span class="pill ' + stPill[o.status][0] + '">' + stPill[o.status][1] + '</span></div><div style="font-size:13px" class="oi"></div></div>';
+    }).join("") : '<p class="note" style="margin:0">Você ainda não doou material.</p>';
+    $("mt-orders").querySelectorAll(".oi").forEach(function (el, i) { el.textContent = mine[i].items.map(function (x) { return x.q + " " + x.un + " de " + x.n; }).join("; ") + (mine[i].nf ? " · " + mine[i].nf : ""); });
+  }
+  function renderFornecedor() {
+    var f = fornecedores[fnWho];
+    $("fn-sel").innerHTML = fornecedores.map(function (x, i) { return '<option value="' + i + '"' + (i === fnWho ? " selected" : "") + '></option>'; }).join("");
+    $("fn-sel").querySelectorAll("option").forEach(function (o, i) { o.textContent = "Ver como: " + fornecedores[i].n; });
+    $("fn-mono").style.background = f.cor; $("fn-mono").textContent = f.n.charAt(0); $("fn-name").textContent = f.n;
+    var os = orders.filter(function (o) { return o.f === fnWho; }).sort(function (a, b) { return b.when - a.when; });
+    var kp = [["Pedidos novos", os.filter(function (o) { return o.status === "pago"; }).length, "Pagos, esperando separação"], ["A entregar", os.filter(function (o) { return o.status === "separado"; }).length, "Separados, a caminho da obra"], ["Entregues", os.filter(function (o) { return o.status === "entregue"; }).length, "Na obra"], ["Valor doado", brl(sum(os.map(function (o) { return o.total; }))), "Em todos os pedidos"]];
+    $("fn-kpis").innerHTML = kp.map(function (k) { return '<div class="panel kpi"><div class="label">' + k[0] + '</div><div class="v num">' + k[1] + '</div><div class="d">' + k[2] + '</div></div>'; }).join("");
+    $("fn-orders").innerHTML = os.length ? os.map(function () { return "<tr><td class='num'></td><td></td><td style='white-space:normal;min-width:200px'></td><td class='r num'></td><td></td><td></td></tr>"; }).join("") : "<tr><td colspan='6'>Nenhum pedido ainda.</td></tr>";
+    $("fn-orders").querySelectorAll("tr").forEach(function (tr, i) {
+      var o = os[i]; if (!o) return; var c = tr.children;
+      c[0].textContent = fmt(o.when); c[1].textContent = o.donor;
+      c[2].textContent = o.items.map(function (x) { return x.q + " " + x.un + " " + x.n; }).join("; ");
+      c[3].textContent = brl(o.total);
+      c[4].innerHTML = '<span class="pill ' + stPill[o.status][0] + '">' + stPill[o.status][1] + '</span>' + (o.nf ? ' <span class="pill">' + o.nf + '</span>' : "");
+      c[5].innerHTML = o.status === "pago" ? '<button class="btn2" type="button" data-fnadv="' + o.id + '">Marcar como separado</button>'
+        : o.status === "separado" ? '<button class="btn2" type="button" data-fnadv="' + o.id + '">Entregue na obra</button>'
+        : !o.nf ? '<button class="btn2 main" type="button" data-fnnf="' + o.id + '">Anexar nota fiscal</button>' : "—";
+    });
+    var cat = mats.filter(function (m) { return m.f === fnWho; });
+    $("fn-cat").innerHTML = cat.map(function (m) { return "<tr><td></td><td></td><td class='r'><input class='pinput num' type='number' min='1' value='" + m.p + "' data-fnprice='" + m.id + "' aria-label='Preço'></td><td class='r num'>" + m.meta.toLocaleString("pt-BR") + " " + m.un + "</td><td class='r num'>" + m.doado.toLocaleString("pt-BR") + "</td></tr>"; }).join("");
+    $("fn-cat").querySelectorAll("tr").forEach(function (tr, i) { tr.children[0].textContent = cat[i].n; tr.children[1].textContent = cat[i].etapa; });
+  }
+  $("v-materiais").addEventListener("click", function (ev) {
+    var t = ev.target.closest("button"); if (!t) return;
+    if (t.dataset.metapa) { mtEtapa = t.dataset.metapa; }
+    else if (t.dataset.minc) { cart[t.dataset.minc] = (cart[t.dataset.minc] || 0) + 1; }
+    else if (t.dataset.mdec) { cart[t.dataset.mdec] = Math.max(0, (cart[t.dataset.mdec] || 0) - 1); }
+    else if (t.id === "mt-go") {
+      var ids = Object.keys(cart).filter(function (k) { return cart[k] > 0; }); if (!ids.length) return;
+      var byF = {}; ids.forEach(function (k) { var m = matBy(+k); (byF[m.f] = byF[m.f] || []).push([m.id, cart[k]]); m.doado += cart[k]; });
+      var tot = 0;
+      Object.keys(byF).forEach(function (f) { var o = mkOrder(oseq++, +f, ME.donor, byF[f], "pago", 0); orders.push(o); tot += o.total; });
+      cart = {};
+      inboxSeed.unshift(["Doação de material de " + brl(tot) + " confirmada. Acompanhe a entrega em Doe material.", "agora", false]); renderInbox();
+      var m = $("mt-msg"); m.hidden = false; m.textContent = "Obrigado! Os fornecedores já receberam o seu pedido e a entrega na obra será registrada aqui.";
+      toast("Doação em material registrada (simulação)");
+    } else return;
+    renderMateriais(); renderFornecedor();
+  });
+  $("v-fornecedor").addEventListener("click", function (ev) {
+    var t = ev.target.closest("button"); if (!t) return;
+    var id = Number(t.dataset.fnadv || t.dataset.fnnf); if (!id) return;
+    var o = orders.filter(function (x) { return x.id === id; })[0]; if (!o) return;
+    var mine = o.donor === ME.donor;
+    if (t.dataset.fnadv) {
+      o.status = o.status === "pago" ? "separado" : "entregue";
+      if (mine) { inboxSeed.unshift([o.status === "entregue" ? "Seu material foi entregue na obra." : "Seu material foi separado e vai para a obra.", "agora", false]); renderInbox(); }
+      toast(o.status === "entregue" ? "Entrega registrada" : "Pedido separado");
+    } else { o.nf = "NF " + (5200 + o.id * 7); toast("Nota fiscal anexada. Ela aparece na Transparência (simulação)"); }
+    renderFornecedor(); renderMateriais();
+  });
+  $("fn-sel").addEventListener("change", function () { fnWho = Number(this.value); renderFornecedor(); });
+  $("fn-cat").addEventListener("change", function (ev) {
+    var i = ev.target.dataset.fnprice; if (!i) return;
+    var v = Number(ev.target.value); if (v > 0) { matBy(+i).p = v; renderMateriais(); toast("Preço atualizado"); }
+  });
+  document.addEventListener("click", function (ev) { var g = ev.target.closest("[data-gotab]"); if (g) $("t-" + g.dataset.gotab).click(); });
+  renderMateriais(); renderFornecedor();
+
+  // ---- Parceiros (empresas fictícias, só para o modelo) ----
+  var parceiros = [
+    { n: "Pizzaria Forno de Belém", ramo: "Pizzaria", cor: "#a23b1f", off: "15%", item: "em pizzas grandes", d: "No balcão e no delivery, de segunda a quinta-feira. Uma borda recheada de cortesia na primeira compra.", tier: "todos", dias: 90, cod: "PIZZA", end: "Rua das Palmeiras, 120" },
+    { n: "Farmácia Boa Saúde", ramo: "Farmácia", cor: "#1f6b4a", off: "10%", item: "em higiene e vitaminas", d: "Vale para perfumaria, higiene pessoal e vitaminas. Não vale para medicamentos controlados.", tier: "familia", dias: 120, cod: "SAUDE", end: "Av. Tiradentes, 450" },
+    { n: "Pet Amigo", ramo: "Pet shop", cor: "#7a4fa3", off: "R$ 20", item: "em banho e tosa", d: "Desconto em um serviço de banho ou banho e tosa. Agendamento prévio pelo WhatsApp.", tier: "todos", dias: 60, cod: "PET", end: "Rua Dom Pedro, 88" },
+    { n: "Studio Vida em Movimento", ramo: "Pilates e academia", cor: "#2d5f9a", off: "20%", item: "na matrícula", d: "Primeira semana de aulas grátis e 20% de desconto na matrícula do primeiro plano.", tier: "familia", dias: 150, cod: "VIDA", end: "Rua XV de Novembro, 301" },
+    { n: "Livraria Cristo Rei", ramo: "Livraria e artigos religiosos", cor: "#8a6516", off: "12%", item: "em livros e terços", d: "Vale para livros, terços, imagens e artigos de liturgia. Não cumulativo com outras promoções.", tier: "todos", dias: 180, cod: "LIVRO", end: "Praça da Matriz, 15" }
+  ];
+  var ptUsed = {}, ptRamo = "todos", ptRedeemed = 214;
+  var vseq = 10;
+  function mkReq(id, donor, tipo, total, partner, status, daysAgo, reason) {
+    return { id: id, donor: donor, tipo: tipo, total: total, partner: partner, status: status, when: new Date(Date.now() - daysAgo * 86400000), reason: reason || "" };
+  }
+  var vreq = [
+    mkReq(1, "Família Oliveira", "Família doadora", 1200, "Farmácia Boa Saúde", "pend", 1),
+    mkReq(2, "João P.", "Doação única", 150, "Livraria Cristo Rei", "pend", 0),
+    mkReq(3, "Carlos M.", "Doação única", 2500, "Studio Vida em Movimento", "pend", 2),
+    mkReq(4, "Beatriz L.", "Doação única", 75, "Pet Amigo", "ok", 5),
+    mkReq(5, "Família Santos", "Família doadora", 2400, "Pizzaria Forno de Belém", "ok", 6),
+    mkReq(6, "Ana C.", "Doação única", 25, "Studio Vida em Movimento", "no", 7, "Voucher exclusivo para família doadora")
+  ];
+  function myReq(pn) { var r = vreq.filter(function (x) { return x.donor === ME.donor && x.partner === pn; }); return r[r.length - 1]; }
+  function partnerByName(n) { return parceiros.filter(function (x) { return x.n === n; })[0]; }
+  function vcode(p) { return "REIS-" + p.cod + "-" + (4000 + p.n.length * 37 + p.dias % 97); }
+  function renderParceiros() {
+    var guest = $("pt-guest").checked;
+    var ramos = ["todos"].concat(parceiros.map(function (p) { return p.ramo; }));
+    $("pt-filters").innerHTML = ramos.map(function (r) { return '<button type="button" aria-pressed="' + (r === ptRamo) + '" data-ramo="' + r + '">' + (r === "todos" ? "Todos" : r) + '</button>'; }).join("");
+    $("pt-n").textContent = parceiros.length;
+    $("pt-v").textContent = ptRedeemed + vreq.filter(function (r) { return r.status === "ok"; }).length;
+    var rows = parceiros.filter(function (p) { return ptRamo === "todos" || p.ramo === ptRamo; });
+    $("pt-list").innerHTML = rows.map(function (p, i) {
+      var famOnly = p.tier === "familia";
+      var tierPill = famOnly ? '<span class="pill go">Família doadora</span>' : '<span class="pill done">Todo doador</span>';
+      var valid = new Date(Date.now() + p.dias * 86400000).toLocaleDateString("pt-BR");
+      var rq = myReq(p.n), used = ptUsed[p.n];
+      var action;
+      if (guest) action = '<button class="btn2" type="button" data-pgo="familia">Doe para liberar o voucher</button>';
+      else if (!rq || rq.status === "no") action = (rq ? '<div class="note" style="color:var(--warn);margin:0">Solicitação recusada: ' + rq.reason + '.</div>' : "") + '<button class="btn2 main" type="button" data-pshow="' + p.n + '">' + (rq ? "Solicitar de novo" : "Solicitar voucher") + '</button>';
+      else if (rq.status === "pend") action = '<div class="ticket" style="border-style:solid;background:var(--bg)"><span class="pill go" style="justify-self:start">Aguardando autorização</span><span class="note" style="margin:0">A administração confere a sua doação e libera o código. Você recebe um aviso no celular.</span><div class="actions" style="margin:0"><button class="btn2" type="button" data-pcancel="' + rq.id + '">Cancelar solicitação</button></div></div>';
+      else action = '<div class="ticket' + (used ? " used" : "") + '"><span class="pill done" style="justify-self:start">Autorizado pela administração</span><div class="label">Seu código</div><div class="code">' + vcode(p) + '</div><div class="actions" style="margin:0">' +
+        '<button class="btn2" type="button" data-pcopy="' + p.n + '">Copiar código</button>' +
+        '<button class="btn2' + (used ? " on" : "") + '" type="button" data-pused="' + p.n + '">' + (used ? "Usado" : "Marcar como usado") + '</button></div></div>';
+      return '<article class="pt"><div class="pt-top"><div class="mono" style="background:' + p.cor + '">' + p.n.charAt(0) + '</div><div><h3 class="pn"></h3><div class="tags"><span class="pill">' + p.ramo + '</span> ' + tierPill + '</div></div></div>' +
+        '<div class="off">' + p.off + '<small>' + p.item + '</small></div><p class="pd"></p>' +
+        '<div class="rules">Válido até ' + valid + ' · ' + p.end + ' (endereço de exemplo)</div>' + action + '</article>';
+    }).join("");
+    var cards = $("pt-list").querySelectorAll(".pt");
+    rows.forEach(function (p, i) { cards[i].querySelector(".pn").textContent = p.n; cards[i].querySelector(".pd").textContent = p.d; });
+  }
+  document.getElementById("v-parceiros").addEventListener("click", function (ev) {
+    var t = ev.target.closest("button"); if (!t) return;
+    if (t.dataset.ramo) { ptRamo = t.dataset.ramo; renderParceiros(); }
+    else if (t.dataset.pshow) {
+      vreq.push(mkReq(vseq++, ME.donor, ME.tipo, ME.total, t.dataset.pshow, "pend", 0));
+      renderParceiros(); renderAdmin(); toast("Pedido enviado para autorização da administração");
+    }
+    else if (t.dataset.pcancel) {
+      vreq = vreq.filter(function (r) { return String(r.id) !== t.dataset.pcancel; });
+      renderParceiros(); renderAdmin(); toast("Solicitação cancelada");
+    }
+    else if (t.dataset.pused) { ptUsed[t.dataset.pused] = !ptUsed[t.dataset.pused]; renderParceiros(); toast(ptUsed[t.dataset.pused] ? "Voucher marcado como usado" : "Voucher liberado de novo"); }
+    else if (t.dataset.pcopy) {
+      var p = parceiros.filter(function (x) { return x.n === t.dataset.pcopy; })[0], c = vcode(p);
+      try { navigator.clipboard.writeText(c).then(function () { toast("Código " + c + " copiado"); }, function () { toast("Código: " + c); }); } catch (e) { toast("Código: " + c); }
+    } else if (t.dataset.pgo) { $("t-" + t.dataset.pgo).click(); }
+  });
+  function renderAdmin() {
+    var pend = vreq.filter(function (r) { return r.status === "pend"; });
+    var kp = [["Aguardando decisão", pend.length, "Pedidos na fila"], ["Autorizados", vreq.filter(function (r) { return r.status === "ok"; }).length, "Códigos liberados"], ["Recusados", vreq.filter(function (r) { return r.status === "no"; }).length, "Fora da regra ou sem doação confirmada"]];
+    $("ad-kpis").innerHTML = kp.map(function (k) { return '<div class="panel kpi"><div class="label">' + k[0] + '</div><div class="v num">' + k[1] + '</div><div class="d">' + k[2] + '</div></div>'; }).join("");
+    $("ad-pend").innerHTML = pend.length ? pend.map(function (r) {
+      var p = partnerByName(r.partner);
+      var fora = p.tier === "familia" && r.tipo !== "Família doadora";
+      return '<div class="rq"><div><h3 class="rq-t"></h3><div class="meta">Pedido em ' + fmt(r.when) + ' · <span class="rq-p"></span> · ' + p.off + ' ' + p.item + '</div>' +
+        '<div class="tags"><span class="pill ' + (r.tipo === "Família doadora" ? "go" : "") + '">' + r.tipo + '</span><span class="pill">Total doado ' + brl(r.total) + '</span>' +
+        (fora ? '<span class="pill bad">Fora da regra: exclusivo para família doadora</span>' : '<span class="pill done">Dentro da regra</span>') + '</div></div>' +
+        '<div class="dec"><select id="mot-' + r.id + '" aria-label="Motivo da recusa"><option>Fora da regra do voucher</option><option>Doação ainda não confirmada</option><option>Voucher já utilizado</option><option>Outro motivo</option></select>' +
+        '<div class="actions" style="margin:0"><button class="btn2 ok" type="button" data-aok="' + r.id + '">Autorizar</button><button class="btn2 no" type="button" data-ano="' + r.id + '">Recusar</button></div></div></div>';
+    }).join("") : '<div class="panel"><p class="note" style="margin:0">Nenhum pedido esperando. Quando um doador solicitar um voucher, ele aparece aqui.</p></div>';
+    var cards = $("ad-pend").querySelectorAll(".rq");
+    pend.forEach(function (r, i) { cards[i].querySelector(".rq-t").textContent = r.donor; cards[i].querySelector(".rq-p").textContent = r.partner; });
+    var done = vreq.filter(function (r) { return r.status !== "pend"; }).sort(function (a, b) { return b.when - a.when; });
+    $("ad-hist").innerHTML = done.map(function () { return "<tr><td class='num'></td><td></td><td></td><td></td><td></td></tr>"; }).join("");
+    $("ad-hist").querySelectorAll("tr").forEach(function (tr, i) {
+      var r = done[i], c = tr.children;
+      c[0].textContent = fmt(r.when); c[1].textContent = r.donor; c[2].textContent = r.partner;
+      c[3].innerHTML = '<span class="pill ' + (r.status === "ok" ? "done" : "bad") + '">' + (r.status === "ok" ? "Autorizado" : "Recusado") + '</span>';
+      c[4].textContent = r.reason || "—";
+    });
+  }
+  document.getElementById("v-admin").addEventListener("click", function (ev) {
+    var t = ev.target.closest("button"); if (!t) return;
+    var id = Number(t.dataset.aok || t.dataset.ano); if (!id) return;
+    var r = vreq.filter(function (x) { return x.id === id; })[0]; if (!r) return;
+    var mine = r.donor === ME.donor;
+    if (t.dataset.aok) {
+      r.status = "ok"; r.when = new Date();
+      if (mine) { inboxSeed.unshift(["Voucher autorizado: " + r.partner + ". Veja o código em Parceiros.", "agora", false]); renderInbox(); }
+      toast(mine ? "Voucher autorizado. Aviso enviado à família (simulação)" : "Voucher autorizado");
+    } else {
+      r.status = "no"; r.when = new Date(); r.reason = $("mot-" + id).value;
+      if (mine) { inboxSeed.unshift(["Seu pedido de voucher (" + r.partner + ") foi recusado: " + r.reason + ".", "agora", false]); renderInbox(); }
+      toast("Voucher recusado");
+    }
+    renderAdmin(); renderParceiros();
+  });
+  $("pt-guest").addEventListener("change", renderParceiros);
+  $("pt-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var m = $("pf-msg"); m.hidden = false;
+    if (!$("pf-nome").value.trim() || !$("pf-resp").value.trim()) { m.style.color = "var(--warn)"; m.textContent = "Informe o nome da empresa e um contato."; return; }
+    m.style.color = "var(--good)"; m.textContent = "Obrigado! A coordenação da campanha entra em contato para combinar as regras do voucher (simulação).";
+  });
+  renderParceiros();
+  renderAdmin();
+
+  // ---- Eventos (datas relativas a hoje, para o modelo sempre mostrar eventos futuros) ----
+  var nowE = new Date(); nowE.setHours(0, 0, 0, 0);
+  function inDays(n, h, m) { var d = new Date(nowE.getTime() + n * 86400000); d.setHours(h, m, 0, 0); return d; }
+  var eventos = [
+    { t: "Missa pelas famílias doadoras", c: "Celebração", d: inDays(9, 19, 30), loc: "Igreja matriz", desc: "Missa nas intenções das famílias inscritas no Livro de Ouro. Todas as famílias doadoras são convidadas.", going: 64 },
+    { t: "Almoço beneficente pró-capela", c: "Arrecadação", d: inDays(16, 12, 0), loc: "Salão paroquial", desc: "Almoço em família com toda a renda destinada à construção. Convite de R$ 40 por pessoa.", going: 112 },
+    { t: "Visita guiada ao terreno da capela", c: "Obra", d: inDays(23, 9, 0), loc: "Terreno da capela", desc: "Conheça a fundação em andamento e veja de perto onde as ofertas estão sendo aplicadas.", going: 31 },
+    { t: "Encontro das famílias doadoras", c: "Comunidade", d: inDays(33, 16, 0), loc: "Salão paroquial", desc: "Café da tarde, entrega do certificado e partilha sobre a caminhada da capela.", going: 48 },
+    { t: "Noite do bazar solidário", c: "Arrecadação", d: inDays(44, 18, 30), loc: "Pátio da paróquia", desc: "Bazar com barraquinhas da comunidade. Tudo que for arrecadado vai para a campanha.", going: 57 },
+    { t: "Missa do Galo", c: "Celebração", d: new Date(2026, 11, 24, 22, 0), loc: "Igreja matriz", desc: "Celebração da noite de Natal, com a comunidade reunida diante do presépio.", going: 210 },
+    { t: "Festa de Reis e bênção da campanha", c: "Celebração", d: new Date(2027, 0, 6, 19, 30), loc: "Igreja matriz", desc: "Missa da Epifania, dia dos Reis Magos, com a bênção da campanha e das famílias doadoras.", going: 143 }
+  ].filter(function (e) { return e.d >= nowE; }).sort(function (a, b) { return a.d - b.d; });
+  var evOn = {};
+  var evFilter = "todos";
+  var wd = function (d) { return d.toLocaleDateString("pt-BR", { weekday: "long" }); };
+  var hhmm = function (d) { return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }).replace(":", "h"); };
+  var catPill = { "Celebração": "done", "Arrecadação": "go", "Comunidade": "wait", "Obra": "card" };
+
+  function renderEventos() {
+    var nx = eventos[0];
+    if (nx) {
+      var days = Math.round((new Date(nx.d.getFullYear(), nx.d.getMonth(), nx.d.getDate()) - nowE) / 86400000);
+      $("evt-next").innerHTML = '<div class="cd"><b class="num">' + (days === 0 ? "hoje" : days) + '</b><span>' + (days === 0 ? "" : days === 1 ? "dia" : "dias") + '</span></div>' +
+        '<div><div class="label" style="color:var(--gold-light)">Próximo evento</div><h2></h2><div class="when">' + wd(nx.d) + ', ' + fmt(nx.d) + ' às ' + hhmm(nx.d) + ' · ' + nx.loc + '</div></div>' +
+        '<div><button type="button" class="btn" style="width:auto;padding:12px 22px" data-evgo="0">' + (evOn[nx.t] ? "Presença confirmada" : "Confirmar presença") + '</button></div>';
+      $("evt-next").querySelector("h2").textContent = nx.t;
+    }
+    var rows = eventos.filter(function (e) { return evFilter === "todos" || e.c === evFilter; });
+    var html = "", last = "";
+    rows.forEach(function (e) {
+      var mk = e.d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+      if (mk !== last) { html += '<div class="evt-month">' + mk + '</div>'; last = mk; }
+      var on = !!evOn[e.t];
+      html += '<article class="evt"><div class="evdate"><div class="dd num">' + String(e.d.getDate()).padStart(2, "0") + '</div><div class="mm">' + e.d.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "") + '</div><div class="wd">' + wd(e.d).split("-")[0] + '</div></div>' +
+        '<div><div class="tags"><span class="pill ' + catPill[e.c] + '">' + e.c + '</span></div><h3 class="evt-t"></h3>' +
+        '<div class="info"><span>' + hhmm(e.d) + '</span><span class="evt-loc"></span></div><p class="evt-d"></p>' +
+        '<div class="actions"><button type="button" class="btn2' + (on ? " on" : "") + '" data-evt="' + eventos.indexOf(e) + '">' + (on ? "Presença confirmada" : "Confirmar presença") + '</button>' +
+        '<button type="button" class="btn2" data-evremind="' + eventos.indexOf(e) + '">Lembrar no celular</button>' +
+        '<a class="btn2" target="_blank" rel="noopener" data-evshare="' + eventos.indexOf(e) + '">Compartilhar</a>' +
+        '<span class="going num">' + (e.going + (on ? 1 : 0)) + ' pessoas vão</span></div></div></article>';
+    });
+    $("evt-list").innerHTML = html || '<p class="note">Nenhum evento neste tipo por enquanto.</p>';
+    var arts = $("evt-list").querySelectorAll("article.evt");
+    rows.forEach(function (e, i) {
+      arts[i].querySelector(".evt-t").textContent = e.t;
+      arts[i].querySelector(".evt-loc").textContent = e.loc;
+      arts[i].querySelector(".evt-d").textContent = e.desc;
+      arts[i].querySelector("[data-evshare]").href = "https://wa.me/?text=" + encodeURIComponent(e.t + ", " + wd(e.d) + " " + fmt(e.d) + " às " + hhmm(e.d) + ", " + e.loc + ". Paróquia São Luís Gonzaga. Aqui você é família!");
+    });
+  }
+  document.getElementById("v-eventos").addEventListener("click", function (ev) {
+    var t = ev.target.closest("button"); if (!t) return;
+    if (t.dataset.cat) {
+      evFilter = t.dataset.cat;
+      document.querySelectorAll("#evt-filters button").forEach(function (b) { b.setAttribute("aria-pressed", String(b === t)); });
+      renderEventos(); return;
+    }
+    var i = t.dataset.evt != null ? Number(t.dataset.evt) : t.dataset.evgo != null ? 0 : null;
+    if (i != null) {
+      var e = eventos[i]; evOn[e.t] = !evOn[e.t]; renderEventos();
+      toast(evOn[e.t] ? "Presença confirmada (simulação)" : "Presença cancelada");
+    } else if (t.dataset.evremind != null) {
+      var r = eventos[Number(t.dataset.evremind)];
+      toast("Lembrete agendado para a véspera, às 18h (simulação)");
+    }
+  });
+  renderEventos();
+
+  // ---- Livro de Ouro ----
+  function fmt(d) { return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }); }
+  function plusYear(d) { var x = new Date(d.getTime()); x.setFullYear(x.getFullYear() + 1); return x; }
+  var book = [
+    { n: "Família Oliveira", since: new Date(2026, 7, 14) }, { n: "Família Santos", since: new Date(2026, 7, 21) },
+    { n: "Família Souza", since: new Date(2026, 8, 5) }, { n: "Família Pereira", since: new Date(2026, 8, 12) },
+    { n: "Família Almeida", since: new Date(2026, 8, 19) }, { n: "Família Costa", since: new Date(2026, 8, 28) },
+    { n: "Família Rocha", since: new Date(2026, 9, 3) }, { n: "Família Martins", since: new Date(2026, 9, 9) }
+  ];
+  function renderBook() {
+    var q = ($("lv-q").value || "").trim().toLowerCase();
+    var rows = book.slice().sort(function (a, b) { return b.since - a.since; }).filter(function (b) { return !q || b.n.toLowerCase().indexOf(q) > -1; });
+    $("lv-list").innerHTML = rows.length ? rows.map(function (b) {
+      return '<div class="bk-item' + (b.fresh ? " new" : "") + '"><span class="nm"></span><span class="dt">desde ' + fmt(b.since) + ' · missas até ' + fmt(plusYear(b.since)) + '</span></div>';
+    }).join("") : '<p class="note">Nenhuma família com esse nome.</p>';
+    $("lv-list").querySelectorAll(".nm").forEach(function (el, i) { el.textContent = rows[i].n; });
+    $("lv-n").textContent = book.length; $("lv-m").textContent = MASSES;
+  }
+  $("lv-q").addEventListener("input", renderBook);
+  renderBook();
+
+  // ---- Família doadora ----
+  var famMural = [["Família Oliveira", "8 tijolos por mês"], ["Família Santos", "20 tijolos por mês"], ["Família Pereira", "10 tijolos por mês"], ["Família Almeida", "40 tijolos por mês"], ["Família Costa", "10 tijolos por mês"], ["Família Rocha", "20 tijolos por mês"]];
+  function renderMural(extra) {
+    $("mural").innerHTML = (extra ? '<div class="fm new"><b>' + extra[0] + '</b><span>' + extra[1] + ' · acabou de entrar</span></div>' : "") +
+      famMural.map(function (f) { return '<div class="fm"><b>' + f[0] + '</b><span>' + f[1] + '</span></div>'; }).join("");
+  }
+  renderMural();
+
+  var fchips = document.querySelectorAll("[data-fv]");
+  fchips.forEach(function (b) {
+    b.addEventListener("click", function () {
+      fchips.forEach(function (c) { c.setAttribute("aria-pressed", "false"); });
+      b.setAttribute("aria-pressed", "true");
+      $("f-valor").value = b.dataset.fv;
+    });
+  });
+  $("f-valor").addEventListener("input", function () {
+    fchips.forEach(function (c) { c.setAttribute("aria-pressed", String(c.dataset.fv === $("f-valor").value)); });
+  });
+
+  $("fam-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var nome = $("f-nome").value.trim(), resp = $("f-resp").value.trim(), valor = Number($("f-valor").value);
+    var msg = $("f-msg"); msg.hidden = true;
+    var erro = !nome ? "Digite o nome da família." : !resp ? "Digite o nome do responsável." : !$("f-whats").value.trim() ? "Digite um WhatsApp para os avisos." : !(valor >= 50) ? "A oferta mensal começa em R$ 50,00." : "";
+    if (erro) { msg.textContent = erro; msg.hidden = false; return; }
+    var bricks = Math.round(valor / 5);
+    var until = plusYear(new Date());
+    var since = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+    var dia = $("f-dia").value;
+    var stage = fundingNow[0];
+    $("cert").innerHTML =
+      '<div class="kicker">Paróquia São Luís Gonzaga · Campanha dos Reis Magos</div>' +
+      '<div class="fname"></div>' +
+      '<div class="verse">“Deus ama quem dá com alegria.” 2Cor 9,7</div>' +
+      '<div>é uma nova família doadora da capela em honra ao Menino Jesus</div>' +
+      '<div class="seal">Inscrita no Livro de Ouro · missas por 1 ano, até ' + fmt(until) + '</div>' +
+      '<div class="meta"><div><b class="num">' + brl(valor) + '</b>por mês</div><div><b class="num">' + bricks + '</b>tijolos por mês</div><div><b class="num">dia ' + dia + '</b>vencimento</div><div><b>Nova</b>família desde ' + since + '</div></div>';
+    $("cert").querySelector(".fname").textContent = nome;
+    $("fam-wa").textContent = "Olá, " + resp.split(" ")[0] + "! A " + nome + " agora faz parte da campanha. Sua oferta de " + brl(valor) + " vence todo dia " + dia + " e será aplicada na etapa “" + stage + "”. Aqui você é família!";
+    book.push({ n: $("f-mural").checked ? nome : "Família (nome reservado)", since: new Date(), fresh: true });
+    renderBook();
+    renderMural([nome, bricks + " tijolos por mês"]);
+    $("fam-main").hidden = true; $("fam-ok").hidden = false;
+    window.scrollTo(0, 0);
+    toast("Família cadastrada (simulação)");
+  });
+  $("fam-go").addEventListener("click", function () { $("t-doador").click(); });
+  $("fam-back").addEventListener("click", function () {
+    $("fam-ok").hidden = true; $("fam-main").hidden = false; $("fam-form").reset(); renderMural();
+    fchips.forEach(function (c) { c.setAttribute("aria-pressed", String(c.dataset.fv === "100")); });
+  });
+
+  // ---- Ampliar fotos ao clicar ----
+  (function () {
+    var imgs = Array.prototype.slice.call(document.querySelectorAll(".imgcard img"));
+    var lb = document.createElement("div");
+    lb.className = "lb"; lb.hidden = true; lb.setAttribute("role", "dialog"); lb.setAttribute("aria-modal", "true"); lb.setAttribute("aria-label", "Foto ampliada");
+    lb.innerHTML = '<button type="button" class="lb-x" aria-label="Fechar">×</button><button type="button" class="lb-n lb-p" aria-label="Foto anterior">‹</button><button type="button" class="lb-n lb-q" aria-label="Próxima foto">›</button><figure><img alt=""><figcaption></figcaption></figure>';
+    document.body.appendChild(lb);
+    var cur = 0, opener = null;
+    function show(i) {
+      var vis = imgs.filter(function (m) { return m.getClientRects().length; });
+      if (!vis.length) return;
+      cur = (i + vis.length) % vis.length;
+      var m = vis[cur], cap = m.parentNode.querySelector(".cap");
+      lb.querySelector("img").src = m.currentSrc || m.src;
+      lb.querySelector("img").alt = m.alt;
+      lb.querySelector("figcaption").textContent = (cap ? cap.textContent + " · " : "") + m.alt;
+      lb._vis = vis;
+    }
+    function open(m) {
+      var vis = imgs.filter(function (x) { return x.getClientRects().length; });
+      opener = m; lb.hidden = false; show(vis.indexOf(m));
+      lb.querySelectorAll(".lb-n").forEach(function (b) { b.hidden = vis.length < 2; });
+      lb.querySelector(".lb-x").focus();
+    }
+    function close() { lb.hidden = true; if (opener) opener.focus(); }
+    imgs.forEach(function (m) {
+      m.tabIndex = 0; m.setAttribute("role", "button"); m.setAttribute("aria-label", "Ampliar foto: " + m.alt);
+      var z = document.createElement("span"); z.className = "zoom"; z.textContent = "Toque para ampliar"; m.parentNode.insertBefore(z, m.nextSibling);
+      m.addEventListener("click", function () { open(m); });
+      m.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(m); } });
+    });
+    lb.addEventListener("click", function (e) {
+      if (e.target.closest(".lb-x") || e.target === lb) close();
+      else if (e.target.closest(".lb-p")) show(cur - 1);
+      else if (e.target.closest(".lb-q")) show(cur + 1);
+    });
+    document.addEventListener("keydown", function (e) {
+      if (lb.hidden) return;
+      if (e.key === "Escape") close(); else if (e.key === "ArrowLeft") show(cur - 1); else if (e.key === "ArrowRight") show(cur + 1);
+    });
+  })();
+
+  // ---- Abas ----
+  var tabs = document.querySelectorAll("nav.tabs button");
+  function show(name) {
+    tabs.forEach(function (t) { t.setAttribute("aria-selected", String(t.dataset.view === name)); });
+    document.querySelectorAll("section.view").forEach(function (s) { s.hidden = s.id !== "v-" + name; });
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(function (t) { t.addEventListener("click", function () { show(t.dataset.view); }); });
+  var start = (location.hash || "").replace("#", "");
+  if (["inicio", "capela", "eventos", "painel", "obra", "transp", "familia", "livro", "parceiros", "materiais", "fornecedor", "doador", "admin"].indexOf(start) > -1) show(start);
+})();
+</script>
+</html>
