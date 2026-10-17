@@ -47,3 +47,12 @@ Snippets (lidos em 17/10):
 - Elementor criado por ferramenta precisa de IDs nos elementos (senão o editor trava).
 - O conector EMCP só lê o domínio principal; não abre giftbrand.com.br nem consulta DNS.
 - Não pedir ao Walter para repetir testes que o histórico já mostra. Ler o histórico primeiro. Tratar por "você".
+
+## Atualização (17/10, fim do dia): ciclo de redirecionamento dos parceiros
+
+- O ciclo (ERR_TOO_MANY_REDIRECTS em `/my-account-2/` e no painel) acontece **também em divulgarcriacoes.com.br** com conta de parceiro (papel `vendedor`, ex.: natiene@divulgarcriacoes.com.br). Não é problema de domínio estacionado nem de cookie por domínio.
+- Descartados: LoginPress (captcha desligado, Google "Não Verificado"), captcha do Wordfence (modo de teste, não bloqueia), passkeys, 2FA do Wordfence (Vendedor = Desativado), snippets 82857, 82862, 82903, 84383 (nenhum manda o parceiro do painel para Minha conta).
+- Aviso "domínio inválido para a chave do site" na tela de login = reCAPTCHA do Wordfence sem o giftbrand.com.br autorizado. Não bloqueia o login; limpeza futura em google.com/recaptcha/admin.
+- Suspeito principal (não confirmado): proteção do WooCommerce que manda quem não tem `edit_posts`/`manage_woocommerce` de wp-admin para Minha conta (`woocommerce_prevent_admin_access`). Correção proposta, pronta: `relatorio/parceiro-sem-bloqueio-woo.php` (filtro que libera quem tem `dc_view_own_quotes`). Aguardando OK para ativar (colar no Sandbox, gancho init).
+- Parceiros cadastrados (papel vendedor): 10, criados de 01 a 07/10. Dona Maria vai começar a vender pelo GiftBrand.
+- Snippet 94979 (Metalnox) excluído a pedido; dados salvos ficam na opção `dc_mtx_cfg`.
