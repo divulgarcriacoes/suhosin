@@ -56,3 +56,7 @@ Snippets (lidos em 17/10):
 - Suspeito principal (não confirmado): proteção do WooCommerce que manda quem não tem `edit_posts`/`manage_woocommerce` de wp-admin para Minha conta (`woocommerce_prevent_admin_access`). Correção proposta, pronta: `relatorio/parceiro-sem-bloqueio-woo.php` (filtro que libera quem tem `dc_view_own_quotes`). Aguardando OK para ativar (colar no Sandbox, gancho init).
 - Parceiros cadastrados (papel vendedor): 10, criados de 01 a 07/10. Dona Maria vai começar a vender pelo GiftBrand.
 - Snippet 94979 (Metalnox) excluído a pedido; dados salvos ficam na opção `dc_mtx_cfg`.
+
+### RESOLVIDO (17/10, noite)
+- Snippet 107937 (ativo): filtro `woocommerce_prevent_admin_access` retorna false para quem tem `dc_view_own_quotes`. Depois de ativado, o parceiro (Natiene) entrou no painel. Causa: a proteção do WooCommerce mandava o parceiro (sem edit_posts/manage_woocommerce) de wp-admin para /my-account-2/, e o snippet 84383 mandava de volta ao painel.
+- Pendências menores: reCAPTCHA do Wordfence sem giftbrand.com.br (não bloqueia, está em modo de teste); botão Google do LoginPress "Não Verificado" (não configurado).
