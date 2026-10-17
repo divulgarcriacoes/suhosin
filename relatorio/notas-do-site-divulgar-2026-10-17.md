@@ -60,3 +60,8 @@ Snippets (lidos em 17/10):
 ### RESOLVIDO (17/10, noite)
 - Snippet 107937 (ativo): filtro `woocommerce_prevent_admin_access` retorna false para quem tem `dc_view_own_quotes`. Depois de ativado, o parceiro (Natiene) entrou no painel. Causa: a proteção do WooCommerce mandava o parceiro (sem edit_posts/manage_woocommerce) de wp-admin para /my-account-2/, e o snippet 84383 mandava de volta ao painel.
 - Pendências menores: reCAPTCHA do Wordfence sem giftbrand.com.br (não bloqueia, está em modo de teste); botão Google do LoginPress "Não Verificado" (não configurado).
+
+### Aberto (17/10, noite): painel dos parceiros e do administrador
+- O menu principal "Painel Comercial" não aparece na lateral (nem para o administrador, nem para parceiros). Os itens existem (submenus com capability `read` sob o pai `dc-painel-comercial`) e abrem pelos cartões da Visão geral (snippets 82851, 82852, 94399). O menu principal não é criado por nenhum snippet legível (fases 1 a 3 não existem como snippet); provável origem: plugin "DC · Orçamento por Lista (IA)" (dc-quote-lista2).
+- Walter diz que a Visão geral antes tinha duas colunas e agora está em uma (sem print antigo). Snippets lidos que não explicam: 94395, 94396, 94398, 84806 (só loja).
+- Próximo passo, se o Walter quiser: snippet que recoloca o menu principal quando faltar (precisa de ativação no Sandbox) e/ou comparar com print antigo.
