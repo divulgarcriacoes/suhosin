@@ -18,6 +18,7 @@ function dcmk_modos() {
 		'branco' => 'Logo branco (silk 1 cor em produto escuro)',
 		'laser'  => 'Laser em metal (gravado claro)',
 		'escuro' => '1 cor escura (laser em bambu/madeira, silk preto em kraft)',
+		'queimado' => 'Laser em cortiça/madeira (marrom queimado)',
 		'nada'   => 'Não aplicar logo neste produto',
 	);
 }
@@ -320,6 +321,7 @@ function dcmk_css() {
 		. '.dcmk[data-m=branco] img{opacity:.95}.dcmk[data-m=branco] img.sil{filter:brightness(0) invert(1)}'
 		. '.dcmk[data-m=laser] img{filter:brightness(0) invert(.9);opacity:.88}'
 		. '.dcmk[data-m=escuro] img{filter:brightness(0);opacity:.72;mix-blend-mode:multiply}'
+		. '.dcmk[data-m=queimado] img{filter:brightness(0) invert(48.2%) sepia(100.4%) saturate(2078%) hue-rotate(344.2deg) brightness(41.7%) contrast(81.8%);opacity:.9;mix-blend-mode:multiply}'
 		. '.dcmk.q img{width:var(--w)!important;height:var(--h)!important;transform-origin:0 0!important}';
 }
 
