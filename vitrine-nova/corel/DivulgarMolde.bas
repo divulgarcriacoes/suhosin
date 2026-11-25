@@ -28,22 +28,69 @@ Private Sub Coleta(sh As Shape, reds As ShapeRange, foto As ShapeRange)
     End If
 End Sub
 
-' 4 cantos de um vermelho, em % do quadrado da foto: "x1,y1,x2,y2,x3,y3,x4,y4".
+Private Function Atn2(y As Double, x As Double) As Double
+    Const PI As Double = 3.14159265358979
+    If x > 0 Then
+        Atn2 = Atn(y / x)
+    ElseIf x < 0 Then
+        If y >= 0 Then Atn2 = Atn(y / x) + PI Else Atn2 = Atn(y / x) - PI
+    Else
+        If y >= 0 Then Atn2 = PI / 2 Else Atn2 = -PI / 2
+    End If
+End Function
+
+' 4 cantos de um vermelho, em % do quadrado da foto: "x1,y1,x2,y2,x3,y3,x4,y4"
+' (cima-esquerda, cima-direita, baixo-direita, baixo-esquerda). Funciona inclinado e em perspectiva.
 Private Function Cantos(red As Shape, esq As Double, topo As Double, lado As Double) As String
-    Dim dup As Shape, nd As Node, px As Double, py As Double
-    Dim q(7) As Double, best(3) As Double
-    best(0) = 1E+30: best(1) = -1E+30: best(2) = -1E+30: best(3) = 1E+30
+    Dim dup As Shape, nd As Node, n As Long, i As Long, j As Long, t As Long
+    Dim xs(255) As Double, ys(255) As Double, q(7) As Double
     Set dup = red.Duplicate
     dup.ConvertToCurves
+    n = 0
     For Each nd In dup.Curve.Nodes
-        px = (nd.PositionX - esq) / lado * 100
-        py = (topo - nd.PositionY) / lado * 100
-        If px + py < best(0) Then best(0) = px + py: q(0) = px: q(1) = py
-        If px - py > best(1) Then best(1) = px - py: q(2) = px: q(3) = py
-        If px + py > best(2) Then best(2) = px + py: q(4) = px: q(5) = py
-        If px - py < best(3) Then best(3) = px - py: q(6) = px: q(7) = py
+        If n < 256 Then
+            xs(n) = (nd.PositionX - esq) / lado * 100
+            ys(n) = (topo - nd.PositionY) / lado * 100
+            n = n + 1
+        End If
     Next nd
     dup.Delete
+    If n > 1 Then
+        If Abs(xs(n - 1) - xs(0)) < 0.01 And Abs(ys(n - 1) - ys(0)) < 0.01 Then n = n - 1
+    End If
+    If n = 4 Then
+        ' Retangulo/quadrilatero: usa as 4 pontas, em volta do centro, comecando em cima-esquerda.
+        Dim cx As Double, cy As Double, ang(3) As Double, ord(3) As Long, s As Long, best As Double
+        cx = (xs(0) + xs(1) + xs(2) + xs(3)) / 4
+        cy = (ys(0) + ys(1) + ys(2) + ys(3)) / 4
+        For i = 0 To 3
+            ang(i) = Atn2(ys(i) - cy, xs(i) - cx)
+            ord(i) = i
+        Next i
+        For i = 0 To 2
+            For j = 0 To 2 - i
+                If ang(ord(j)) > ang(ord(j + 1)) Then t = ord(j): ord(j) = ord(j + 1): ord(j + 1) = t
+            Next j
+        Next i
+        s = 0: best = 1E+30
+        For i = 0 To 3
+            If xs(ord(i)) + ys(ord(i)) < best Then best = xs(ord(i)) + ys(ord(i)): s = i
+        Next i
+        For i = 0 To 3
+            q(i * 2) = xs(ord((s + i) Mod 4))
+            q(i * 2 + 1) = ys(ord((s + i) Mod 4))
+        Next i
+    Else
+        ' Circulo/elipse ou forma livre: pontos mais afastados nas diagonais.
+        Dim b(3) As Double
+        b(0) = 1E+30: b(1) = -1E+30: b(2) = -1E+30: b(3) = 1E+30
+        For i = 0 To n - 1
+            If xs(i) + ys(i) < b(0) Then b(0) = xs(i) + ys(i): q(0) = xs(i): q(1) = ys(i)
+            If xs(i) - ys(i) > b(1) Then b(1) = xs(i) - ys(i): q(2) = xs(i): q(3) = ys(i)
+            If xs(i) + ys(i) > b(2) Then b(2) = xs(i) + ys(i): q(4) = xs(i): q(5) = ys(i)
+            If xs(i) - ys(i) < b(3) Then b(3) = xs(i) - ys(i): q(6) = xs(i): q(7) = ys(i)
+        Next i
+    End If
     Cantos = N(q(0)) & "," & N(q(1)) & "," & N(q(2)) & "," & N(q(3)) & "," & N(q(4)) & "," & N(q(5)) & "," & N(q(6)) & "," & N(q(7))
 End Function
 
