@@ -51,8 +51,19 @@ body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--f-body)}
 .passo h2{margin:0;font:700 13px var(--f-body);text-transform:uppercase;letter-spacing:.08em;color:var(--mut);display:flex;align-items:center;gap:8px}
 .passo h2 b{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--acc);color:var(--acc-fg);font-size:12px;letter-spacing:0}
 .dicas{margin:0;padding-left:18px;color:var(--mut);font-size:14px}
+.abas{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.abas::-webkit-scrollbar{display:none}
+.aba{flex:none;appearance:none;border:1.5px solid var(--line);background:var(--bg);color:var(--fg);border-radius:999px;padding:8px 14px;font:700 14px var(--f-body);cursor:pointer}
+.aba[aria-selected="true"]{background:var(--acc);border-color:var(--acc);color:var(--acc-fg)}
+.aba:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.ptam{display:flex;flex-wrap:wrap;gap:8px}
+.ptam button{appearance:none;min-width:46px;padding:9px 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--fg);font:700 14px var(--f-body);cursor:pointer}
+.ptam button[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:var(--acc-fg)}
+.ptam button:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
 .pecas{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .pc{background:var(--bg);border:1.5px solid var(--line);border-radius:14px;padding:6px;cursor:pointer;display:grid;gap:6px;font:600 13px/1.25 var(--f-body);color:var(--fg);text-align:center}
+.pc .pr{color:var(--acc);font-weight:700;font-size:13px}
+.aba.sub{padding:6px 12px;font-size:13px;font-weight:600}
 .pc img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:10px;background:#fff}
 .pc[aria-pressed="true"]{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc) inset}
 .vazio{color:var(--mut);margin:0;font-size:14px}
@@ -116,7 +127,8 @@ body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--f-body)}
       </div>
       <div class="acts" id="actsRes" hidden>
         <button class="bt clara" id="antes" type="button">Ver antes</button>
-        <button class="bt wa" id="enviar" type="button">Enviar para a loja</button>
+        <button class="bt" id="comprar" type="button" hidden>Comprar</button>
+        <button class="bt wa" id="enviar" type="button">Pedir no WhatsApp</button>
         <button class="bt" id="salvar" type="button">Salvar foto</button>
         <button class="bt sec" id="outra" type="button">Provar outra</button>
       </div>
@@ -128,7 +140,10 @@ body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--f-body)}
       </div>
       <div class="passo">
         <h2><b>2</b> Escolha a peça</h2>
+        <div class="abas" id="abas" role="tablist" aria-label="Categorias"></div>
+        <div class="abas" id="subs" aria-label="Subcategorias" hidden></div>
         <div class="pecas" id="pecas"></div>
+        <div id="tamBox" hidden><h2 style="margin:6px 0 8px"><b>3</b> Tamanho</h2><div class="ptam" id="ptam"></div></div>
         <p class="vazio" id="semPecas" hidden>A loja está cadastrando as peças. Volte em breve!</p>
       </div>
       <div class="passo">
@@ -137,7 +152,7 @@ body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--f-body)}
         <p class="info" id="info"></p>
       </div>
       <div class="rod">
-        <a class="bt wa" id="wa" href="#" target="_blank" rel="noopener">Gostou? Chama no WhatsApp</a>
+        <a class="bt wa" id="wa" href="#" target="_blank" rel="noopener">Comprar pelo WhatsApp</a>
         <p class="ola" id="ola" hidden></p>
         <p class="nota">A imagem é gerada por inteligência artificial e é uma simulação. <a href="{{BASE}}termos">Termos e privacidade</a> · tecnologia Vcela</p>
       </div>
@@ -150,8 +165,6 @@ body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--f-body)}
     <h2>Cadastre-se para provar</h2>
     <label class="f" for="cnome">Seu nome<input id="cnome" type="text" autocomplete="name" maxlength="80" required></label>
     <label class="f" for="cwhats">WhatsApp com DDD<input id="cwhats" type="tel" inputmode="tel" autocomplete="tel" placeholder="(11) 90000-0000" required></label>
-    <fieldset style="border:0;padding:0;margin:0;display:grid;gap:6px"><legend style="font-weight:600;font-size:14px;padding:0;margin-bottom:6px">Tamanho que costuma usar <span style="color:var(--mut);font-weight:400">(opcional)</span></legend>
-      <div class="tams" id="ctams"></div></fieldset>
     <label class="ck"><input id="ctermos" type="checkbox" required><span>Li e aceito os <a href="{{BASE}}termos" target="_blank" rel="noopener">termos de uso e privacidade</a> do provador, incluindo o envio da minha foto para a inteligência artificial gerar a imagem.</span></label>
     <label class="ck"><input id="cnov" type="checkbox"><span>Quero receber novidades e promoções da {{NOME}} pelo WhatsApp.</span></label>
     <p class="erro" id="cerro" role="alert"></p>
@@ -169,16 +182,15 @@ $("wa").href=wa("Oi! Vim pelo provador virtual da loja.");
 /* ---------- cadastro ---------- */
 let cli=null; try{cli=JSON.parse(localStorage.getItem(CK)||"null");}catch(_){}
 if(cli&&cli.termos!==TERMOS)cli=null;
-["PP","P","M","G","GG","XG"].forEach(t=>{const l=document.createElement("label");const i=document.createElement("input");i.type="radio";i.name="ctam";i.value=t;const s=document.createElement("span");s.textContent=t;l.append(i,s);$("ctams").append(l);});
 function mostrarOla(){ if(!cli){$("cad").hidden=false;$("ola").hidden=true;return;} $("cad").hidden=true;$("ola").hidden=false;$("ola").textContent="Olá, "+cli.nome.split(" ")[0]+"! ";const s=document.createElement("button");s.type="button";s.textContent="Não é você?";s.onclick=()=>{try{localStorage.removeItem(CK);}catch(_){}cli=null;mostrarOla();};$("ola").append(s);atualizar(); }
 const $w=$("cwhats");
 $w.addEventListener("input",()=>{let d=$w.value.replace(/\D/g,"").slice(0,11);$w.value=d.length>6?"("+d.slice(0,2)+") "+d.slice(2,d.length-4)+"-"+d.slice(-4):d.length>2?"("+d.slice(0,2)+") "+d.slice(2):d;});
 $("fcad").onsubmit=async e=>{e.preventDefault();const er=$("cerro"),bt=$("cbt");er.textContent="";
-  const nome=$("cnome").value.trim(),wh=$w.value.replace(/\D/g,""),tam=(document.querySelector('input[name="ctam"]:checked')||{}).value||"";
+  const nome=$("cnome").value.trim(),wh=$w.value.replace(/\D/g,"");
   if(nome.length<2){er.textContent="Digite seu nome.";return;} if(wh.length<10){er.textContent="Digite o WhatsApp com DDD.";return;}
   if(!$("ctermos").checked){er.textContent="Para usar o provador, aceite os termos.";return;}
   bt.disabled=true;bt.textContent="Entrando…";
-  try{const r=await fetch(API+"cadastro",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({loja:LOJA,nome,whatsapp:wh,tamanho:tam,termos:true,termos_versao:TERMOS,novidades:$("cnov").checked})});
+  try{const r=await fetch(API+"cadastro",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({loja:LOJA,nome,whatsapp:wh,tamanho:"",termos:true,termos_versao:TERMOS,novidades:$("cnov").checked})});
     const j=await r.json(); if(!r.ok)throw new Error(j.message||"Não deu certo. Tente de novo.");
     cli={token:j.token,nome:j.nome,termos:TERMOS}; try{localStorage.setItem(CK,JSON.stringify(cli));}catch(_){} mostrarOla();
   }catch(x){er.textContent=x.message||"Sem conexão. Tente de novo.";}
@@ -188,10 +200,33 @@ $("fcad").onsubmit=async e=>{e.preventDefault();const er=$("cerro"),bt=$("cbt");
 let peca=null;
 const lista=L.pecas||[];
 if(!lista.length){$("semPecas").hidden=false; if(L.gerando){$("semPecas").textContent="As peças estão sendo criadas agora. Esta página atualiza sozinha em instantes…"; setTimeout(()=>location.reload(),25000);}}
-lista.forEach(p=>{const b=document.createElement("button");b.type="button";b.className="pc";b.setAttribute("aria-pressed","false");
-  const im=document.createElement("img");im.src=p.img;im.alt="";im.loading="lazy";b.append(im,document.createTextNode(p.nome));
-  b.onclick=()=>{peca=p;document.querySelectorAll(".pc").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));$("wa").href=wa("Oi! Provei no provador virtual e gostei: "+p.nome);atualizar();};
-  $("pecas").append(b);});
+let tam="";
+const ORD=["Feminino","Masculino","Infantil","Acessórios"];
+const cats=[...new Set(lista.map(p=>p.cat||"Outras"))].sort((a,b)=>(ORD.indexOf(a)<0?99:ORD.indexOf(a))-(ORD.indexOf(b)<0?99:ORD.indexOf(b)));
+const pre=new URLSearchParams(location.search).get("peca");
+const alvo=lista.find(p=>p.id===pre);
+let catAtual=alvo?(alvo.cat||"Outras"):cats[0], subAtual=alvo?(alvo.sub||""):"";
+function msg(){ return "Oi! Provei no provador virtual e quero comprar: "+(peca?peca.nome:"")+(tam?", tamanho "+tam:"")+(peca&&peca.preco?" (R$ "+peca.preco+")":""); }
+function tamanhos(){ const box=$("ptam"); box.textContent=""; tam="";
+  const ts=(peca&&peca.tams)||[]; $("tamBox").hidden=!ts.length;
+  ts.forEach(t=>{const b=document.createElement("button");b.type="button";b.textContent=t;b.setAttribute("aria-pressed","false");
+    b.onclick=()=>{tam=t;box.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));$("wa").href=wa(msg());$("erro").textContent="";};box.append(b);}); }
+function escolher(p){ peca=p; document.querySelectorAll(".pc").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.id===p.id))); tamanhos(); $("wa").href=wa(msg()); $("comprar").hidden=!p.link; atualizar(); }
+function subs(){ const box=$("subs"); box.textContent="";
+  const ss=[...new Set(lista.filter(p=>(p.cat||"Outras")===catAtual&&p.sub).map(p=>p.sub))];
+  box.hidden=ss.length<2; if(box.hidden){subAtual="";return;}
+  ["Todos",...ss].forEach(n=>{const b=document.createElement("button");b.type="button";b.className="aba sub";b.textContent=n;const v=n==="Todos"?"":n;b.setAttribute("aria-pressed",String(v===subAtual));
+    b.onclick=()=>{subAtual=v;box.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));box.querySelectorAll("button").forEach(x=>x.setAttribute("aria-selected",String(x===b)));mostrar();};
+    b.setAttribute("aria-selected",String(v===subAtual));box.append(b);}); }
+function mostrar(){ $("pecas").textContent="";
+  lista.filter(p=>(p.cat||"Outras")===catAtual&&(!subAtual||p.sub===subAtual)).forEach(p=>{const b=document.createElement("button");b.type="button";b.className="pc";b.dataset.id=p.id;b.setAttribute("aria-pressed",String(peca===p));
+    const im=document.createElement("img");im.src=p.img;im.alt="";im.loading="lazy";b.append(im,document.createTextNode(p.nome));
+    if(p.preco){const pr=document.createElement("span");pr.className="pr";pr.textContent="R$ "+p.preco;b.append(pr);}
+    b.onclick=()=>escolher(p); $("pecas").append(b);}); }
+if(cats.length>1){ cats.forEach(c=>{const b=document.createElement("button");b.type="button";b.className="aba";b.setAttribute("role","tab");b.textContent=c;b.setAttribute("aria-selected",String(c===catAtual));
+  b.onclick=()=>{catAtual=c;subAtual="";document.querySelectorAll("#abas .aba").forEach(x=>x.setAttribute("aria-selected",String(x===b)));subs();mostrar();};$("abas").append(b);}); }
+else $("abas").hidden=true;
+subs(); mostrar(); if(alvo)escolher(alvo);
 
 /* ---------- foto ---------- */
 let foto=null, stream=null, frente=true, resultado=null, job=null, link=null;
@@ -255,13 +290,15 @@ $("antes").onclick=()=>{ vendoAntes=!vendoAntes; $("res").src=vendoAntes?foto:re
 $("outra").onclick=()=>{ vendoAntes=false; $("antes").textContent="Ver antes"; estado("foto"); };
 async function enviar(){ if(!job||!cli)return false; const bt=$("enviar"); const ant=bt.textContent;
   const w=window.open("","_blank"); bt.disabled=true; bt.textContent="Preparando…"; $("erro").textContent="";
-  try{ if(!link){ const r=await fetch(API+"enviar",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:cli.token,id:job})}); const j=await r.json(); if(!r.ok)throw new Error(j.message||"Não deu para enviar."); link=j.link; }
-    const url=wa("Oi! Provei no provador virtual e gostei: "+(peca?peca.nome:"")+"\nMinha prova: "+link);
+  try{ if(!link){ const r=await fetch(API+"enviar",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:cli.token,id:job,tamanho:tam})}); const j=await r.json(); if(!r.ok)throw new Error(j.message||"Não deu para enviar."); link=j.link; }
+    const url=wa(msg()+"\nMinha prova: "+link);
     if(w){w.location.href=url;}else{location.href=url;}
   }catch(x){ if(w)w.close(); $("erro").textContent=x.message||"Sem conexão. Tente de novo."; }
   bt.disabled=false; bt.textContent=ant; return true; }
-$("enviar").onclick=enviar;
-$("wa").addEventListener("click",e=>{ if(job&&resultado){e.preventDefault();enviar();} });
+function precisaTam(){ if(peca&&peca.tams&&peca.tams.length&&!tam){ $("erro").textContent="Escolha o tamanho antes de comprar."; $("tamBox").scrollIntoView({behavior:"smooth",block:"center"}); return true;} return false; }
+$("enviar").onclick=()=>{ if(precisaTam())return; enviar(); };
+$("comprar").onclick=()=>{ if(precisaTam()||!peca||!peca.link)return; let u=peca.link; if(tam&&peca.var){u+=(u.includes("?")?"&":"?")+peca.var+"="+encodeURIComponent(tam.toLowerCase());} location.href=u; };
+$("wa").addEventListener("click",e=>{ if(job&&resultado){e.preventDefault(); if(precisaTam())return; enviar();} });
 $("salvar").onclick=async()=>{ try{ const b=await (await fetch(resultado)).blob(); const f=new File([b],"provador-"+LOJA+".jpg",{type:b.type||"image/jpeg"});
     if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:"Provador "+L.nome,text:"Olha como ficou!"+(L.instagram?" @"+L.instagram:"")});return;}
     const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=f.name;a.click(); }catch(_){} };

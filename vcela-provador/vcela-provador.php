@@ -2,7 +2,8 @@
 /**
  * Plugin Name: Vcela Provador
  * Description: Provador virtual para lojas de roupa. Cada loja tem seu endereço (/slug), cadastro com aceite dos termos, lista de clientes e peças próprias.
- * Version: 1.4.0
+ * Version: 1.5.0
+ * WC requires at least: 8.0
  * Author: Divulgar Criações
  * Text Domain: vcela-provador
  */
@@ -156,17 +157,96 @@ add_action('init', function () {
 	register_post_type('vcela_peca', ['labels' => ['name' => 'Peças', 'singular_name' => 'Peça', 'add_new_item' => 'Nova peça', 'edit_item' => 'Editar peça'],
 		'public' => false, 'show_ui' => true, 'show_in_menu' => 'vcela-lojas', 'show_in_rest' => true, 'supports' => ['title', 'thumbnail', 'custom-fields'], 'menu_icon' => 'dashicons-format-image']);
 	register_post_meta('vcela_peca', 'vcela_loja', ['type' => 'string', 'single' => true, 'show_in_rest' => true]);
+	register_post_meta('vcela_peca', 'vcela_tamanhos', ['type' => 'string', 'single' => true, 'show_in_rest' => true]);
+	register_post_meta('vcela_peca', 'vcela_preco', ['type' => 'string', 'single' => true, 'show_in_rest' => true]);
+	register_taxonomy('vcela_categoria', 'vcela_peca', ['labels' => ['name' => 'Categorias', 'singular_name' => 'Categoria', 'add_new_item' => 'Nova categoria'],
+		'hierarchical' => true, 'public' => false, 'show_ui' => true, 'show_admin_column' => true, 'show_in_rest' => true]);
+	if ((int) get_option('vcp_cats_ok') < 2) {
+		foreach (VCP_SUBS as $c => $subs) {
+			$t = term_exists($c, 'vcela_categoria'); if (!$t) $t = wp_insert_term($c, 'vcela_categoria');
+			if (is_wp_error($t)) continue;
+			foreach ($subs as $sb) if (!term_exists($sb, 'vcela_categoria', (int) $t['term_id'])) wp_insert_term($sb, 'vcela_categoria', ['parent' => (int) $t['term_id'], 'slug' => sanitize_title($c . '-' . $sb)]);
+		}
+		update_option('vcp_cats_ok', 2, false);
+	}
 });
 
-/** Todas as pecas da loja: ['o0' => [...], 'p123' => [...]] */
-function vcp_pecas($slug, $l) {
+const VCP_CATS = ['Feminino', 'Masculino', 'Infantil', 'Acessórios'];
+const VCP_SUBS = ['Feminino' => ['Vestidos', 'Blusas', 'Saias', 'Calças', 'Conjuntos'], 'Masculino' => ['Camisetas', 'Camisas', 'Calças', 'Bermudas'], 'Infantil' => ['Menina', 'Menino', 'Bebê'], 'Acessórios' => ['Bolsas', 'Bijuterias', 'Óculos', 'Cintos']];
+
+function vcp_preco($v) { $v = preg_replace('/[^0-9,\.]/', '', (string) $v); if ($v === '') return ''; $n = (float) str_replace(',', '.', str_replace('.', '', preg_match('/,\d{1,2}$/', $v) ? $v : str_replace(',', '', $v))); if (!preg_match('/,\d{1,2}$/', $v)) $n = (float) str_replace(',', '', $v); return $n > 0 ? number_format($n, 2, ',', '.') : ''; }
+function vcp_tams($txt) { return array_values(array_filter(array_map(fn($t) => mb_strtoupper(trim($t)), preg_split('/[,;\/]+/', (string) $txt)), fn($t) => $t !== '' && mb_strlen($t) <= 12)); }
+
+// Caixa "Loja e tamanhos" na tela da peca.
+add_action('add_meta_boxes_vcela_peca', function () {
+	add_meta_box('vcp_peca', 'Loja e tamanhos', function ($post) {
+		wp_nonce_field('vcp_peca', 'vcp_peca_n');
+		$loja = get_post_meta($post->ID, 'vcela_loja', true) ?: 'vcelastore';
+		echo '<p><label>Loja<br><select name="vcela_loja" style="width:100%">';
+		foreach (vcp_lojas() as $s => $x) echo '<option value="' . esc_attr($s) . '"' . selected($loja, $s, false) . '>' . esc_html($x['nome']) . '</option>';
+		echo '</select></label></p><p><label>Tamanhos disponíveis<br><input name="vcela_tamanhos" style="width:100%" placeholder="P, M, G, GG" value="' . esc_attr(get_post_meta($post->ID, 'vcela_tamanhos', true)) . '"></label></p><p class="description">Separe por vírgula.</p><p><label>Preço<br><input name="vcela_preco" style="width:100%" placeholder="129,90" value="' . esc_attr(get_post_meta($post->ID, 'vcela_preco', true)) . '"></label></p><p class="description">A foto da peça vai em "Imagem destacada". Marque a categoria e a subcategoria (ex.: Feminino e Vestidos) na caixa "Categorias".</p>';
+	}, 'vcela_peca', 'side', 'high');
+});
+add_action('save_post_vcela_peca', function ($id) {
+	if (!isset($_POST['vcp_peca_n']) || !wp_verify_nonce($_POST['vcp_peca_n'], 'vcp_peca') || !current_user_can('edit_post', $id)) return;
+	$loja = sanitize_key($_POST['vcela_loja'] ?? '');
+	if (vcp_loja($loja)) update_post_meta($id, 'vcela_loja', $loja);
+	update_post_meta($id, 'vcela_tamanhos', implode(', ', vcp_tams(wp_unslash($_POST['vcela_tamanhos'] ?? ''))));
+	update_post_meta($id, 'vcela_preco', vcp_preco(wp_unslash($_POST['vcela_preco'] ?? '')));
+});
+
+/** Loja do provador ligada ao WooCommerce deste site (a primeira loja ativa, ou a escolhida no painel). */
+function vcp_loja_woo() {
+	$s = (string) get_option('vcp_loja_woo', '');
+	if ($s && vcp_loja($s)) return $s;
+	foreach (vcp_lojas() as $k => $x) if (!empty($x['ativa'])) return $k;
+	return '';
+}
+
+function vcp_woo_cat_sub($pid) {
+	$cat = ''; $sub = '';
+	foreach ((array) wp_get_post_terms($pid, 'product_cat') as $tm) {
+		if (!is_object($tm) || $tm->slug === 'uncategorized' || $tm->slug === 'sem-categoria') continue;
+		$anc = get_ancestors($tm->term_id, 'product_cat');
+		if ($anc) { $topo = get_term(end($anc), 'product_cat'); $pai = get_term($tm->parent, 'product_cat');
+			if ($topo && !is_wp_error($topo)) $cat = $topo->name; if ($pai && !is_wp_error($pai) && $pai->term_id !== $topo->term_id) $sub = $pai->name; else $sub = $tm->name; }
+		elseif ($cat === '') $cat = $tm->name;
+	}
+	return [$cat, $sub];
+}
+
+/** Produtos do WooCommerce que entram no provador. */
+function vcp_pecas_woo() {
+	if (!function_exists('wc_get_products')) return [];
 	$out = [];
-	foreach ((array) ($l['pecas'] ?? []) as $i => $p) if (!empty($p['img'])) $out['o' . $i] = ['id' => 'o' . $i, 'nome' => $p['nome'], 'img' => $p['img']];
+	foreach (wc_get_products(['status' => 'publish', 'limit' => 300, 'orderby' => 'menu_order', 'order' => 'ASC']) as $pr) {
+		if (get_post_meta($pr->get_id(), '_vcp_fora', true) === 'yes' || !$pr->get_image_id()) continue;
+		$img = wp_get_attachment_image_url($pr->get_image_id(), 'large');
+		if (!$img) continue;
+		[$cat, $sub] = vcp_woo_cat_sub($pr->get_id());
+		$tams = vcp_tams($pr->get_attribute('pa_tamanho') ?: $pr->get_attribute('tamanho'));
+		$preco = $pr->get_price() !== '' ? number_format((float) $pr->get_price(), 2, ',', '.') : '';
+		$out['w' . $pr->get_id()] = ['id' => 'w' . $pr->get_id(), 'nome' => $pr->get_name(), 'img' => $img, 'cat' => $cat, 'sub' => $sub, 'tams' => $tams, 'preco' => $preco,
+			'link' => get_permalink($pr->get_id()), 'var' => $pr->is_type('variable') ? (taxonomy_exists('pa_tamanho') && $pr->get_attribute('pa_tamanho') ? 'attribute_pa_tamanho' : 'attribute_tamanho') : ''];
+	}
+	return $out;
+}
+
+/** Todas as pecas da loja: ['w12' => produto Woo, 'o0' => [...], 'p123' => [...]] */
+function vcp_pecas($slug, $l) {
+	$out = $slug === vcp_loja_woo() ? vcp_pecas_woo() : [];
+	foreach ((array) ($l['pecas'] ?? []) as $i => $p) if (!empty($p['img'])) $out['o' . $i] = ['id' => 'o' . $i, 'nome' => $p['nome'], 'img' => $p['img'], 'cat' => $p['cat'] ?? '', 'sub' => '', 'tams' => vcp_tams($p['tams'] ?? ''), 'preco' => $p['preco'] ?? ''];
 	$posts = get_posts(['post_type' => 'vcela_peca', 'post_status' => 'publish', 'numberposts' => 200, 'orderby' => 'menu_order date', 'order' => 'ASC',
 		'meta_query' => [['key' => 'vcela_loja', 'value' => $slug]]]);
 	foreach ($posts as $p) {
 		$img = get_the_post_thumbnail_url($p, 'large');
-		if ($img) $out['p' . $p->ID] = ['id' => 'p' . $p->ID, 'nome' => get_the_title($p), 'img' => $img];
+		$cat = ''; $sub = '';
+		foreach ((array) wp_get_post_terms($p->ID, 'vcela_categoria') as $tm) {
+			if (!is_object($tm)) continue;
+			if ($tm->parent) { $pai = get_term($tm->parent, 'vcela_categoria'); $sub = $tm->name; if ($pai && !is_wp_error($pai)) $cat = $pai->name; }
+			elseif ($cat === '') $cat = $tm->name;
+		}
+		if ($img) $out['p' . $p->ID] = ['id' => 'p' . $p->ID, 'nome' => get_the_title($p), 'img' => $img, 'cat' => $cat, 'sub' => $sub, 'tams' => vcp_tams(get_post_meta($p->ID, 'vcela_tamanhos', true)), 'preco' => (string) get_post_meta($p->ID, 'vcela_preco', true)];
 	}
 	return $out;
 }
@@ -181,6 +261,22 @@ function vcp_auto($slug, $l) {
 	$g = get_option('vcp_geracoes', []);
 	if ($g && !get_transient('vcp_conferindo')) { set_transient('vcp_conferindo', 1, 15); vcp_gerar_conferir(); }
 }
+
+/* -------------------------------------------------- WooCommerce: produto */
+
+// Botao "Provar em mim" na pagina do produto.
+add_action('woocommerce_after_add_to_cart_form', function () {
+	global $product; $slug = vcp_loja_woo();
+	if (!$product || !$slug || !vcp_ia_ok() || get_post_meta($product->get_id(), '_vcp_fora', true) === 'yes' || !$product->get_image_id()) return;
+	$l = vcp_loja($slug); $acc = vcp_cor($l['acc'] ?? '');
+	echo '<a class="vcp-provar-btn" href="' . esc_url(home_url('/' . $slug . '/?peca=w' . $product->get_id())) . '" style="display:flex;align-items:center;justify-content:center;gap:8px;margin:12px 0;padding:14px 18px;border-radius:12px;background:' . $acc . ';color:#fff;font-weight:700;text-decoration:none">✨ Provar em mim com IA</a>';
+});
+
+// Caixa no produto para tirar do provador.
+add_action('woocommerce_product_options_general_product_data', function () {
+	woocommerce_wp_checkbox(['id' => '_vcp_fora', 'label' => 'Fora do provador', 'description' => 'Não mostrar este produto no provador virtual']);
+});
+add_action('woocommerce_process_product_meta', function ($id) { update_post_meta($id, '_vcp_fora', empty($_POST['_vcp_fora']) ? 'no' : 'yes'); });
 
 /* ------------------------------------------------------ prova com IA (FASHN) */
 
@@ -267,6 +363,8 @@ function vcp_enviar(WP_REST_Request $r) {
 	$tok = preg_replace('/[^a-f0-9]/', '', (string) $r['token']);
 	$cid = strlen($tok) === 32 ? (int) $wpdb->get_var($wpdb->prepare("SELECT id FROM $t WHERE token=%s", $tok)) : 0;
 	if (!$job || !$cid || $job['c'] !== $cid) return new WP_Error('job', 'Prova não encontrada. Faça a prova de novo.', ['status' => 404]);
+	$tam = mb_substr(sanitize_text_field((string) $r['tamanho']), 0, 12);
+	if ($tam !== '') $wpdb->update($t, ['tamanho' => mb_substr($tam, 0, 4)], ['id' => $cid]);
 	if (!empty($job['link'])) return ['link' => $job['link']];
 	$res = vcp_fashn('GET', '/v1/status/' . rawurlencode($id));
 	$img = (string) ($res['output'][0] ?? '');
@@ -488,7 +586,8 @@ add_action('admin_post_vcp_salvar', function () {
 	$pecas = [];
 	foreach ((array) ($_POST['pecas'] ?? []) as $p) {
 		$img = esc_url_raw($p['img'] ?? ''); $nome = sanitize_text_field($p['nome'] ?? '');
-		if ($img && $nome) $pecas[] = ['nome' => $nome, 'img' => $img];
+		$cat = in_array($p['cat'] ?? '', VCP_CATS, true) ? $p['cat'] : '';
+		if ($img && $nome) $pecas[] = ['nome' => $nome, 'img' => $img, 'cat' => $cat, 'tams' => implode(', ', vcp_tams(wp_unslash($p['tams'] ?? ''))), 'preco' => vcp_preco(wp_unslash($p['preco'] ?? ''))];
 	}
 	$d['pecas'] = $pecas;
 	if (!empty($_POST['nova_chave'])) $d['chave'] = bin2hex(random_bytes(16));
@@ -542,7 +641,8 @@ function vcp_admin() {
 	$pecas = $d['pecas'] ?: [];
 	$pecas[] = ['nome' => '', 'img' => ''];
 	foreach ($pecas as $i => $p) {
-		$rows .= '<tr><td><input name="pecas[' . $i . '][nome]" placeholder="Nome da peça" value="' . esc_attr($p['nome']) . '"></td><td><input class="regular-text" id="vcp-p' . $i . '" name="pecas[' . $i . '][img]" value="' . esc_attr($p['img']) . '"> <button type="button" class="button vcp-media" data-alvo="vcp-p' . $i . '">Escolher</button></td><td>' . ($p['img'] ? '<img src="' . esc_url($p['img']) . '" style="height:48px">' : '') . '</td></tr>';
+		$sc = '<select name="pecas[' . $i . '][cat]"><option value="">Categoria</option>'; foreach (VCP_CATS as $cc) $sc .= '<option' . selected($p['cat'] ?? '', $cc, false) . '>' . esc_html($cc) . '</option>'; $sc .= '</select>';
+		$rows .= '<tr><td><input name="pecas[' . $i . '][nome]" placeholder="Nome da peça" value="' . esc_attr($p['nome']) . '"><br>' . $sc . ' <input name="pecas[' . $i . '][tams]" placeholder="Tamanhos: P, M, G" size="14" value="' . esc_attr($p['tams'] ?? '') . '"> R$ <input name="pecas[' . $i . '][preco]" placeholder="129,90" size="7" value="' . esc_attr($p['preco'] ?? '') . '"></td><td><input class="regular-text" id="vcp-p' . $i . '" name="pecas[' . $i . '][img]" value="' . esc_attr($p['img']) . '"> <button type="button" class="button vcp-media" data-alvo="vcp-p' . $i . '">Escolher</button></td><td>' . ($p['img'] ? '<img src="' . esc_url($p['img']) . '" style="height:48px">' : '') . '</td></tr>';
 	}
 	echo $f('Peças', '<table class="widefat" style="max-width:640px"><tbody>' . $rows . '</tbody></table>', 'Foto da peça de frente, em PNG sem fundo. Para apagar uma peça, deixe o nome vazio. Salve para abrir mais uma linha.');
 	if ($sel) {
