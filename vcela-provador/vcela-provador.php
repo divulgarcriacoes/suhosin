@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Vcela Provador
  * Description: Provador virtual para lojas de roupa. Cada loja tem seu endereço (/slug), cadastro com aceite dos termos, lista de clientes e peças próprias.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Divulgar Criações
  * Text Domain: vcela-provador
  */
@@ -10,8 +10,8 @@ if (!defined('ABSPATH')) exit;
 
 define('VCP_DIR', __DIR__ . '/');
 define('VCP_URL', plugin_dir_url(__FILE__));
-const VCP_DB = 1;
-const VCP_TERMOS = '2026-11-25';
+const VCP_DB = 2;
+const VCP_TERMOS = '2026-11-26';
 const VCP_TAMS = ['PP', 'P', 'M', 'G', 'GG', 'XG'];
 
 /* ------------------------------------------------------------------ dados */
@@ -44,6 +44,8 @@ function vcp_instalar() {
 		aceite_em datetime NOT NULL,
 		token char(32) NOT NULL,
 		provas int unsigned NOT NULL DEFAULT 0,
+		ia_dia date NULL,
+		ia_qtd int unsigned NOT NULL DEFAULT 0,
 		pecas text NULL,
 		ultima datetime NULL,
 		PRIMARY KEY  (id),
@@ -83,9 +85,10 @@ function vcp_render($tpl, $slug, $l) {
 	$h = file_get_contents(VCP_DIR . 'app/' . $tpl . '.html');
 	$base = home_url('/' . $slug . '/');
 	$pecas = [];
-	foreach ((array) $l['pecas'] as $p) if (!empty($p['img'])) $pecas[] = ['nome' => $p['nome'], 'img' => $p['img'], 'anc' => $p['anc'] ?? null];
+	foreach ((array) $l['pecas'] as $i => $p) if (!empty($p['img'])) $pecas[] = ['id' => $i, 'nome' => $p['nome'], 'img' => $p['img'], 'anc' => $p['anc'] ?? null];
 	$cfg = ['slug' => $slug, 'nome' => $l['nome'], 'cor1' => $l['cor1'], 'whatsapp' => $l['whatsapp'], 'instagram' => $l['instagram'],
-		'api' => rest_url('vcela/v1/'), 'termos' => VCP_TERMOS, 'pecas' => $pecas];
+		'api' => rest_url('vcela/v1/'), 'termos' => VCP_TERMOS, 'pecas' => $pecas,
+		'ia' => vcp_ia_ok() ? 1 : 0, 'limite' => vcp_ia_cfg()['por_cliente']];
 	$cont = [];
 	if ($l['whatsapp']) $cont[] = 'pelo WhatsApp <a href="https://wa.me/' . esc_attr($l['whatsapp']) . '">' . esc_html(vcp_fone($l['whatsapp'])) . '</a>';
 	if ($l['instagram']) $cont[] = 'pelo Instagram <a href="https://instagram.com/' . esc_attr($l['instagram']) . '">@' . esc_html($l['instagram']) . '</a>';
@@ -106,6 +109,8 @@ function vcp_fone($w) { $d = substr($w, 2); return strlen($d) === 11 ? substr($d
 add_action('rest_api_init', function () {
 	register_rest_route('vcela/v1', '/cadastro', ['methods' => 'POST', 'permission_callback' => '__return_true', 'callback' => 'vcp_cadastro']);
 	register_rest_route('vcela/v1', '/prova', ['methods' => 'POST', 'permission_callback' => '__return_true', 'callback' => 'vcp_prova']);
+	register_rest_route('vcela/v1', '/provar', ['methods' => 'POST', 'permission_callback' => '__return_true', 'callback' => 'vcp_provar']);
+	register_rest_route('vcela/v1', '/provar/(?P<id>[A-Za-z0-9-]{8,80})', ['methods' => 'GET', 'permission_callback' => '__return_true', 'callback' => 'vcp_provar_status']);
 });
 
 function vcp_cadastro(WP_REST_Request $r) {
@@ -140,6 +145,202 @@ function vcp_prova(WP_REST_Request $r) {
 	if ($peca !== '') $p[$peca] = ($p[$peca] ?? 0) + 1;
 	$wpdb->query($wpdb->prepare("UPDATE $t SET provas=provas+1, pecas=%s, ultima=%s WHERE id=%d", wp_json_encode($p, JSON_UNESCAPED_UNICODE), current_time('mysql'), $c->id));
 	return ['ok' => true];
+}
+
+/* ------------------------------------------------------ prova com IA (FASHN) */
+
+function vcp_ia_cfg() {
+	$c = get_option('vcp_ia', []);
+	return array_merge(['chave' => '', 'por_cliente' => 5, 'por_dia' => 60, 'modo' => 'balanced'], is_array($c) ? $c : []);
+}
+function vcp_ia_ok() { return vcp_ia_cfg()['chave'] !== ''; }
+
+function vcp_fashn($metodo, $caminho, $corpo = null, $timeout = 40) {
+	$args = ['timeout' => $timeout, 'headers' => ['Authorization' => 'Bearer ' . vcp_ia_cfg()['chave'], 'Content-Type' => 'application/json']];
+	if ($corpo !== null) $args['body'] = wp_json_encode($corpo);
+	$r = $metodo === 'POST' ? wp_remote_post('https://api.fashn.ai' . $caminho, $args) : wp_remote_get('https://api.fashn.ai' . $caminho, $args);
+	if (is_wp_error($r)) return ['_erro' => 'Sem conexão com o serviço de IA.'];
+	$j = json_decode(wp_remote_retrieve_body($r), true);
+	$code = wp_remote_retrieve_response_code($r);
+	if ($code >= 400) return ['_erro' => $code === 401 ? 'Chave da IA inválida.' : ($code === 429 ? 'Muitas provas ao mesmo tempo. Tente em alguns segundos.' : 'O serviço de IA recusou o pedido.'), '_code' => $code];
+	return is_array($j) ? $j : ['_erro' => 'Resposta inesperada do serviço de IA.'];
+}
+
+function vcp_provar(WP_REST_Request $r) {
+	global $wpdb; $t = vcp_tab(); $cfg = vcp_ia_cfg();
+	if (!vcp_ia_ok()) return new WP_Error('ia', 'Prova com IA ainda não está ligada.', ['status' => 503]);
+	$tok = preg_replace('/[^a-f0-9]/', '', (string) $r['token']);
+	$c = strlen($tok) === 32 ? $wpdb->get_row($wpdb->prepare("SELECT * FROM $t WHERE token=%s", $tok)) : null;
+	if (!$c) return new WP_Error('token', 'Cadastro não encontrado.', ['status' => 401]);
+	if ($c->termos !== VCP_TERMOS) return new WP_Error('termos', 'Aceite os termos atualizados para continuar.', ['status' => 401]);
+	$l = vcp_loja($c->loja);
+	$pid = (int) $r['peca'];
+	$peca = $l['pecas'][$pid] ?? null;
+	if (!$l || !$peca || empty($peca['img'])) return new WP_Error('peca', 'Peça não encontrada.', ['status' => 400]);
+	$foto = (string) $r['foto'];
+	if (!preg_match('#^data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$#', $foto) || strlen($foto) > 4000000) return new WP_Error('foto', 'Foto inválida ou grande demais.', ['status' => 400]);
+	$hoje = current_time('Y-m-d');
+	$qtd = ($c->ia_dia === $hoje) ? (int) $c->ia_qtd : 0;
+	if ($qtd >= (int) $cfg['por_cliente']) return new WP_Error('limite', 'Você já usou suas provas de hoje. Volte amanhã!', ['status' => 429]);
+	$dk = 'vcp_ia_dia_' . $hoje; $total = (int) get_option($dk, 0);
+	if ($total >= (int) $cfg['por_dia']) return new WP_Error('limite', 'O provador atingiu o limite de hoje. Volte amanhã!', ['status' => 429]);
+	$res = vcp_fashn('POST', '/v1/run', ['model_name' => 'tryon-v1.6', 'inputs' => [
+		'model_image' => $foto, 'garment_image' => $peca['img'], 'category' => 'auto', 'garment_photo_type' => 'auto',
+		'mode' => in_array($cfg['modo'], ['performance', 'balanced', 'quality'], true) ? $cfg['modo'] : 'balanced',
+		'moderation_level' => 'conservative', 'output_format' => 'jpeg', 'return_base64' => true, 'num_samples' => 1]]);
+	if (isset($res['_erro']) || empty($res['id'])) return new WP_Error('ia', $res['_erro'] ?? 'Não deu para iniciar a prova.', ['status' => 502]);
+	$wpdb->update($t, ['ia_dia' => $hoje, 'ia_qtd' => $qtd + 1], ['id' => $c->id]);
+	update_option($dk, $total + 1, false);
+	set_transient('vcp_job_' . md5($res['id']), ['c' => (int) $c->id, 'peca' => $peca['nome']], HOUR_IN_SECONDS);
+	return ['id' => $res['id'], 'restantes' => max(0, (int) $cfg['por_cliente'] - $qtd - 1)];
+}
+
+function vcp_provar_status(WP_REST_Request $r) {
+	global $wpdb; $t = vcp_tab();
+	$id = (string) $r['id'];
+	$job = get_transient('vcp_job_' . md5($id));
+	$tok = preg_replace('/[^a-f0-9]/', '', (string) $r['token']);
+	$cid = strlen($tok) === 32 ? (int) $wpdb->get_var($wpdb->prepare("SELECT id FROM $t WHERE token=%s", $tok)) : 0;
+	if (!$job || !$cid || $job['c'] !== $cid) return new WP_Error('job', 'Prova não encontrada.', ['status' => 404]);
+	$res = vcp_fashn('GET', '/v1/status/' . rawurlencode($id));
+	if (isset($res['_erro'])) return new WP_Error('ia', $res['_erro'], ['status' => 502]);
+	$st = $res['status'] ?? '';
+	if ($st === 'completed' && !empty($res['output'][0])) {
+		if (empty($job['ok'])) { // conta a prova uma vez
+			$job['ok'] = 1; set_transient('vcp_job_' . md5($id), $job, HOUR_IN_SECONDS);
+			$c = $wpdb->get_row($wpdb->prepare("SELECT id,pecas FROM $t WHERE id=%d", $cid));
+			$p = json_decode((string) $c->pecas, true) ?: []; $p[$job['peca']] = ($p[$job['peca']] ?? 0) + 1;
+			$wpdb->query($wpdb->prepare("UPDATE $t SET provas=provas+1, pecas=%s, ultima=%s WHERE id=%d", wp_json_encode($p, JSON_UNESCAPED_UNICODE), current_time('mysql'), $cid));
+		}
+		$img = (string) $res['output'][0];
+		if (strpos($img, 'data:image/') !== 0 && strpos($img, 'https://') !== 0) return new WP_Error('ia', 'Resposta inesperada.', ['status' => 502]);
+		return ['status' => 'pronto', 'imagem' => $img];
+	}
+	if ($st === 'failed') {
+		$n = $res['error']['name'] ?? '';
+		$msg = stripos($n, 'Pose') !== false || stripos($n, 'Load') !== false ? 'Não deu para usar essa foto. Tente uma foto de frente, de corpo inteiro ou da cintura para cima, com boa luz.' : (stripos($n, 'Moderation') !== false || stripos($n, 'Content') !== false ? 'Essa foto não pode ser usada no provador.' : 'A prova não deu certo. Tente outra foto.');
+		return ['status' => 'erro', 'mensagem' => $msg];
+	}
+	return ['status' => 'aguarde'];
+}
+
+add_action('admin_post_vcp_ia', function () {
+	if (!current_user_can('manage_options')) wp_die('Sem permissão.');
+	check_admin_referer('vcp_ia');
+	$c = vcp_ia_cfg();
+	$nova = trim((string) wp_unslash($_POST['chave'] ?? ''));
+	if (!empty($_POST['apagar_chave'])) $c['chave'] = '';
+	elseif ($nova !== '') $c['chave'] = preg_replace('/[^A-Za-z0-9_\-.]/', '', $nova);
+	$c['por_cliente'] = max(1, min(50, (int) ($_POST['por_cliente'] ?? 5)));
+	$c['por_dia'] = max(1, min(5000, (int) ($_POST['por_dia'] ?? 60)));
+	$c['modo'] = in_array($_POST['modo'] ?? '', ['performance', 'balanced', 'quality'], true) ? $_POST['modo'] : 'balanced';
+	update_option('vcp_ia', $c, false);
+	wp_safe_redirect(admin_url('admin.php?page=vcela-lojas&ia=1')); exit;
+});
+
+function vcp_admin_ia() {
+	$c = vcp_ia_cfg(); $hoje = (int) get_option('vcp_ia_dia_' . current_time('Y-m-d'), 0);
+	$saldo = '';
+	if (vcp_ia_ok()) { $b = vcp_fashn('GET', '/v1/credits'); $saldo = isset($b['_erro']) ? esc_html($b['_erro']) : (int) ($b['credits']['total'] ?? 0) . ' restantes'; }
+	echo '<h2 style="margin-top:32px">Prova com IA (FASHN)</h2>';
+	if (!empty($_GET['ia'])) echo '<div class="notice notice-success"><p>Configuração salva.</p></div>';
+	echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="max-width:820px">';
+	wp_nonce_field('vcp_ia');
+	echo '<input type="hidden" name="action" value="vcp_ia"><table class="form-table">';
+	echo '<tr><th scope="row">Chave da FASHN</th><td><input type="password" class="regular-text" name="chave" autocomplete="off" placeholder="' . (vcp_ia_ok() ? 'Chave salva (deixe vazio para manter)' : 'Cole aqui a chave da FASHN') . '">' . (vcp_ia_ok() ? ' <label><input type="checkbox" name="apagar_chave" value="1"> Apagar chave</label>' : '') . '<p class="description">Fica guardada só neste servidor. ' . ($saldo !== '' ? 'Créditos: ' . $saldo : '') . '</p></td></tr>';
+	echo '<tr><th scope="row">Provas por cliente por dia</th><td><input type="number" min="1" max="50" name="por_cliente" value="' . (int) $c['por_cliente'] . '"></td></tr>';
+	echo '<tr><th scope="row">Limite total por dia</th><td><input type="number" min="1" max="5000" name="por_dia" value="' . (int) $c['por_dia'] . '"><p class="description">Todas as lojas somadas. Hoje: ' . $hoje . ' provas. Cada prova gasta 1 crédito.</p></td></tr>';
+	echo '<tr><th scope="row">Qualidade</th><td><select name="modo">';
+	foreach (['performance' => 'Rápida (~5 s)', 'balanced' => 'Equilibrada (~8 s)', 'quality' => 'Máxima (~15 s)'] as $k => $v) echo '<option value="' . $k . '"' . selected($c['modo'], $k, false) . '>' . $v . '</option>';
+	echo '</select></td></tr></table>';
+	submit_button('Salvar prova com IA');
+	echo '</form>';
+}
+
+/* ------------------------------------------- fotos de pecas criadas pela IA */
+
+const VCP_EXEMPLOS = [
+	['Camiseta floral', 'a white cotton t-shirt with a colorful tropical floral print on the chest'],
+	['Camiseta animal print', 'a black t-shirt with an all-over leopard animal print in brown and caramel tones'],
+	['Camiseta AMOR', 'a hot pink t-shirt with the word AMOR printed in large white bold letters on the chest'],
+	['Camiseta listrada', 'a navy blue t-shirt with horizontal white stripes'],
+	['Camiseta tie-dye', 'an orange and yellow tie-dye t-shirt'],
+];
+
+function vcp_prompt_peca($desc) {
+	return 'E-commerce product packshot, ghost mannequin, front view, short-sleeve crew-neck garment: ' . $desc . '. The whole garment is visible and centered, realistic fabric texture, soft studio light, plain light grey background, no person, no hanger, no extra text or logos.';
+}
+
+function vcp_gerar_iniciar($loja, $nome, $desc) {
+	$r = vcp_fashn('POST', '/v1/agent/images/run', ['prompt' => vcp_prompt_peca($desc), 'aspect_ratio' => '3:4', 'resolution' => '1k', 'generation_mode' => 'balanced']);
+	if (isset($r['_erro']) || empty($r['id'])) return $r['_erro'] ?? 'Não deu para iniciar.';
+	$g = get_option('vcp_geracoes', []); $g = is_array($g) ? $g : [];
+	$g[] = ['id' => $r['id'], 'loja' => $loja, 'nome' => $nome, 'inicio' => time()];
+	update_option('vcp_geracoes', $g, false);
+	return true;
+}
+
+/** Confere as fotos em criacao e coloca as prontas nas pecas da loja. Retorna [prontas, pendentes, erros]. */
+function vcp_gerar_conferir() {
+	$g = get_option('vcp_geracoes', []); $g = is_array($g) ? $g : [];
+	if (!$g) return [0, 0, []];
+	require_once ABSPATH . 'wp-admin/includes/media.php';
+	require_once ABSPATH . 'wp-admin/includes/file.php';
+	require_once ABSPATH . 'wp-admin/includes/image.php';
+	$fica = []; $prontas = 0; $erros = [];
+	foreach ($g as $j) {
+		$r = vcp_fashn('GET', '/v1/agent/status/' . rawurlencode($j['id']));
+		$st = $r['status'] ?? '';
+		if ($st === 'completed' && !empty($r['predictions'])) {
+			$url = '';
+			foreach ($r['predictions'] as $p) if (!empty($p['results'][0])) $url = $p['results'][0];
+			$src = $url ? media_sideload_image($url, 0, $j['nome'], 'src') : null;
+			if ($src && !is_wp_error($src)) {
+				$l = vcp_lojas();
+				if (isset($l[$j['loja']])) { $l[$j['loja']]['pecas'][] = ['nome' => $j['nome'], 'img' => $src]; vcp_salvar_lojas($l); }
+				$prontas++;
+			} else $erros[] = $j['nome'] . ': não deu para salvar a foto.';
+		} elseif ($st === 'failed' || (isset($r['_code']) && $r['_code'] === 404)) {
+			$erros[] = $j['nome'] . ': ' . ($r['error']['message'] ?? 'a IA não conseguiu criar.');
+		} elseif (time() - (int) $j['inicio'] > 1800) {
+			$erros[] = $j['nome'] . ': demorou demais.';
+		} else $fica[] = $j;
+	}
+	update_option('vcp_geracoes', $fica, false);
+	return [$prontas, count($fica), $erros];
+}
+
+add_action('admin_post_vcp_gerar', function () {
+	if (!current_user_can('manage_options')) wp_die('Sem permissão.');
+	check_admin_referer('vcp_gerar');
+	$loja = sanitize_key($_POST['loja'] ?? '');
+	if (!vcp_loja($loja) || !vcp_ia_ok()) wp_die('Loja inválida ou chave da FASHN não salva.');
+	$itens = [];
+	if (!empty($_POST['exemplos'])) $itens = VCP_EXEMPLOS;
+	else {
+		$nome = sanitize_text_field($_POST['nome'] ?? ''); $desc = sanitize_textarea_field($_POST['desc'] ?? '');
+		if ($nome !== '' && $desc !== '') $itens[] = [$nome, $desc];
+	}
+	$msg = [];
+	foreach ($itens as $it) { $ok = vcp_gerar_iniciar($loja, $it[0], $it[1]); if ($ok !== true) $msg[] = $it[0] . ': ' . $ok; }
+	set_transient('vcp_gerar_msg', $msg ? implode(' · ', $msg) : count($itens) . ' foto(s) em criação. Leva cerca de 1 minuto; recarregue esta página.', 300);
+	wp_safe_redirect(admin_url('admin.php?page=vcela-lojas&loja=' . $loja)); exit;
+});
+
+function vcp_admin_gerar($sel) {
+	if (!vcp_ia_ok()) { echo '<p><em>Para criar fotos de peças com IA, salve a chave da FASHN na tela "Todas as lojas".</em></p>'; return; }
+	[$prontas, $pend, $erros] = vcp_gerar_conferir();
+	echo '<h2 style="margin-top:32px">Criar foto de peça com IA</h2>';
+	if ($m = get_transient('vcp_gerar_msg')) { echo '<div class="notice notice-info"><p>' . esc_html($m) . '</p></div>'; delete_transient('vcp_gerar_msg'); }
+	if ($prontas) echo '<div class="notice notice-success"><p>' . (int) $prontas . ' peça(s) criada(s) e adicionada(s) à loja.</p></div>';
+	if ($pend) echo '<div class="notice notice-warning"><p>' . (int) $pend . ' foto(s) ainda em criação. Recarregue em alguns segundos.</p></div>';
+	foreach ($erros as $e) echo '<div class="notice notice-error"><p>' . esc_html($e) . '</p></div>';
+	echo '<p class="description">A IA cria uma foto realista da peça (fundo liso, de frente). Cada foto gasta 1 crédito da FASHN. Use para testar; para vender, o ideal é a foto da peça real da loja.</p>';
+	echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="max-width:640px;display:grid;gap:8px">';
+	wp_nonce_field('vcp_gerar');
+	echo '<input type="hidden" name="action" value="vcp_gerar"><input type="hidden" name="loja" value="' . esc_attr($sel) . '">';
+	echo '<input name="nome" placeholder="Nome da peça (ex.: Blusa listrada)" class="regular-text"><textarea name="desc" rows="2" class="large-text" placeholder="Descreva em inglês ou português: cor, tecido, estampa..."></textarea>';
+	echo '<p><button class="button button-primary">Criar foto da peça</button> <button class="button" name="exemplos" value="1">Criar 5 camisetas de exemplo (5 créditos)</button></p></form>';
 }
 
 /* ------------------------------------------------- lista da lojista */
@@ -229,7 +430,9 @@ function vcp_admin() {
 			$u = home_url('/' . $s . '/');
 			echo '<tr><td><a href="' . esc_url(admin_url('admin.php?page=vcela-lojas&loja=' . $s)) . '"><b>' . esc_html($x['nome']) . '</b></a></td><td><a href="' . esc_url($u) . '" target="_blank">' . esc_html($u) . '</a></td><td>' . (int) ($cont[$s]->n ?? 0) . '</td><td>' . (int) ($cont[$s]->p ?? 0) . '</td><td>' . ($x['ativa'] ? 'Ativa' : 'Pausada') . '</td></tr>';
 		}
-		echo '</tbody></table></div>';
+		echo '</tbody></table>';
+		vcp_admin_ia();
+		echo '</div>';
 		return;
 	}
 	wp_enqueue_media();
@@ -266,7 +469,9 @@ function vcp_admin() {
 	}
 	echo '</table>';
 	submit_button('Salvar loja');
-	echo '</form></div>';
+	echo '</form>';
+	if ($sel) vcp_admin_gerar($sel);
+	echo '</div>';
 	echo "<script>jQuery(function($){ $('.vcp-media').on('click',function(e){e.preventDefault();var alvo=$('#'+$(this).data('alvo'));var f=wp.media({title:'Escolher imagem',multiple:false,library:{type:'image'}});f.on('select',function(){alvo.val(f.state().get('selection').first().toJSON().url);});f.open();});});</script>";
 }
 
