@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Vcela Provador
  * Description: Provador virtual para lojas de roupa. Cada loja tem seu endereço (/slug), cadastro com aceite dos termos, lista de clientes e peças próprias.
- * Version: 1.6.1
+ * Version: 1.7.0
  * WC requires at least: 8.0
  * Author: Divulgar Criações
  * Text Domain: vcela-provador
@@ -225,9 +225,14 @@ function vcp_pecas_woo() {
 		if (!$img) continue;
 		[$cat, $sub] = vcp_woo_cat_sub($pr->get_id());
 		$tams = vcp_tams($pr->get_attribute('pa_tamanho') ?: $pr->get_attribute('tamanho'));
+		$est = []; // tamanho => unidades (so produto variavel com estoque controlado)
+		if ($pr->is_type('variable')) foreach ($pr->get_children() as $vid) { $v = wc_get_product($vid); if (!$v) continue;
+			$t = mb_strtoupper((string) ($v->get_attribute('pa_tamanho') ?: $v->get_attribute('tamanho'))); if ($t === '') continue;
+			$est[$t] = $v->managing_stock() ? max(0, (int) $v->get_stock_quantity()) : ($v->is_in_stock() ? 99 : 0); }
 		$preco = $pr->get_price() !== '' ? number_format((float) $pr->get_price(), 2, ',', '.') : '';
 		$out['w' . $pr->get_id()] = ['id' => 'w' . $pr->get_id(), 'nome' => $pr->get_name(), 'img' => $img, 'cat' => $cat, 'sub' => $sub, 'tams' => $tams, 'preco' => $preco,
-			'link' => get_permalink($pr->get_id()), 'var' => $pr->is_type('variable') ? (taxonomy_exists('pa_tamanho') && $pr->get_attribute('pa_tamanho') ? 'attribute_pa_tamanho' : 'attribute_tamanho') : ''];
+			'link' => get_permalink($pr->get_id()), 'est' => $est ?: null,
+			'var' => $pr->is_type('variable') ? ($pr->get_attribute('pa_tamanho') ? 'attribute_pa_tamanho' : 'attribute_tamanho') : '', 'varlc' => $pr->get_attribute('pa_tamanho') ? 1 : 0];
 	}
 	return $out;
 }
@@ -271,7 +276,7 @@ function vcp_woo_aplicar($pid) {
 	if (!function_exists('wc_get_product')) return;
 	$p = wc_get_product($pid); if (!$p) return;
 	$m = fn($k) => (string) get_post_meta($pid, $k, true);
-	$assin = md5($m('vcela_preco') . '|' . $m('vcela_preco_promo') . '|' . $m('vcela_estoque') . '|' . $m('vcela_codigo') . '|' . $m('vcela_tamanhos'));
+	$assin = md5($m('vcela_preco') . '|' . $m('vcela_preco_promo') . '|' . $m('vcela_estoque') . '|' . $m('vcela_codigo') . '|' . $m('vcela_tamanhos') . '|' . $m('vcela_estoque_tamanhos') . '|v2');
 	if (get_post_meta($pid, '_vcp_ok', true) === $assin) return;
 	if (($v = vcp_num($m('vcela_preco'))) !== '') $p->set_regular_price($v);
 	$pr = vcp_num($m('vcela_preco_promo')); $p->set_sale_price($pr);
@@ -284,7 +289,42 @@ function vcp_woo_aplicar($pid) {
 		$attrs['tamanho'] = $a; $p->set_attributes($attrs);
 	}
 	$p->save();
+	// Estoque por tamanho ("P:3, M:2, G:4"): vira produto variavel com uma variacao por tamanho.
+	$et = vcp_estoque_tams($m('vcela_estoque_tamanhos'));
+	if ($et) vcp_woo_variacoes($pid, $et, vcp_num($m('vcela_preco')), vcp_num($m('vcela_preco_promo')));
 	update_post_meta($pid, '_vcp_ok', $assin);
+}
+
+/** "P:3, M:2, G:4" -> ['P' => 3, 'M' => 2, 'G' => 4] */
+function vcp_estoque_tams($txt) {
+	$out = [];
+	foreach (preg_split('/[,;|]+/', (string) $txt) as $par) {
+		if (!preg_match('/^\s*([^:=]+?)\s*[:=]\s*(\d+)\s*$/u', $par, $mm)) continue;
+		$t = mb_strtoupper(trim($mm[1])); if ($t !== '' && mb_strlen($t) <= 12) $out[$t] = (int) $mm[2];
+	}
+	return $out;
+}
+
+function vcp_woo_variacoes($pid, $et, $preco, $promo) {
+	wp_set_object_terms($pid, 'variable', 'product_type');
+	$p = new WC_Product_Variable($pid);
+	$attrs = $p->get_attributes(); unset($attrs['tamanho']);
+	$a = new WC_Product_Attribute(); $a->set_name('Tamanho'); $a->set_options(array_keys($et)); $a->set_visible(true); $a->set_variation(true); $a->set_position(0);
+	$attrs['tamanho'] = $a; $p->set_attributes($attrs); $p->set_manage_stock(false); $p->set_stock_quantity(null);
+	$p->save();
+	$exist = [];
+	foreach ($p->get_children() as $vid) { $v = wc_get_product($vid); if ($v) $exist[mb_strtoupper((string) $v->get_attribute('tamanho'))] = $v; }
+	foreach ($et as $t => $qtd) {
+		$v = $exist[$t] ?? new WC_Product_Variation();
+		$v->set_parent_id($pid); $v->set_attributes(['tamanho' => $t]); $v->set_status('publish');
+		if ($preco !== '') $v->set_regular_price($preco);
+		$v->set_sale_price($promo);
+		$v->set_manage_stock(true); $v->set_stock_quantity($qtd); $v->set_stock_status($qtd > 0 ? 'instock' : 'outofstock');
+		$v->save(); unset($exist[$t]);
+	}
+	foreach ($exist as $v) $v->delete(true); // tamanhos que sairam da lista
+	WC_Product_Variable::sync($pid);
+	wc_delete_product_transients($pid);
 }
 
 add_action('added_post_meta', 'vcp_woo_fila', 10, 3);
@@ -295,11 +335,11 @@ function vcp_woo_fila($mid, $pid, $key) {
 }
 add_action('shutdown', function () { foreach (array_keys($GLOBALS['vcp_fila'] ?? []) as $pid) vcp_woo_aplicar($pid); });
 
-// Confere produtos cadastrados antes desta versao (no maximo 20 por vez).
+// Confere a cada 10 minutos se algum produto tem campos vcela_* ainda nao aplicados.
 add_action('init', function () {
 	if (!function_exists('wc_get_product') || get_transient('vcp_woo_varre')) return;
 	set_transient('vcp_woo_varre', 1, 10 * MINUTE_IN_SECONDS);
-	$ids = get_posts(['post_type' => 'product', 'post_status' => 'any', 'numberposts' => 20, 'fields' => 'ids', 'meta_query' => [['key' => 'vcela_preco', 'compare' => 'EXISTS'], ['key' => '_vcp_ok', 'compare' => 'NOT EXISTS']]]);
+	$ids = get_posts(['post_type' => 'product', 'post_status' => 'any', 'numberposts' => 60, 'fields' => 'ids', 'meta_query' => [['key' => 'vcela_preco', 'compare' => 'EXISTS']]]);
 	foreach ($ids as $pid) vcp_woo_aplicar($pid);
 }, 30);
 

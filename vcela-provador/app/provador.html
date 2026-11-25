@@ -58,6 +58,8 @@ body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--f-body)}
 .aba:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
 .ptam{display:flex;flex-wrap:wrap;gap:8px}
 .ptam button{appearance:none;min-width:46px;padding:9px 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--fg);font:700 14px var(--f-body);cursor:pointer}
+.ptam button small{display:block;font-size:10.5px;font-weight:600;opacity:.85}
+.ptam button.esg{text-decoration:line-through;opacity:.45;cursor:not-allowed}
 .ptam button[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:var(--acc-fg)}
 .ptam button:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
 .pecas{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
@@ -209,7 +211,10 @@ let catAtual=alvo?(alvo.cat||"Outras"):cats[0], subAtual=alvo?(alvo.sub||""):"";
 function msg(){ return "Oi! Provei no provador virtual e quero comprar: "+(peca?peca.nome:"")+(tam?", tamanho "+tam:"")+(peca&&peca.preco?" (R$ "+peca.preco+")":""); }
 function tamanhos(){ const box=$("ptam"); box.textContent=""; tam="";
   const ts=(peca&&peca.tams)||[]; $("tamBox").hidden=!ts.length;
-  ts.forEach(t=>{const b=document.createElement("button");b.type="button";b.textContent=t;b.setAttribute("aria-pressed","false");
+  ts.forEach(t=>{const b=document.createElement("button");b.type="button";b.setAttribute("aria-pressed","false");
+    const q=peca.est?peca.est[t]:undefined; b.textContent=t;
+    if(q===0){b.disabled=true;b.classList.add("esg");b.title="Esgotado";b.setAttribute("aria-label",t+", esgotado");}
+    else if(q!==undefined&&q<=2){const s=document.createElement("small");s.textContent=q===1?"última":"últimas "+q;b.append(s);b.setAttribute("aria-label",t+", "+s.textContent);}
     b.onclick=()=>{tam=t;box.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));$("wa").href=wa(msg());$("erro").textContent="";};box.append(b);}); }
 function escolher(p){ peca=p; document.querySelectorAll(".pc").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.id===p.id))); tamanhos(); $("wa").href=wa(msg()); $("comprar").hidden=!p.link; atualizar(); }
 function subs(){ const box=$("subs"); box.textContent="";
@@ -297,7 +302,7 @@ async function enviar(){ if(!job||!cli)return false; const bt=$("enviar"); const
   bt.disabled=false; bt.textContent=ant; return true; }
 function precisaTam(){ if(peca&&peca.tams&&peca.tams.length&&!tam){ $("erro").textContent="Escolha o tamanho antes de comprar."; $("tamBox").scrollIntoView({behavior:"smooth",block:"center"}); return true;} return false; }
 $("enviar").onclick=()=>{ if(precisaTam())return; enviar(); };
-$("comprar").onclick=()=>{ if(precisaTam()||!peca||!peca.link)return; let u=peca.link; if(tam&&peca.var){u+=(u.includes("?")?"&":"?")+peca.var+"="+encodeURIComponent(tam.toLowerCase());} location.href=u; };
+$("comprar").onclick=()=>{ if(precisaTam()||!peca||!peca.link)return; let u=peca.link; if(tam&&peca.var){u+=(u.includes("?")?"&":"?")+peca.var+"="+encodeURIComponent(peca.varlc?tam.toLowerCase():tam);} location.href=u; };
 $("wa").addEventListener("click",e=>{ if(job&&resultado){e.preventDefault(); if(precisaTam())return; enviar();} });
 $("salvar").onclick=async()=>{ try{ const b=await (await fetch(resultado)).blob(); const f=new File([b],"provador-"+LOJA+".jpg",{type:b.type||"image/jpeg"});
     if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:"Provador "+L.nome,text:"Olha como ficou!"+(L.instagram?" @"+L.instagram:"")});return;}
