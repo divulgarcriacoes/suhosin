@@ -56,7 +56,7 @@ Tudo dentro de `wp-content/` do WordPress, no mesmo caminho desta pasta:
 
 1 horizontal colorido p/ fundos claros · 2 horizontal colorido p/ fundos escuros · 3 horizontal branco ·
 4 vertical colorido p/ fundos claros · 5 vertical colorido p/ fundos escuros · 6 vertical branco ·
-7 colorido automático (pela cor de cada foto) · 8 laser em metal · 9 1 cor escura (bambu/kraft) · Enter = manter.
+7 colorido automático (pela cor de cada foto) · 8 laser em metal, logo horizontal · 9 1 cor escura (bambu/kraft) · 10 laser em metal, logo vertical · Enter = manter.
 
 Pode ter até 6 áreas vermelhas na mesma foto (um logo em cada).
 

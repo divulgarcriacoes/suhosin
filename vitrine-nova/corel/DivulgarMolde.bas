@@ -138,7 +138,7 @@ Sub EnviarMoldeParaSite()
     SaveSetting "DivulgarMolde", "ui", "sku", sku
 
     Dim modo As String, op As String, lg As String, tom As String
-    op = Trim(InputBox("Qual logo usar:" & vbCr & "1 = horizontal colorido p/ fundos claros" & vbCr & "2 = horizontal colorido p/ fundos escuros" & vbCr & "3 = horizontal branco" & vbCr & "4 = vertical colorido p/ fundos claros" & vbCr & "5 = vertical colorido p/ fundos escuros" & vbCr & "6 = vertical branco" & vbCr & "7 = colorido automatico (pela cor de cada foto)" & vbCr & "8 = laser em metal" & vbCr & "9 = 1 cor escura (bambu/kraft)" & vbCr & "Enter = manter o do site", "Enviar molde", ""))
+    op = Trim(InputBox("Qual logo usar:" & vbCr & "1 = horizontal colorido p/ fundos claros" & vbCr & "2 = horizontal colorido p/ fundos escuros" & vbCr & "3 = horizontal branco" & vbCr & "4 = vertical colorido p/ fundos claros" & vbCr & "5 = vertical colorido p/ fundos escuros" & vbCr & "6 = vertical branco" & vbCr & "7 = colorido automatico (pela cor de cada foto)" & vbCr & "8 = laser em metal - logo horizontal" & vbCr & "9 = 1 cor escura (bambu/kraft)" & vbCr & "10 = laser em metal - logo vertical" & vbCr & "Enter = manter o do site", "Enviar molde", ""))
     Select Case op
         Case "1": modo = "cor": lg = "h": tom = "claro"
         Case "2": modo = "cor": lg = "h": tom = "escuro"
@@ -149,6 +149,7 @@ Sub EnviarMoldeParaSite()
         Case "7": modo = "cor": lg = "a": tom = "a"
         Case "8": modo = "laser": lg = "h": tom = "a"
         Case "9": modo = "escuro": lg = "h": tom = "a"
+        Case "10": modo = "laser": lg = "v": tom = "a"
         Case Else: modo = "": lg = "": tom = ""
     End Select
 
