@@ -116,6 +116,7 @@ body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--f-body)}
       </div>
       <div class="acts" id="actsRes" hidden>
         <button class="bt clara" id="antes" type="button">Ver antes</button>
+        <button class="bt wa" id="enviar" type="button">Enviar para a loja</button>
         <button class="bt" id="salvar" type="button">Salvar foto</button>
         <button class="bt sec" id="outra" type="button">Provar outra</button>
       </div>
@@ -193,7 +194,7 @@ lista.forEach(p=>{const b=document.createElement("button");b.type="button";b.cla
   $("pecas").append(b);});
 
 /* ---------- foto ---------- */
-let foto=null, stream=null, frente=true, resultado=null;
+let foto=null, stream=null, frente=true, resultado=null, job=null, link=null;
 function estado(s){ // inicio | cam | foto | gerando | res
   $("msg").hidden=s!=="inicio"; $("cam").hidden=s!=="cam"; $("guia").hidden=s!=="cam"; $("actsCam").hidden=s!=="cam";
   $("foto").hidden=!(s==="foto"||s==="gerando"); $("actsFoto").hidden=s!=="foto"; $("gerando").hidden=s!=="gerando";
@@ -237,6 +238,7 @@ $("provar").onclick=async()=>{ if($("provar").disabled)return; $("erro").textCon
     const j=await r.json();
     if(r.status===401){try{localStorage.removeItem(CK);}catch(_){}cli=null;mostrarOla();throw new Error(j.message||"Faça o cadastro de novo.");}
     if(!r.ok)throw new Error(j.message||"Não deu para provar agora.");
+    job=j.id; link=null;
     $("info").textContent=j.restantes>0?("Você ainda tem "+j.restantes+(j.restantes===1?" prova":" provas")+" hoje."):"Essa foi sua última prova de hoje.";
     const fim=Date.now()+90000;
     while(Date.now()<fim){ await espera(2000);
@@ -251,6 +253,15 @@ $("provar").onclick=async()=>{ if($("provar").disabled)return; $("erro").textCon
 let vendoAntes=false;
 $("antes").onclick=()=>{ vendoAntes=!vendoAntes; $("res").src=vendoAntes?foto:resultado; $("antes").textContent=vendoAntes?"Ver depois":"Ver antes"; };
 $("outra").onclick=()=>{ vendoAntes=false; $("antes").textContent="Ver antes"; estado("foto"); };
+async function enviar(){ if(!job||!cli)return false; const bt=$("enviar"); const ant=bt.textContent;
+  const w=window.open("","_blank"); bt.disabled=true; bt.textContent="Preparando…"; $("erro").textContent="";
+  try{ if(!link){ const r=await fetch(API+"enviar",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:cli.token,id:job})}); const j=await r.json(); if(!r.ok)throw new Error(j.message||"Não deu para enviar."); link=j.link; }
+    const url=wa("Oi! Provei no provador virtual e gostei: "+(peca?peca.nome:"")+"\nMinha prova: "+link);
+    if(w){w.location.href=url;}else{location.href=url;}
+  }catch(x){ if(w)w.close(); $("erro").textContent=x.message||"Sem conexão. Tente de novo."; }
+  bt.disabled=false; bt.textContent=ant; return true; }
+$("enviar").onclick=enviar;
+$("wa").addEventListener("click",e=>{ if(job&&resultado){e.preventDefault();enviar();} });
 $("salvar").onclick=async()=>{ try{ const b=await (await fetch(resultado)).blob(); const f=new File([b],"provador-"+LOJA+".jpg",{type:b.type||"image/jpeg"});
     if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:"Provador "+L.nome,text:"Olha como ficou!"+(L.instagram?" @"+L.instagram:"")});return;}
     const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=f.name;a.click(); }catch(_){} };

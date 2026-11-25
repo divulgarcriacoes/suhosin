@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Vcela Provador
  * Description: Provador virtual para lojas de roupa. Cada loja tem seu endereço (/slug), cadastro com aceite dos termos, lista de clientes e peças próprias.
- * Version: 1.2.0
+ * Version: 1.3.0
  * Author: Divulgar Criações
  * Text Domain: vcela-provador
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) exit;
 define('VCP_DIR', __DIR__ . '/');
 define('VCP_URL', plugin_dir_url(__FILE__));
 const VCP_DB = 2;
-const VCP_TERMOS = '2026-11-26';
+const VCP_TERMOS = '2026-11-27';
 const VCP_TAMS = ['PP', 'P', 'M', 'G', 'GG', 'XG'];
 
 /* ------------------------------------------------------------------ dados */
@@ -111,6 +111,7 @@ add_action('rest_api_init', function () {
 	register_rest_route('vcela/v1', '/prova', ['methods' => 'POST', 'permission_callback' => '__return_true', 'callback' => 'vcp_prova']);
 	register_rest_route('vcela/v1', '/provar', ['methods' => 'POST', 'permission_callback' => '__return_true', 'callback' => 'vcp_provar']);
 	register_rest_route('vcela/v1', '/provar/(?P<id>[A-Za-z0-9-]{8,80})', ['methods' => 'GET', 'permission_callback' => '__return_true', 'callback' => 'vcp_provar_status']);
+	register_rest_route('vcela/v1', '/enviar', ['methods' => 'POST', 'permission_callback' => '__return_true', 'callback' => 'vcp_enviar']);
 });
 
 function vcp_cadastro(WP_REST_Request $r) {
@@ -256,6 +257,37 @@ function vcp_provar_status(WP_REST_Request $r) {
 	}
 	return ['status' => 'aguarde'];
 }
+
+/** Guarda a imagem gerada por 7 dias num link privado, para a cliente mandar no WhatsApp da loja. */
+function vcp_enviar(WP_REST_Request $r) {
+	global $wpdb; $t = vcp_tab();
+	$id = preg_replace('/[^A-Za-z0-9-]/', '', (string) $r['id']);
+	$job = get_transient('vcp_job_' . md5($id));
+	$tok = preg_replace('/[^a-f0-9]/', '', (string) $r['token']);
+	$cid = strlen($tok) === 32 ? (int) $wpdb->get_var($wpdb->prepare("SELECT id FROM $t WHERE token=%s", $tok)) : 0;
+	if (!$job || !$cid || $job['c'] !== $cid) return new WP_Error('job', 'Prova não encontrada. Faça a prova de novo.', ['status' => 404]);
+	if (!empty($job['link'])) return ['link' => $job['link']];
+	$res = vcp_fashn('GET', '/v1/status/' . rawurlencode($id));
+	$img = (string) ($res['output'][0] ?? '');
+	if ($img === '') return new WP_Error('ia', 'A imagem expirou. Faça a prova de novo.', ['status' => 410]);
+	if (strpos($img, 'data:image/') === 0) $bin = base64_decode(substr($img, strpos($img, ',') + 1));
+	else { $g = wp_remote_get($img, ['timeout' => 30]); $bin = is_wp_error($g) ? '' : wp_remote_retrieve_body($g); }
+	if (!$bin || !@getimagesizefromstring($bin)) return new WP_Error('ia', 'Não deu para salvar a imagem.', ['status' => 502]);
+	$up = wp_upload_dir(); $dir = $up['basedir'] . '/vcela-provas/';
+	if (!is_dir($dir)) { wp_mkdir_p($dir); file_put_contents($dir . 'index.html', ''); }
+	$nome = bin2hex(random_bytes(16)) . '.jpg';
+	file_put_contents($dir . $nome, $bin);
+	$job['link'] = $up['baseurl'] . '/vcela-provas/' . $nome;
+	set_transient('vcp_job_' . md5($id), $job, HOUR_IN_SECONDS);
+	return ['link' => $job['link']];
+}
+
+// Apaga as imagens enviadas com mais de 7 dias.
+add_action('vcp_limpar', function () {
+	$dir = wp_upload_dir()['basedir'] . '/vcela-provas/';
+	foreach ((array) glob($dir . '*.jpg') as $f) if (is_file($f) && filemtime($f) < time() - 7 * DAY_IN_SECONDS) @unlink($f);
+});
+add_action('init', function () { if (!wp_next_scheduled('vcp_limpar')) wp_schedule_event(time() + 3600, 'daily', 'vcp_limpar'); });
 
 add_action('admin_post_vcp_ia', function () {
 	if (!current_user_can('manage_options')) wp_die('Sem permissão.');
