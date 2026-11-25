@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Vcela Provador
  * Description: Provador virtual para lojas de roupa. Cada loja tem seu endereço (/slug), cadastro com aceite dos termos, lista de clientes e peças próprias.
- * Version: 1.3.0
+ * Version: 1.4.0
  * Author: Divulgar Criações
  * Text Domain: vcela-provador
  */
@@ -69,12 +69,13 @@ add_action('parse_request', function () {
 	$p = trim((string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), '/');
 	$home = trim((string) parse_url(home_url('/'), PHP_URL_PATH), '/');
 	if ($home !== '' && strpos($p, $home) === 0) $p = trim(substr($p, strlen($home)), '/');
-	if (!preg_match('#^([a-z0-9-]{2,40})(?:/(termos|clientes))?$#', $p, $m)) return;
+	if (!preg_match('#^([a-z0-9-]{2,40})(?:/(termos|clientes|prova/[a-f0-9]{32}))?$#', $p, $m)) return;
 	$loja = vcp_loja($m[1]);
 	if (!$loja || empty($loja['ativa'])) return;
 	$pag = $m[2] ?? '';
 	nocache_headers(); header('X-Robots-Tag: noindex, nofollow');
 	if ($pag === 'clientes') { vcp_painel($m[1], $loja); exit; }
+	if (strpos($pag, 'prova/') === 0) { vcp_pagina_prova($m[1], $loja, substr($pag, 6)); exit; }
 	header('Content-Type: text/html; charset=utf-8');
 	header('Permissions-Policy: camera=(self)');
 	echo vcp_render($pag === 'termos' ? 'termos' : 'provador', $m[1], $loja);
@@ -277,9 +278,26 @@ function vcp_enviar(WP_REST_Request $r) {
 	if (!is_dir($dir)) { wp_mkdir_p($dir); file_put_contents($dir . 'index.html', ''); }
 	$nome = bin2hex(random_bytes(16)) . '.jpg';
 	file_put_contents($dir . $nome, $bin);
-	$job['link'] = $up['baseurl'] . '/vcela-provas/' . $nome;
+	$loja = (string) $wpdb->get_var($wpdb->prepare("SELECT loja FROM $t WHERE id=%d", $cid));
+	$job['link'] = home_url('/' . $loja . '/prova/' . substr($nome, 0, 32));
 	set_transient('vcp_job_' . md5($id), $job, HOUR_IN_SECONDS);
 	return ['link' => $job['link']];
+}
+
+/** Pagina da prova enviada no WhatsApp: mostra a foto e tem as tags que geram a previa grande. */
+function vcp_pagina_prova($slug, $l, $hash) {
+	$up = wp_upload_dir(); $arq = $up['basedir'] . '/vcela-provas/' . $hash . '.jpg';
+	header('Content-Type: text/html; charset=utf-8');
+	$e = 'esc_html'; $acc = vcp_cor($l['acc']);
+	if (!is_file($arq)) { status_header(404); echo '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Prova expirada</title><p style="font:16px system-ui;padding:24px">Essa prova já expirou (as fotos ficam disponíveis por 7 dias).</p>'; return; }
+	$img = $up['baseurl'] . '/vcela-provas/' . $hash . '.jpg';
+	[$w, $h] = (array) @getimagesize($arq) + [0, 0];
+	$tit = 'Prova no provador virtual · ' . $l['nome'];
+	echo '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">';
+	echo '<title>' . $e($tit) . '</title><meta property="og:type" content="website"><meta property="og:title" content="' . esc_attr($tit) . '"><meta property="og:description" content="Veja como a peça ficou na cliente.">';
+	echo '<meta property="og:image" content="' . esc_url($img) . '"><meta property="og:image:secure_url" content="' . esc_url($img) . '"><meta property="og:image:type" content="image/jpeg">' . ($w ? '<meta property="og:image:width" content="' . (int) $w . '"><meta property="og:image:height" content="' . (int) $h . '">' : '') . '<meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="' . esc_url($img) . '">';
+	echo '<style>:root{--bg:#F6F1EE;--fg:#2A1F24;--acc:' . $acc . '}@media(prefers-color-scheme:dark){:root{--bg:#171114;--fg:#F3ECEF;--acc:' . vcp_cor($l['acc2']) . '}}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Arial,sans-serif}main{max-width:560px;margin:0 auto;padding:16px;display:grid;gap:14px}img{width:100%;height:auto;border-radius:18px;display:block}h1{font-size:20px;margin:0}a{display:block;text-align:center;background:var(--acc);color:#fff;text-decoration:none;font-weight:700;border-radius:12px;padding:14px}</style></head><body><main>';
+	echo '<h1>' . $e($tit) . '</h1><img src="' . esc_url($img) . '" alt="Prova no provador virtual"><a href="' . esc_url(home_url('/' . $slug . '/')) . '">Abrir o provador</a></main></body></html>';
 }
 
 // Apaga as imagens enviadas com mais de 7 dias.
