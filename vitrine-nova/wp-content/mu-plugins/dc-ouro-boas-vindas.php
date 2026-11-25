@@ -60,16 +60,18 @@ function dcbv_guia() {
 	$cx = function ( $svg, $escuro, $tit, $uso ) {
 		return '<div class="bvg-i"><div class="bvg-v ' . ( $escuro ? 'es' : 'cl' ) . '">' . $svg . '</div><b>' . $tit . '</b><small>' . $uso . '</small></div>';
 	};
-	return '<div class="bv-box bvg"><h3>Como são os 4 logos</h3><p>São o <b>mesmo logo</b> da escola em 4 versões. Cada brinde usa a versão que combina com ele: o site escolhe sozinho.</p>'
+	return '<div class="bv-box bvg"><h3>Como são os 6 logos</h3><p>São o <b>mesmo logo</b> da escola em 6 versões: horizontal e vertical, cada um colorido para fundos claros, colorido para fundos escuros e branco. Cada brinde usa a versão que combina com ele: o site escolhe sozinho.</p>'
 		. '<div class="bvg-g">'
-		. $cx( $marca( '#F5B400', '#0B2A5B', '#0B2A5B', false ), false, '1. Horizontal colorido', 'Símbolo ao lado do nome. Vai nos brindes claros com área larga: cadernos, sacolas, power banks.' )
-		. $cx( $marca( '#FFFFFF', '#2E3192', '#FFFFFF', false ), true, '2. Horizontal branco', 'O mesmo logo, todo branco. Vai nos brindes escuros e na gravação de 1 cor ou a laser.' )
-		. $cx( $marca( '#F5B400', '#0B2A5B', '#0B2A5B', true ), false, '3. Vertical colorido', 'Símbolo em cima e o nome embaixo. Vai em áreas altas: squeezes, garrafas, etiquetas.' )
-		. $cx( $marca( '#FFFFFF', '#2E3192', '#FFFFFF', true ), true, '4. Vertical branco', 'O vertical todo branco. Vai em squeezes e garrafas escuras ou de metal.' )
+		. $cx( $marca( '#F5B400', '#0B2A5B', '#0B2A5B', false ), false, '1. Logo horizontal colorido para fundos claros', 'Símbolo ao lado do nome, letras coloridas. Vai nos brindes claros com área larga: cadernos, sacolas, power banks.' )
+		. $cx( $marca( '#F5B400', '#0B2A5B', '#FFFFFF', false ), true, '2. Logo horizontal colorido para fundos escuros', 'Símbolo colorido e letras brancas. Vai nos brindes escuros com impressão colorida.' )
+		. $cx( $marca( '#FFFFFF', '#2E3192', '#FFFFFF', false ), true, '3. Logo horizontal branco', 'O mesmo logo, todo branco. Vai na gravação de 1 cor ou a laser.' )
+		. $cx( $marca( '#F5B400', '#0B2A5B', '#0B2A5B', true ), false, '4. Logo vertical colorido para fundos claros', 'Símbolo em cima e o nome embaixo. Vai em áreas altas e claras: squeezes, garrafas, etiquetas.' )
+		. $cx( $marca( '#F5B400', '#0B2A5B', '#FFFFFF', true ), true, '5. Logo vertical colorido para fundos escuros', 'Vertical com símbolo colorido e letras brancas. Vai em garrafas e squeezes escuros.' )
+		. $cx( $marca( '#FFFFFF', '#2E3192', '#FFFFFF', true ), true, '6. Logo vertical branco', 'O vertical todo branco. Vai na gravação de 1 cor ou a laser, em metal e em produtos escuros.' )
 		. '</div>'
 		. '<div class="bvg-r"><div class="ok"><b>Como mandar</b><ul><li>Arquivo <b>PNG com fundo transparente</b> (sem quadrado branco em volta).</li><li>Boa qualidade: pelo menos <b>1000 px</b> de largura.</li><li>O logo inteiro, sem cortar, sem sombra e sem borda.</li><li>Quem fez o logo (designer/gráfica) normalmente tem essas versões.</li></ul></div>'
 		. '<div class="no"><b>Evite</b><ul><li>Foto ou print do logo (fica borrado).</li><li>Logo com fundo branco ou colorido.</li><li>Arquivo em PDF ou Word.</li><li>Logo muito pequeno, tirado do WhatsApp ou de rede social.</li></ul></div></div>'
-		. '<p class="bvg-n">Só tem o colorido? Pode mandar só ele: o site gera a versão branca. Mas com as 4 versões os brindes ficam bem mais bonitos.</p></div>';
+		. '<p class="bvg-n">Só tem o colorido? Pode mandar só ele: o site gera a versão branca. Mas com as 6 versões os brindes ficam bem mais bonitos.</p></div>';
 }
 
 /* Recebe o envio. */
@@ -212,10 +214,10 @@ add_action(
 			. '.bv-steps{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 0}.bv-steps span{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:7px 14px;font-size:13px}.bv-steps b{color:#F5B400;margin-right:4px}'
 			. '.bv-box{background:#fff;border:1px solid #E7E9F0;border-radius:20px;box-shadow:0 8px 24px rgba(11,31,63,.06);padding:24px 26px;margin:16px 0 0}'
 			. '.bv-box h3{margin:0 0 4px;font-size:20px;color:#0B2A5B}.bv-box>p{margin:0 0 16px;color:#5B6478;font-size:14px}'
-			. '.bv-g{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}'
+			. '.bv-g{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}'
 			. '.bv-c{border:2px dashed #D0D5DD;border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:8px;cursor:pointer;transition:border-color .15s,background .15s}.bv-c:hover{border-color:#F5B400;background:#FFFBEB}'
 			. '.bv-c b{color:#0B2A5B;font-size:15px}.bv-c small{color:#667085;font-size:12.5px;min-height:34px}'
-			. '.bv-pv{height:110px;border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:12.5px;padding:10px;box-sizing:border-box}.bv-pv.cl{background:#F2F4F7;color:#98A2B3}.bv-pv.es{background:#0B2A5B;color:#8EA0C4}.bv-pv img{max-width:100%;max-height:100%;object-fit:contain}'
+			. '.bv-pv{height:110px;border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:12.5px;padding:10px;box-sizing:border-box}.bv-pv.cl{background:#A7A9AC;color:#F2F4F7}.bv-pv picture{display:flex;align-items:center;justify-content:center;width:100%;height:100%}.bv-pv img{max-height:90px!important;width:auto!important;height:auto!important}.bv-pv.es{background:#0B2A5B;color:#8EA0C4}.bv-pv img{max-width:100%;max-height:100%;object-fit:contain}'
 			. '.bv-st{font-size:12px;font-weight:700}.bv-st.ok{color:#079455}.bv-st.no{color:#B54708}.bv-c input[type=file]{display:none}'
 			. '.bv-bt{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:12px;background:#F5B400;color:#0B2A5B!important;font-weight:800;font-size:16px;padding:14px 26px;cursor:pointer;text-decoration:none!important}.bv-bt.sec{background:#EEF1F6}'
 			. '.bv-ac{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:18px 0 0}.bv-ac a.lk{color:#667085;font-size:13.5px}'
@@ -224,7 +226,7 @@ add_action(
 			. '.bv-pr{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}.bv-p{border:1px solid #EEF0F4;border-radius:14px;padding:8px;background:#fff}.bv-im{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#fff}.bv-im img.f{width:100%;height:100%;object-fit:contain;display:block}.bv-p span{display:block;font-size:12px;color:#344054;margin:6px 2px 2px;line-height:1.3;height:31px;overflow:hidden}'
 			. '.bv-vet{border:2px solid #FEDF89;background:#FFFCF5}.bv-vet h3{font-size:18px!important}.bv-vg{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:14px}.bv-vf{display:flex;flex-direction:column;gap:6px;font-size:13.5px}.bv-vf b{color:#0B2A5B}.bv-vf textarea{border:1px solid #D0D5DD;border-radius:10px;padding:8px 10px;font:inherit;resize:vertical}.bv-vok{background:#ECFDF3;color:#05603A;border-radius:10px;padding:10px 12px}@media(max-width:700px){.bv-vg{grid-template-columns:1fr}}'
 			. '.bv-cw{display:flex;flex-direction:column;gap:6px}.bv-cw>.bv-c{flex:1}.bv-nt{display:flex;gap:8px;align-items:center;justify-content:center;cursor:pointer;font-size:13.5px;font-weight:700;color:#B54708;background:#FFFBEB;border:1px solid #FEDF89;border-radius:10px;padding:7px 10px}.bv-nt input{width:17px;height:17px;margin:0}'
-			. '.bvg-g{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.bvg-i b{display:block;color:#0B2A5B;font-size:14.5px;margin:8px 0 2px}.bvg-i small{display:block;color:#667085;font-size:12.5px;line-height:1.45}.bvg-v{height:120px;border-radius:14px;display:flex;align-items:center;justify-content:center;padding:14px 18px;box-sizing:border-box}.bvg-v.cl{background:#F8FAFC;border:1px solid #EEF0F4}.bvg-v.es{background:#2E3192}'
+			. '.bvg-g{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.bvg-i b{display:block;color:#0B2A5B;font-size:14.5px;margin:8px 0 2px}.bvg-i small{display:block;color:#667085;font-size:12.5px;line-height:1.45}.bvg-v{height:120px;border-radius:14px;display:flex;align-items:center;justify-content:center;padding:14px 18px;box-sizing:border-box}.bvg-v.cl{background:#F8FAFC;border:1px solid #EEF0F4}.bvg-v.es{background:#2E3192}'
 			. '.bvg-r{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:18px 0 0}.bvg-r>div{border-radius:14px;padding:12px 16px;font-size:13.5px}.bvg-r ul{margin:6px 0 0;padding-left:18px}.bvg-r li{margin:3px 0}.bvg-r .ok{background:#ECFDF3;color:#05603A}.bvg-r .no{background:#FEF3F2;color:#912018}.bvg-n{margin:12px 0 0!important;font-size:13px!important}'
 			. '@media(max-width:900px){.bvg-g{grid-template-columns:repeat(2,minmax(0,1fr))}.bvg-r{grid-template-columns:1fr}}'
 			. '@media(max-width:900px){.bv-g{grid-template-columns:repeat(2,minmax(0,1fr))}.bv-pr{grid-template-columns:repeat(3,minmax(0,1fr))}.bv-dc{grid-template-columns:1fr}}'
