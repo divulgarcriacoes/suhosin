@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Vcela Provador
  * Description: Provador virtual para lojas de roupa. Cada loja tem seu endereço (/slug), cadastro com aceite dos termos, lista de clientes e peças próprias.
- * Version: 1.5.0
+ * Version: 1.6.0
  * WC requires at least: 8.0
  * Author: Divulgar Criações
  * Text Domain: vcela-provador
@@ -261,6 +261,47 @@ function vcp_auto($slug, $l) {
 	$g = get_option('vcp_geracoes', []);
 	if ($g && !get_transient('vcp_conferindo')) { set_transient('vcp_conferindo', 1, 15); vcp_gerar_conferir(); }
 }
+
+/* ------------------- WooCommerce: campos vcela_* viram preco, estoque, SKU e tamanhos */
+// Permite cadastrar produtos por ferramentas que so gravam campos simples (importacao da planilha).
+
+function vcp_num($v) { $v = trim((string) $v); if ($v === '') return ''; if (preg_match('/,\d{1,2}$/', $v)) $v = str_replace(['.', ','], ['', '.'], $v); else $v = str_replace(',', '', $v); return is_numeric($v) ? (string) round((float) $v, 2) : ''; }
+
+function vcp_woo_aplicar($pid) {
+	if (!function_exists('wc_get_product')) return;
+	$p = wc_get_product($pid); if (!$p) return;
+	$m = fn($k) => (string) get_post_meta($pid, $k, true);
+	$assin = md5($m('vcela_preco') . '|' . $m('vcela_preco_promo') . '|' . $m('vcela_estoque') . '|' . $m('vcela_codigo') . '|' . $m('vcela_tamanhos'));
+	if (get_post_meta($pid, '_vcp_ok', true) === $assin) return;
+	if (($v = vcp_num($m('vcela_preco'))) !== '') $p->set_regular_price($v);
+	$pr = vcp_num($m('vcela_preco_promo')); $p->set_sale_price($pr);
+	if ($m('vcela_estoque') !== '') { $p->set_manage_stock(true); $p->set_stock_quantity((int) $m('vcela_estoque')); }
+	if ($m('vcela_codigo') !== '') { try { $p->set_sku(sanitize_text_field($m('vcela_codigo'))); } catch (Exception $e) {} }
+	$tams = vcp_tams($m('vcela_tamanhos'));
+	if ($tams && !$p->is_type('variable')) {
+		$attrs = $p->get_attributes(); unset($attrs['tamanho']);
+		$a = new WC_Product_Attribute(); $a->set_name('Tamanho'); $a->set_options($tams); $a->set_visible(true); $a->set_variation(false); $a->set_position(0);
+		$attrs['tamanho'] = $a; $p->set_attributes($attrs);
+	}
+	$p->save();
+	update_post_meta($pid, '_vcp_ok', $assin);
+}
+
+add_action('added_post_meta', 'vcp_woo_fila', 10, 3);
+add_action('updated_post_meta', 'vcp_woo_fila', 10, 3);
+function vcp_woo_fila($mid, $pid, $key) {
+	if (strpos((string) $key, 'vcela_') !== 0 || get_post_type($pid) !== 'product') return;
+	$GLOBALS['vcp_fila'][$pid] = 1;
+}
+add_action('shutdown', function () { foreach (array_keys($GLOBALS['vcp_fila'] ?? []) as $pid) vcp_woo_aplicar($pid); });
+
+// Confere produtos cadastrados antes desta versao (no maximo 20 por vez).
+add_action('init', function () {
+	if (!function_exists('wc_get_product') || get_transient('vcp_woo_varre')) return;
+	set_transient('vcp_woo_varre', 1, 10 * MINUTE_IN_SECONDS);
+	$ids = get_posts(['post_type' => 'product', 'post_status' => 'any', 'numberposts' => 20, 'fields' => 'ids', 'meta_query' => [['key' => 'vcela_preco', 'compare' => 'EXISTS'], ['key' => '_vcp_ok', 'compare' => 'NOT EXISTS']]]);
+	foreach ($ids as $pid) vcp_woo_aplicar($pid);
+}, 30);
 
 /* -------------------------------------------------- WooCommerce: produto */
 
