@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Provador {{NOME}}</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* Provador: palco da camera em cima, prateleira de pecas embaixo (celular primeiro). */
+:root{
+  --bg:#F6F1EE; --fg:#2A1F24; --mut:#7A6B71; --card:#FFFFFF; --line:#E8DDD8;
+  --acc:{{ACC}}; --acc-fg:#FFFFFF; --brand1:{{COR1}}; --brand2:{{COR2}}; --stage:#1E171A;
+  --f-disp:"Fraunces",Georgia,serif; --f-body:"Inter",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{--bg:#171114;--fg:#F3ECEF;--mut:#B3A4AA;--card:#221A1E;--line:#3A2E33;--acc:{{ACC2}};--acc-fg:#1A0F14;--stage:#0E0A0C;color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--fg);font:15px/1.45 var(--f-body)}
+.wrap{max-width:1100px;margin:0 auto;padding-block:16px 28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:16px}
+.topo{background:linear-gradient(135deg,var(--brand1),var(--brand2));color:#fff;border-radius:20px;padding:18px 20px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.topo img{width:118px;height:auto;flex:none}
+.topo p{color:#FFE6EF!important}
+.wa{display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:#25D366;color:#fff;border-radius:12px;padding:13px 18px;font:700 15px var(--f-body)}
+header h1{font:600 clamp(26px,5vw,38px)/1.1 var(--f-disp);margin:0;letter-spacing:-.01em;text-wrap:balance}
+header p{margin:6px 0 0;color:var(--mut);max-width:60ch}
+.grid{display:grid;grid-template-columns:1fr;gap:16px}
+@media(min-width:900px){.grid{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);align-items:start}}
+.stage{position:relative;background:var(--stage);border-radius:20px;overflow:hidden;aspect-ratio:3/4;max-width:100%;width:100%}
+@media(min-width:900px){.stage{aspect-ratio:4/3}}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.stage video{display:none}
+.msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;color:#F3ECEF;padding:24px}
+.msg p{margin:0;max-width:34ch;color:#D9CBD0}
+.status{position:absolute;left:12px;top:12px;background:rgba(0,0,0,.45);color:#fff;font-size:12.5px;border-radius:999px;padding:6px 12px}
+.bt{appearance:none;border:0;border-radius:12px;padding:13px 20px;font:700 15px var(--f-body);cursor:pointer;background:var(--acc);color:var(--acc-fg)}
+.bt.sec{background:transparent;color:inherit;border:1.5px solid currentColor}
+.bt:focus-visible,.pc:focus-visible,.cor:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.acts{position:absolute;left:0;right:0;bottom:0;display:flex;gap:10px;justify-content:center;padding:14px;background:linear-gradient(transparent,rgba(0,0,0,.55))}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;display:grid;gap:16px}
+.panel h2{margin:0;font:600 13px var(--f-body);text-transform:uppercase;letter-spacing:.08em;color:var(--mut)}
+.pecas{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.pc{background:var(--bg);border:1.5px solid var(--line);border-radius:14px;padding:8px 6px;cursor:pointer;display:grid;gap:4px;justify-items:center;font:600 12.5px var(--f-body);color:var(--fg)}
+.pc canvas{width:100%;max-width:70px;aspect-ratio:600/760;height:auto}
+.pc[aria-pressed="true"]{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc) inset}
+.cores{display:flex;flex-wrap:wrap;gap:10px}
+.cor{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);cursor:pointer}
+.cor[aria-pressed="true"]{box-shadow:0 0 0 3px var(--card),0 0 0 5px var(--acc)}
+.aj{display:grid;gap:10px}
+.aj label{display:grid;grid-template-columns:90px 1fr;align-items:center;gap:10px;font-size:13.5px;color:var(--mut)}
+.aj input{width:100%;accent-color:var(--acc)}
+.up{display:grid;gap:6px;font-size:13.5px;color:var(--mut)}
+.up input{font:inherit;color:var(--fg)}
+.cad{position:fixed;inset:0;z-index:50;background:rgba(20,10,15,.55);display:grid;place-items:center;padding:16px;overflow:auto}
+.cad form{background:var(--card);color:var(--fg);border-radius:20px;width:100%;max-width:420px;padding:22px 20px;display:grid;gap:14px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.cad h2{margin:0;font:600 24px/1.15 var(--f-disp);text-transform:none;letter-spacing:0;color:var(--fg)}
+.cad .lg{background:linear-gradient(135deg,var(--brand1),var(--brand2));border-radius:14px;padding:12px;display:grid;place-items:center}
+.cad .lg img{width:92px}
+.cad label.f{display:grid;gap:5px;font-weight:600;font-size:14px}
+.cad input[type=text],.cad input[type=tel]{font:16px var(--f-body);padding:12px 13px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);color:var(--fg)}
+.cad input:focus-visible{outline:3px solid var(--acc);outline-offset:1px}
+.tams{display:flex;flex-wrap:wrap;gap:8px}
+.tams label{position:relative}
+.tams input{position:absolute;opacity:0}
+.tams span{display:block;min-width:46px;text-align:center;padding:9px 10px;border-radius:10px;border:1.5px solid var(--line);font-weight:700;font-size:14px;cursor:pointer}
+.tams input:checked+span{border-color:var(--acc);background:var(--acc);color:var(--acc-fg)}
+.tams input:focus-visible+span{outline:3px solid var(--acc);outline-offset:2px}
+.ck{display:grid;grid-template-columns:22px 1fr;gap:10px;align-items:start;font-size:14px;color:var(--mut)}
+.ck input{width:20px;height:20px;margin:1px 0 0;accent-color:var(--acc)}
+.ck a{color:var(--acc);font-weight:700}
+.erro{color:#C4122F;font-weight:600;font-size:14px;margin:0;min-height:1em}
+@media (prefers-color-scheme:dark){.erro{color:#FF7A8E}}
+.ola{font-size:13.5px;color:var(--mut);margin:0}
+.ola button{background:none;border:0;padding:0;color:var(--acc);font:inherit;font-weight:700;cursor:pointer;text-decoration:underline}
+.nota{font-size:12.5px;color:var(--mut);margin:0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="topo">
+    <img src="{{LOGO}}" alt="{{NOME}}">
+    <div><h1>Provador Virtual</h1>
+    <p>Abra a câmera, fique a uns 2 passos de distância com os ombros e a cintura aparecendo e escolha a peça. A roupa acompanha você.</p></div>
+  </header>
+  <div class="grid">
+    <div class="stage" id="stage">
+      <video id="cam" playsinline muted></video>
+      <canvas id="tela"></canvas>
+      <div class="status" id="status">Câmera desligada</div>
+      <div class="msg" id="msg">
+        <p>As imagens da câmera ficam só no seu aparelho. Nada é enviado para a internet.</p>
+        <button class="bt" id="abrir" type="button">Abrir câmera</button>
+        <label class="bt sec" for="foto" style="color:#F3ECEF">Usar uma foto<input id="foto" type="file" accept="image/*" hidden></label>
+      </div>
+      <div class="acts" id="acts" hidden>
+        <button class="bt" id="tirar" type="button">Tirar foto</button>
+        <button class="bt sec" id="virar" type="button" style="color:#fff">Virar câmera</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div><h2>Peça</h2></div>
+      <div class="pecas" id="pecas"></div>
+      <div><h2>Cor</h2></div>
+      <div class="cores" id="cores"></div>
+      <div><h2>Ajuste</h2></div>
+      <div class="aj">
+        <label for="tam">Tamanho <input id="tam" type="range" min="80" max="140" value="108"></label>
+        <label for="alt">Altura <input id="alt" type="range" min="-30" max="30" value="0"></label>
+      </div>
+      <div class="up">
+        <label for="minha"><b style="color:var(--fg)">Testar uma peça da loja</b><br>Foto da peça de frente, em PNG sem fundo.</label>
+        <input id="minha" type="file" accept="image/png,image/webp">
+      </div>
+      <a class="wa" id="wa" href="#" target="_blank" rel="noopener">Gostou? Chama no WhatsApp</a>
+      <p class="ola" id="ola" hidden></p>
+      <p class="nota">A imagem é uma simulação. <a href="{{BASE}}termos" style="color:inherit">Termos e privacidade</a> · tecnologia Vcela</p>
+    </div>
+  </div>
+</div>
+<div class="cad" id="cad" hidden>
+  <form id="fcad" novalidate>
+    <div class="lg"><img src="{{LOGO}}" alt="{{NOME}}"></div>
+    <h2>Cadastre-se para provar</h2>
+    <label class="f" for="cnome">Seu nome<input id="cnome" type="text" autocomplete="name" maxlength="80" required></label>
+    <label class="f" for="cwhats">WhatsApp com DDD<input id="cwhats" type="tel" inputmode="tel" autocomplete="tel" placeholder="(11) 90000-0000" required></label>
+    <fieldset style="border:0;padding:0;margin:0;display:grid;gap:6px"><legend style="font-weight:600;font-size:14px;padding:0;margin-bottom:6px">Tamanho que costuma usar <span style="color:var(--mut);font-weight:400">(opcional)</span></legend>
+      <div class="tams" id="ctams"></div></fieldset>
+    <label class="ck"><input id="ctermos" type="checkbox" required><span>Li e aceito os <a href="{{BASE}}termos" target="_blank" rel="noopener">termos de uso e privacidade</a> do provador.</span></label>
+    <label class="ck"><input id="cnov" type="checkbox"><span>Quero receber novidades e promoções da {{NOME}} pelo WhatsApp.</span></label>
+    <p class="erro" id="cerro" role="alert"></p>
+    <button class="bt" id="cbt" type="submit">Começar a provar</button>
+  </form>
+</div>
+<script type="module">
+import {PoseLandmarker, FilesetResolver} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
+
+const W=600, H=760; // espaco de desenho das pecas
+// Ancoras na peca: ombro esq/dir e meio do quadril (vistos de frente).
+const ANC={sl:[175,130], sr:[425,130], hm:[300,600]};
+const L={{CONFIG}};
+const CORES=[L.cor1,"#1F2A44","#F2EDE4","#2B2B2B","#6E8B74","#D98E4A","#7C9CC8","#C9A227"];
+
+function camiseta(c,cor){c.beginPath();c.moveTo(245,92);c.quadraticCurveTo(300,140,355,92);c.lineTo(430,118);c.lineTo(560,240);c.lineTo(505,300);c.lineTo(440,250);c.lineTo(448,705);c.lineTo(152,705);c.lineTo(160,250);c.lineTo(95,300);c.lineTo(40,240);c.lineTo(170,118);c.closePath();sombrear(c,cor);gola(c);}
+function regata(c,cor){c.beginPath();c.moveTo(232,90);c.quadraticCurveTo(300,175,368,90);c.lineTo(405,96);c.quadraticCurveTo(410,200,445,250);c.lineTo(450,705);c.lineTo(150,705);c.lineTo(155,250);c.quadraticCurveTo(190,200,195,96);c.closePath();sombrear(c,cor);}
+function blusa(c,cor){c.beginPath();c.moveTo(250,95);c.quadraticCurveTo(300,170,350,95);c.lineTo(430,118);c.quadraticCurveTo(520,260,575,560);c.lineTo(520,575);c.quadraticCurveTo(470,380,445,300);c.lineTo(470,705);c.quadraticCurveTo(300,735,130,705);c.lineTo(155,300);c.quadraticCurveTo(130,380,80,575);c.lineTo(25,560);c.quadraticCurveTo(80,260,170,118);c.closePath();sombrear(c,cor);}
+function vestido(c,cor){c.beginPath();c.moveTo(238,90);c.quadraticCurveTo(300,165,362,90);c.lineTo(408,98);c.quadraticCurveTo(415,190,440,240);c.quadraticCurveTo(430,420,410,470);c.lineTo(560,1130);c.quadraticCurveTo(300,1180,40,1130);c.lineTo(190,470);c.quadraticCurveTo(170,420,160,240);c.quadraticCurveTo(185,190,192,98);c.closePath();sombrear(c,cor,1180);}
+function sombrear(c,cor,h){c.fillStyle=cor;c.fill();const g=c.createLinearGradient(0,0,W,0);g.addColorStop(0,"rgba(0,0,0,.22)");g.addColorStop(.25,"rgba(0,0,0,0)");g.addColorStop(.5,"rgba(255,255,255,.08)");g.addColorStop(.75,"rgba(0,0,0,0)");g.addColorStop(1,"rgba(0,0,0,.25)");c.fillStyle=g;c.fill();const v=c.createLinearGradient(0,0,0,h||H);v.addColorStop(0,"rgba(255,255,255,.06)");v.addColorStop(1,"rgba(0,0,0,.12)");c.fillStyle=v;c.fill();c.lineWidth=3;c.strokeStyle="rgba(0,0,0,.18)";c.stroke();}
+function gola(c){c.beginPath();c.moveTo(245,92);c.quadraticCurveTo(300,140,355,92);c.lineWidth=10;c.strokeStyle="rgba(0,0,0,.18)";c.stroke();}
+const PECAS=[{id:"camiseta",nome:"Camiseta",f:camiseta,h:H},{id:"blusa",nome:"Blusa",f:blusa,h:H},{id:"regata",nome:"Regata",f:regata,h:H},{id:"vestido",nome:"Vestido",f:vestido,h:1180}];
+
+let peca=PECAS[0], cor=CORES[0], arte=null, propria=null;
+function gerar(){ if(propria){arte=propria;return;} const cv=document.createElement("canvas");cv.width=W;cv.height=peca.h;peca.f(cv.getContext("2d"),cor);arte={img:cv,anc:ANC}; }
+
+// Prateleira
+document.getElementById("wa").href="https://wa.me/"+L.whatsapp+"?text="+encodeURIComponent("Oi! Testei no provador virtual e gostei de uma peça");
+const $pecas=document.getElementById("pecas"),$cores=document.getElementById("cores");
+PECAS.forEach(p=>{const b=document.createElement("button");b.type="button";b.className="pc";b.id="pc-"+p.id;b.setAttribute("aria-pressed",p===peca);const cv=document.createElement("canvas");cv.width=W;cv.height=p.h;cv.style.aspectRatio=W+"/"+p.h;p.f(cv.getContext("2d"),"#9C8A91");b.append(cv,document.createTextNode(p.nome));b.onclick=()=>{peca=p;propria=null;document.querySelectorAll(".pc").forEach(x=>x.setAttribute("aria-pressed",x===b));gerar();escolheu(p.nome);};$pecas.append(b);});
+CORES.forEach(c=>{const b=document.createElement("button");b.type="button";b.className="cor";b.style.background=c;b.setAttribute("aria-label","Cor "+c);b.setAttribute("aria-pressed",c===cor);b.onclick=()=>{cor=c;propria=null;document.querySelectorAll(".cor").forEach(x=>x.setAttribute("aria-pressed",x===b));gerar();};$cores.append(b);});
+gerar();
+
+// Pecas reais da loja: pecas.json = [{"nome","img","anc":{"sl":[x,y],"sr":[x,y],"hm":[x,y]}}] em % da imagem
+Promise.resolve(L.pecas||[]).then(lista=>{lista.forEach((it,i)=>{const im=new Image();im.onload=()=>{const w=im.naturalWidth,h=im.naturalHeight,A=it.anc||{sl:[27,16],sr:[73,16],hm:[50,52]};const obj={img:im,anc:{sl:[A.sl[0]*w/100,A.sl[1]*h/100],sr:[A.sr[0]*w/100,A.sr[1]*h/100],hm:[A.hm[0]*w/100,A.hm[1]*h/100]}};
+  const b=document.createElement("button");b.type="button";b.className="pc";const t=document.createElement("img");t.src=im.src;t.alt="";t.style.cssText="width:100%;max-width:70px;aspect-ratio:600/760;object-fit:contain";b.append(t,document.createTextNode(it.nome));
+  b.onclick=()=>{propria=obj;arte=obj;document.querySelectorAll(".pc").forEach(x=>x.setAttribute("aria-pressed",x===b));document.getElementById("wa").href="https://wa.me/"+L.whatsapp+"?text="+encodeURIComponent("Oi! Testei no provador virtual e gostei: "+it.nome);escolheu(it.nome);};
+  b.setAttribute("aria-pressed","false");$pecas.prepend(b);if(i===0)b.click();};im.src=it.img;});}).catch(()=>{});
+
+document.getElementById("minha").onchange=e=>{const f=e.target.files[0];if(!f)return;const im=new Image();im.onload=()=>{const w=im.naturalWidth,h=im.naturalHeight;propria={img:im,anc:{sl:[w*.27,h*.16],sr:[w*.73,h*.16],hm:[w*.5,h*.76]}};arte=propria;document.querySelectorAll(".pc").forEach(x=>x.setAttribute("aria-pressed","false"));escolheu("Peça enviada pela cliente");};im.src=URL.createObjectURL(f);};
+
+// Cadastro (com aceite dos termos)
+const API=L.api, LOJA=L.slug, TERMOS=L.termos, CK="dcpv_"+LOJA;
+let cli=null; try{cli=JSON.parse(localStorage.getItem(CK)||"null");}catch(_){}
+if(cli&&cli.termos!==TERMOS)cli=null;
+const $cad=document.getElementById("cad"),$ola=document.getElementById("ola");
+["PP","P","M","G","GG","XG"].forEach(t=>{const l=document.createElement("label");l.innerHTML='<input type="radio" name="ctam" value="'+t+'"><span>'+t+'</span>';document.getElementById("ctams").append(l);});
+function mostrarOla(){ if(!cli){$cad.hidden=false;$ola.hidden=true;return;} $cad.hidden=true;$ola.hidden=false;$ola.textContent="Olá, "+cli.nome.split(" ")[0]+"! ";const s=document.createElement("button");s.type="button";s.textContent="Não é você?";s.onclick=()=>{try{localStorage.removeItem(CK);}catch(_){}cli=null;mostrarOla();};$ola.append(s); }
+const $w=document.getElementById("cwhats");
+$w.addEventListener("input",()=>{let d=$w.value.replace(/\D/g,"").slice(0,11);$w.value=d.length>6?"("+d.slice(0,2)+") "+d.slice(2,d.length-4)+"-"+d.slice(-4):d.length>2?"("+d.slice(0,2)+") "+d.slice(2):d;});
+document.getElementById("fcad").onsubmit=async e=>{e.preventDefault();const er=document.getElementById("cerro"),bt=document.getElementById("cbt");er.textContent="";
+  const nome=document.getElementById("cnome").value.trim(),wh=$w.value.replace(/\D/g,""),tam=(document.querySelector('input[name="ctam"]:checked')||{}).value||"";
+  if(nome.length<2){er.textContent="Digite seu nome.";return;} if(wh.length<10){er.textContent="Digite o WhatsApp com DDD.";return;}
+  if(!document.getElementById("ctermos").checked){er.textContent="Para usar o provador, aceite os termos.";return;}
+  bt.disabled=true;bt.textContent="Entrando…";
+  try{const r=await fetch(API+"cadastro",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({loja:LOJA,nome,whatsapp:wh,tamanho:tam,termos:true,termos_versao:TERMOS,novidades:document.getElementById("cnov").checked})});
+    const j=await r.json(); if(!r.ok)throw new Error(j.message||"Não deu certo. Tente de novo.");
+    cli={token:j.token,nome:j.nome,termos:TERMOS}; try{localStorage.setItem(CK,JSON.stringify(cli));}catch(_){} mostrarOla();
+  }catch(x){er.textContent=x.message||"Sem conexão. Tente de novo.";}
+  bt.disabled=false;bt.textContent="Começar a provar"; };
+mostrarOla();
+const ultimas={};
+function registrar(peca){ if(!cli||!peca)return; const t=Date.now(); if(ultimas[peca]&&t-ultimas[peca]<60000)return; ultimas[peca]=t;
+  fetch(API+"prova",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:cli.token,peca})}).then(r=>{if(r.status===401){try{localStorage.removeItem(CK);}catch(_){}cli=null;mostrarOla();}}).catch(()=>{}); }
+let pecaAtual="Camiseta";
+function ativo(){return !!(stream||fotoFixa);}
+function escolheu(nome){pecaAtual=nome; if(ativo())registrar(nome);}
+
+// Camera + pose
+const video=document.getElementById("cam"),tela=document.getElementById("tela"),ctx=tela.getContext("2d");
+const $st=document.getElementById("status"),$msg=document.getElementById("msg"),$acts=document.getElementById("acts");
+let pose=null, frente=true, stream=null, fotoFixa=null, sm=null;
+async function carregarPose(){ if(pose)return pose; $st.textContent="Carregando o provador…";
+  const fs=await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
+  pose=await PoseLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",delegate:"GPU"},runningMode:"VIDEO",numPoses:1});
+  return pose; }
+async function abrir(){ if(!cli){mostrarOla();return;} try{ await carregarPose(); if(stream)stream.getTracks().forEach(t=>t.stop());
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:frente?"user":"environment",width:{ideal:1280},height:{ideal:960}},audio:false});
+    video.srcObject=stream; await video.play(); fotoFixa=null; $msg.hidden=true; $acts.hidden=false; $st.textContent="Procurando você…"; registrar(pecaAtual); loop();
+  }catch(e){ $st.textContent= e&&e.name==="NotAllowedError" ? "Câmera não permitida. Libere a câmera nas configurações do navegador." : "Não deu para abrir a câmera. Tente “Usar uma foto”."; } }
+document.getElementById("abrir").onclick=abrir;
+document.getElementById("virar").onclick=()=>{frente=!frente;abrir();};
+document.getElementById("foto").onchange=async e=>{const f=e.target.files[0];if(!f)return;if(!cli){mostrarOla();return;}const im=new Image();im.onload=async()=>{try{await carregarPose();}catch(_){$st.textContent="Não deu para carregar o provador.";return;}
+  if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;fotoFixa=im;$msg.hidden=true;$acts.hidden=false;
+  await pose.setOptions({runningMode:"IMAGE"});const r=pose.detect(im);await pose.setOptions({runningMode:"VIDEO"});sm=null;registrar(pecaAtual);fotoLoop(r);};im.src=URL.createObjectURL(f);};
+function fotoLoop(r){ if(!fotoFixa)return; desenhar(fotoFixa,fotoFixa.naturalWidth,fotoFixa.naturalHeight,r,false); requestAnimationFrame(()=>fotoLoop(r)); }
+
+function loop(){ if(!stream||fotoFixa)return; if(video.readyState>=2){ const r=pose.detectForVideo(video,performance.now()); desenhar(video,video.videoWidth,video.videoHeight,r,frente);} requestAnimationFrame(loop); }
+
+function af(a,b,c,A,B,C){ // transformacao afim que leva a,b,c em A,B,C
+  const d=(a[0]*(b[1]-c[1])+b[0]*(c[1]-a[1])+c[0]*(a[1]-b[1]));
+  const m11=(A[0]*(b[1]-c[1])+B[0]*(c[1]-a[1])+C[0]*(a[1]-b[1]))/d, m21=(A[0]*(c[0]-b[0])+B[0]*(a[0]-c[0])+C[0]*(b[0]-a[0]))/d, dx=(A[0]*(b[0]*c[1]-c[0]*b[1])+B[0]*(c[0]*a[1]-a[0]*c[1])+C[0]*(a[0]*b[1]-b[0]*a[1]))/d;
+  const m12=(A[1]*(b[1]-c[1])+B[1]*(c[1]-a[1])+C[1]*(a[1]-b[1]))/d, m22=(A[1]*(c[0]-b[0])+B[1]*(a[0]-c[0])+C[1]*(b[0]-a[0]))/d, dy=(A[1]*(b[0]*c[1]-c[0]*b[1])+B[1]*(c[0]*a[1]-a[0]*c[1])+C[1]*(a[0]*b[1]-b[0]*a[1]))/d;
+  return [m11,m12,m21,m22,dx,dy]; }
+
+function desenhar(src,w,h,r,espelho){
+  if(tela.width!==w||tela.height!==h){tela.width=w;tela.height=h;}
+  ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,w,h);
+  if(espelho){ctx.translate(w,0);ctx.scale(-1,1);}
+  ctx.drawImage(src,0,0,w,h);
+  const lm=r&&r.landmarks&&r.landmarks[0];
+  if(!lm||lm[11].visibility<.5||lm[12].visibility<.5){ if(!fotoFixa)$st.textContent="Mostre os ombros para a câmera"; sm=null; return; }
+  // Pontos em pixels. De frente: ombro direito da pessoa (12) fica a esquerda da imagem.
+  const P=i=>[lm[i].x*w,lm[i].y*h];
+  let A=P(12),B=P(11),Hm;
+  const temQuadril=lm[23].visibility>.45&&lm[24].visibility>.45;
+  if(temQuadril){const a=P(24),b=P(23);Hm=[(a[0]+b[0])/2,(a[1]+b[1])/2];}
+  else{const mx=(A[0]+B[0])/2,my=(A[1]+B[1])/2,dx=B[0]-A[0],dy=B[1]-A[1];Hm=[mx-dy*1.55,my+dx*1.55];}
+  // Suaviza o tremor.
+  const cur=[A,B,Hm]; if(!sm)sm=cur.map(p=>p.slice()); else sm=sm.map((p,i)=>[p[0]+(cur[i][0]-p[0])*.45,p[1]+(cur[i][1]-p[1])*.45]);
+  [A,B,Hm]=sm;
+  const k=(+document.getElementById("tam").value)/100, off=(+document.getElementById("alt").value)/100;
+  const mx=(A[0]+B[0])/2,my=(A[1]+B[1])/2, tor=Math.hypot(Hm[0]-mx,Hm[1]-my);
+  const ux=(Hm[0]-mx)/tor, uy=(Hm[1]-my)/tor, sy=off*tor;
+  const A2=[mx+(A[0]-mx)*k+ux*sy, my+(A[1]-my)*k+uy*sy], B2=[mx+(B[0]-mx)*k+ux*sy, my+(B[1]-my)*k+uy*sy], H2=[Hm[0]+ux*sy,Hm[1]+uy*sy];
+  const t=af(arte.anc.sl,arte.anc.sr,arte.anc.hm,A2,B2,H2);
+  ctx.save(); ctx.transform(t[0],t[1],t[2],t[3],t[4],t[5]); ctx.globalAlpha=.97; ctx.drawImage(arte.img,0,0); ctx.restore();
+  if(!fotoFixa)$st.textContent=temQuadril?"Vestindo":"Afaste um pouco para mostrar a cintura";
+}
+
+document.getElementById("tirar").onclick=()=>{ tela.toBlob(b=>{ if(!b)return; const f=new File([b],"provador.png",{type:"image/png"});
+  if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],title:"Provador "+L.nome,text:"Olha como ficou!"+(L.instagram?" @"+L.instagram:"")}).catch(()=>{});return;}
+  const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="provador.png";a.click(); },"image/png"); };
+</script>
+</body>
+</html>
