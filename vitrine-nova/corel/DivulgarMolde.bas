@@ -42,23 +42,23 @@ End Function
 ' 4 cantos de um vermelho, em % do quadrado da foto: "x1,y1,x2,y2,x3,y3,x4,y4"
 ' (cima-esquerda, cima-direita, baixo-direita, baixo-esquerda). Funciona inclinado e em perspectiva.
 Private Function Cantos(red As Shape, esq As Double, topo As Double, lado As Double) As String
-    Dim dup As Shape, nd As Node, n As Long, i As Long, j As Long, t As Long
+    Dim dup As Shape, nd As Node, qt As Long, i As Long, j As Long, t As Long
     Dim xs(255) As Double, ys(255) As Double, q(7) As Double
     Set dup = red.Duplicate
     dup.ConvertToCurves
-    n = 0
+    qt = 0
     For Each nd In dup.Curve.Nodes
-        If n < 256 Then
-            xs(n) = (nd.PositionX - esq) / lado * 100
-            ys(n) = (topo - nd.PositionY) / lado * 100
-            n = n + 1
+        If qt < 256 Then
+            xs(qt) = (nd.PositionX - esq) / lado * 100
+            ys(qt) = (topo - nd.PositionY) / lado * 100
+            qt = qt + 1
         End If
     Next nd
     dup.Delete
-    If n > 1 Then
-        If Abs(xs(n - 1) - xs(0)) < 0.01 And Abs(ys(n - 1) - ys(0)) < 0.01 Then n = n - 1
+    If qt > 1 Then
+        If Abs(xs(qt - 1) - xs(0)) < 0.01 And Abs(ys(qt - 1) - ys(0)) < 0.01 Then qt = qt - 1
     End If
-    If n = 4 Then
+    If qt = 4 Then
         ' Retangulo/quadrilatero: usa as 4 pontas, em volta do centro, comecando em cima-esquerda.
         Dim cx As Double, cy As Double, ang(3) As Double, ord(3) As Long, s As Long, best As Double
         cx = (xs(0) + xs(1) + xs(2) + xs(3)) / 4
@@ -84,7 +84,7 @@ Private Function Cantos(red As Shape, esq As Double, topo As Double, lado As Dou
         ' Circulo/elipse ou forma livre: pontos mais afastados nas diagonais.
         Dim b(3) As Double
         b(0) = 1E+30: b(1) = -1E+30: b(2) = -1E+30: b(3) = 1E+30
-        For i = 0 To n - 1
+        For i = 0 To qt - 1
             If xs(i) + ys(i) < b(0) Then b(0) = xs(i) + ys(i): q(0) = xs(i): q(1) = ys(i)
             If xs(i) - ys(i) > b(1) Then b(1) = xs(i) - ys(i): q(2) = xs(i): q(3) = ys(i)
             If xs(i) + ys(i) > b(2) Then b(2) = xs(i) + ys(i): q(4) = xs(i): q(5) = ys(i)
