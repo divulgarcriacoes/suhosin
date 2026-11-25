@@ -45,47 +45,6 @@ function dccm_produto( $sku ) {
 	return $id;
 }
 
-/* Brilho medio (0-255) dentro da area do molde, na foto de um item so do produto. */
-function dccm_luminancia( $pid, $q ) {
-	$att = (int) get_post_meta( $pid, '_dcmk_foto', true );
-	$arq = $att ? get_attached_file( $att ) : '';
-	if ( ! $arq || ! file_exists( $arq ) || ! function_exists( 'imagecreatefromstring' ) ) {
-		return null;
-	}
-	$im = @imagecreatefromstring( (string) file_get_contents( $arq ) ); // phpcs:ignore
-	if ( ! $im ) {
-		return null;
-	}
-	$w  = imagesx( $im );
-	$h  = imagesy( $im );
-	$s  = min( $w, $h );
-	$ox = ( $w - $s ) / 2;
-	$oy = ( $h - $s ) / 2;
-	$xs = array( $q[0], $q[2], $q[4], $q[6] );
-	$ys = array( $q[1], $q[3], $q[5], $q[7] );
-	$x0 = min( $xs );
-	$x1 = max( $xs );
-	$y0 = min( $ys );
-	$y1 = max( $ys );
-	$cx = ( $x0 + $x1 ) / 2;
-	$cy = ( $y0 + $y1 ) / 2;
-	$t  = 0;
-	$n  = 0;
-	for ( $i = 0; $i < 15; $i++ ) {
-		for ( $j = 0; $j < 15; $j++ ) {
-			$px = $cx + ( ( $x1 - $x0 ) * 0.6 ) * ( $i / 14 - 0.5 );
-			$py = $cy + ( ( $y1 - $y0 ) * 0.6 ) * ( $j / 14 - 0.5 );
-			$x  = (int) max( 0, min( $w - 1, $ox + $px / 100 * $s ) );
-			$y  = (int) max( 0, min( $h - 1, $oy + $py / 100 * $s ) );
-			$c  = imagecolorsforindex( $im, imagecolorat( $im, $x, $y ) );
-			$t += 0.299 * $c['red'] + 0.587 * $c['green'] + 0.114 * $c['blue'];
-			$n++;
-		}
-	}
-	imagedestroy( $im );
-	return $n ? $t / $n : null;
-}
-
 function dccm_receber( WP_REST_Request $r ) {
 	$p   = $r->get_json_params();
 	$p   = is_array( $p ) ? $p : array();
@@ -104,6 +63,11 @@ function dccm_receber( WP_REST_Request $r ) {
 		},
 		$q
 	);
+	// Área do molde (cantos em %): se ficou sem altura ou largura, o logo não tem onde entrar.
+	$area = abs( ( $q[0] * $q[3] - $q[2] * $q[1] ) + ( $q[2] * $q[5] - $q[4] * $q[3] ) + ( $q[4] * $q[7] - $q[6] * $q[5] ) + ( $q[6] * $q[1] - $q[0] * $q[7] ) ) / 2;
+	if ( $area < 1 ) {
+		return new WP_REST_Response( array( 'ok' => false, 'mensagem' => 'O molde vermelho ficou sem altura (cantos nao encontrados). Atualize a macro e envie de novo.' ), 400 );
+	}
 	$msg = array();
 	// Foto de um item só (PNG quadrado exportado pelo Corel, já sem o vermelho).
 	if ( ! empty( $p['foto'] ) ) {
@@ -144,24 +108,6 @@ function dccm_receber( WP_REST_Request $r ) {
 		$regra['r'] = 0;
 	}
 	$regra['q'] = $q;
-	// Outras áreas vermelhas (logo em mais de um lugar).
-	$qx = array();
-	foreach ( ( isset( $p['qx'] ) && is_array( $p['qx'] ) ) ? $p['qx'] : array() as $qq ) {
-		if ( is_array( $qq ) && 8 === count( $qq ) ) {
-			$qx[] = array_map(
-				function ( $n ) {
-					return round( max( -20, min( 120, (float) $n ) ), 1 );
-				},
-				array_values( $qq )
-			);
-		}
-	}
-	if ( $qx ) {
-		$regra['qx'] = array_slice( $qx, 0, 5 );
-		$msg[]       = ( count( $regra['qx'] ) + 1 ) . ' áreas';
-	} else {
-		unset( $regra['qx'] );
-	}
 	$modos      = function_exists( 'dcmk_modos' ) ? dcmk_modos() : array();
 	$m          = isset( $p['modo'] ) ? sanitize_key( (string) $p['modo'] ) : '';
 	if ( '' !== $m && isset( $modos[ $m ] ) ) {
@@ -180,14 +126,6 @@ function dccm_receber( WP_REST_Request $r ) {
 		$msg[]      = 'v' === $lg ? 'logo vertical' : 'logo horizontal';
 	} elseif ( 'a' === $lg ) {
 		unset( $regra['l'] );
-	}
-	// Versão colorida: fundos claros / fundos escuros (ou automático pela cor de cada foto).
-	$tm = isset( $p['tom'] ) ? sanitize_key( (string) $p['tom'] ) : '';
-	if ( 'claro' === $tm || 'escuro' === $tm ) {
-		$regra['t'] = $tm;
-		$msg[]      = 'fundos ' . ( 'claro' === $tm ? 'claros' : 'escuros' );
-	} elseif ( 'a' === $tm ) {
-		unset( $regra['t'] );
 	}
 	// Area em pe (caneta, garrafa...) com logo horizontal: deita o logo ao longo do produto.
 	$w1 = hypot( $q[2] - $q[0], $q[3] - $q[1] ) + hypot( $q[4] - $q[6], $q[5] - $q[7] );
