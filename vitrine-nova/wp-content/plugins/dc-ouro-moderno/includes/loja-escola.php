@@ -203,7 +203,7 @@ add_action(
 		}
 		$nome = (string) get_user_meta( $id, 'omx_escola', true );
 		$cid  = (string) get_user_meta( $id, 'omx_cidade', true );
-		$lgid = (int) get_user_meta( $id, 'omx_logo_escuro', true ) ?: ( (int) get_user_meta( $id, 'omx_logo_vertical_escuro', true ) ?: ( (int) get_user_meta( $id, 'omx_logo_branco', true ) ?: (int) get_user_meta( $id, 'omx_logo', true ) ) ); // topo escuro: logo colorido para fundos escuros (ou o que a escola tiver)
+		$lgid = (int) get_user_meta( $id, 'omx_logo_escuro', true ) ?: ( (int) get_user_meta( $id, 'omx_logo', true ) ?: ( (int) get_user_meta( $id, 'omx_logo_vertical_escuro', true ) ?: (int) get_user_meta( $id, 'omx_logo_branco', true ) ) ); // topo: colorido para fundos escuros; sem ele, o horizontal colorido
 		$logo = $lgid ? (string) wp_get_attachment_image_url( $lgid, 'medium_large' ) : '';
 		$cor  = (string) get_user_meta( $id, 'omx_cor', true );
 		$cor  = preg_match( '/^#[0-9a-fA-F]{6}$/', $cor ) ? $cor : '#F5B400';
@@ -337,7 +337,7 @@ add_action(
 function dcom_loja_topo_html( $id ) {
 	$nome = (string) get_user_meta( $id, 'omx_escola', true );
 	$cid  = (string) get_user_meta( $id, 'omx_cidade', true );
-	$lgid = (int) get_user_meta( $id, 'omx_logo_escuro', true ) ?: ( (int) get_user_meta( $id, 'omx_logo_vertical_escuro', true ) ?: ( (int) get_user_meta( $id, 'omx_logo_branco', true ) ?: (int) get_user_meta( $id, 'omx_logo', true ) ) ); // topo escuro: logo colorido para fundos escuros (ou o que a escola tiver)
+	$lgid = (int) get_user_meta( $id, 'omx_logo_escuro', true ) ?: ( (int) get_user_meta( $id, 'omx_logo', true ) ?: ( (int) get_user_meta( $id, 'omx_logo_vertical_escuro', true ) ?: (int) get_user_meta( $id, 'omx_logo_branco', true ) ) ); // topo: colorido para fundos escuros; sem ele, o horizontal colorido
 	$logo = $lgid ? (string) wp_get_attachment_image_url( $lgid, 'medium_large' ) : '';
 	$cor  = (string) get_user_meta( $id, 'omx_cor', true );
 	$cor  = preg_match( '/^#[0-9a-fA-F]{6}$/', $cor ) ? $cor : '#F5B400';
