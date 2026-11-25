@@ -186,7 +186,7 @@ $("fcad").onsubmit=async e=>{e.preventDefault();const er=$("cerro"),bt=$("cbt");
 /* ---------- pecas ---------- */
 let peca=null;
 const lista=L.pecas||[];
-if(!lista.length)$("semPecas").hidden=false;
+if(!lista.length){$("semPecas").hidden=false; if(L.gerando){$("semPecas").textContent="As peças estão sendo criadas agora. Esta página atualiza sozinha em instantes…"; setTimeout(()=>location.reload(),25000);}}
 lista.forEach(p=>{const b=document.createElement("button");b.type="button";b.className="pc";b.setAttribute("aria-pressed","false");
   const im=document.createElement("img");im.src=p.img;im.alt="";im.loading="lazy";b.append(im,document.createTextNode(p.nome));
   b.onclick=()=>{peca=p;document.querySelectorAll(".pc").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));$("wa").href=wa("Oi! Provei no provador virtual e gostei: "+p.nome);atualizar();};

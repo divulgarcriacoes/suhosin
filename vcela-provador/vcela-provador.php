@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Vcela Provador
  * Description: Provador virtual para lojas de roupa. Cada loja tem seu endereço (/slug), cadastro com aceite dos termos, lista de clientes e peças próprias.
- * Version: 1.1.0
+ * Version: 1.2.0
  * Author: Divulgar Criações
  * Text Domain: vcela-provador
  */
@@ -84,11 +84,11 @@ add_action('parse_request', function () {
 function vcp_render($tpl, $slug, $l) {
 	$h = file_get_contents(VCP_DIR . 'app/' . $tpl . '.html');
 	$base = home_url('/' . $slug . '/');
-	$pecas = [];
-	foreach ((array) $l['pecas'] as $i => $p) if (!empty($p['img'])) $pecas[] = ['id' => $i, 'nome' => $p['nome'], 'img' => $p['img'], 'anc' => $p['anc'] ?? null];
+	vcp_auto($slug, $l);
+	$pecas = array_values(vcp_pecas($slug, $l));
 	$cfg = ['slug' => $slug, 'nome' => $l['nome'], 'cor1' => $l['cor1'], 'whatsapp' => $l['whatsapp'], 'instagram' => $l['instagram'],
 		'api' => rest_url('vcela/v1/'), 'termos' => VCP_TERMOS, 'pecas' => $pecas,
-		'ia' => vcp_ia_ok() ? 1 : 0, 'limite' => vcp_ia_cfg()['por_cliente']];
+		'ia' => vcp_ia_ok() ? 1 : 0, 'gerando' => count((array) get_option('vcp_geracoes', [])), 'limite' => vcp_ia_cfg()['por_cliente']];
 	$cont = [];
 	if ($l['whatsapp']) $cont[] = 'pelo WhatsApp <a href="https://wa.me/' . esc_attr($l['whatsapp']) . '">' . esc_html(vcp_fone($l['whatsapp'])) . '</a>';
 	if ($l['instagram']) $cont[] = 'pelo Instagram <a href="https://instagram.com/' . esc_attr($l['instagram']) . '">@' . esc_html($l['instagram']) . '</a>';
@@ -147,6 +147,39 @@ function vcp_prova(WP_REST_Request $r) {
 	return ['ok' => true];
 }
 
+/* --------------------------------------------------------------- pecas */
+
+// Pecas tambem podem ser cadastradas como posts "Peças" (titulo + imagem destacada + campo vcela_loja).
+add_action('init', function () {
+	register_post_type('vcela_peca', ['labels' => ['name' => 'Peças', 'singular_name' => 'Peça', 'add_new_item' => 'Nova peça', 'edit_item' => 'Editar peça'],
+		'public' => false, 'show_ui' => true, 'show_in_menu' => 'vcela-lojas', 'show_in_rest' => true, 'supports' => ['title', 'thumbnail', 'custom-fields'], 'menu_icon' => 'dashicons-format-image']);
+	register_post_meta('vcela_peca', 'vcela_loja', ['type' => 'string', 'single' => true, 'show_in_rest' => true]);
+});
+
+/** Todas as pecas da loja: ['o0' => [...], 'p123' => [...]] */
+function vcp_pecas($slug, $l) {
+	$out = [];
+	foreach ((array) ($l['pecas'] ?? []) as $i => $p) if (!empty($p['img'])) $out['o' . $i] = ['id' => 'o' . $i, 'nome' => $p['nome'], 'img' => $p['img']];
+	$posts = get_posts(['post_type' => 'vcela_peca', 'post_status' => 'publish', 'numberposts' => 200, 'orderby' => 'menu_order date', 'order' => 'ASC',
+		'meta_query' => [['key' => 'vcela_loja', 'value' => $slug]]]);
+	foreach ($posts as $p) {
+		$img = get_the_post_thumbnail_url($p, 'large');
+		if ($img) $out['p' . $p->ID] = ['id' => 'p' . $p->ID, 'nome' => get_the_title($p), 'img' => $img];
+	}
+	return $out;
+}
+
+/** Loja modelo sem pecas: cria sozinha as 5 camisetas de exemplo (uma vez) e importa as prontas. */
+function vcp_auto($slug, $l) {
+	if (!vcp_ia_ok()) return;
+	if ($slug === 'vcelastore' && !get_option('vcp_exemplos_feitos') && !vcp_pecas($slug, $l)) {
+		update_option('vcp_exemplos_feitos', time(), false);
+		foreach (VCP_EXEMPLOS as $it) vcp_gerar_iniciar($slug, $it[0], $it[1]);
+	}
+	$g = get_option('vcp_geracoes', []);
+	if ($g && !get_transient('vcp_conferindo')) { set_transient('vcp_conferindo', 1, 15); vcp_gerar_conferir(); }
+}
+
 /* ------------------------------------------------------ prova com IA (FASHN) */
 
 function vcp_ia_cfg() {
@@ -174,8 +207,8 @@ function vcp_provar(WP_REST_Request $r) {
 	if (!$c) return new WP_Error('token', 'Cadastro não encontrado.', ['status' => 401]);
 	if ($c->termos !== VCP_TERMOS) return new WP_Error('termos', 'Aceite os termos atualizados para continuar.', ['status' => 401]);
 	$l = vcp_loja($c->loja);
-	$pid = (int) $r['peca'];
-	$peca = $l['pecas'][$pid] ?? null;
+	$todas = $l ? vcp_pecas($c->loja, $l) : [];
+	$peca = $todas[(string) $r['peca']] ?? null;
 	if (!$l || !$peca || empty($peca['img'])) return new WP_Error('peca', 'Peça não encontrada.', ['status' => 400]);
 	$foto = (string) $r['foto'];
 	if (!preg_match('#^data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$#', $foto) || strlen($foto) > 4000000) return new WP_Error('foto', 'Foto inválida ou grande demais.', ['status' => 400]);
@@ -294,10 +327,10 @@ function vcp_gerar_conferir() {
 		if ($st === 'completed' && !empty($r['predictions'])) {
 			$url = '';
 			foreach ($r['predictions'] as $p) if (!empty($p['results'][0])) $url = $p['results'][0];
-			$src = $url ? media_sideload_image($url, 0, $j['nome'], 'src') : null;
-			if ($src && !is_wp_error($src)) {
-				$l = vcp_lojas();
-				if (isset($l[$j['loja']])) { $l[$j['loja']]['pecas'][] = ['nome' => $j['nome'], 'img' => $src]; vcp_salvar_lojas($l); }
+			$aid = $url ? media_sideload_image($url, 0, $j['nome'], 'id') : null;
+			if ($aid && !is_wp_error($aid)) {
+				$pid = wp_insert_post(['post_type' => 'vcela_peca', 'post_status' => 'publish', 'post_title' => $j['nome'], 'meta_input' => ['vcela_loja' => $j['loja']]]);
+				if ($pid && !is_wp_error($pid)) set_post_thumbnail($pid, $aid);
 				$prontas++;
 			} else $erros[] = $j['nome'] . ': não deu para salvar a foto.';
 		} elseif ($st === 'failed' || (isset($r['_code']) && $r['_code'] === 404)) {
