@@ -209,6 +209,17 @@ add_action( 'init', function () {
 		update_option( 'dcmp_lab_ids', array(), false );
 		update_option( 'dcmp_lab_pos', 0, false );
 	}
+	// v4: coloca as 10 na galeria do BLAIR 93282-106 (60350), na ordem 01 a 10.
+	if ( ! get_option( 'dcmp_lab_v4' ) && get_option( 'dcmp_lab_v3' ) && function_exists( 'wc_get_product' ) ) {
+		$ids = array_filter( (array) get_option( 'dcmp_lab_ids', array() ), 'is_int' );
+		$pr  = wc_get_product( 60350 );
+		if ( $pr && 10 === count( $ids ) ) {
+			update_option( 'dcmp_lab_v4', time(), false );
+			ksort( $ids );
+			$pr->set_gallery_image_ids( array_values( array_unique( array_merge( $pr->get_gallery_image_ids(), array_values( $ids ) ) ) ) );
+			$pr->save();
+		}
+	}
 	// v3: troca a 09 (estampa clara demais).
 	if ( ! get_option( 'dcmp_lab_v3' ) && 10 === (int) get_option( 'dcmp_lab_pos', 0 ) ) {
 		update_option( 'dcmp_lab_v3', time(), false );
