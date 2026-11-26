@@ -20,7 +20,7 @@ function dcmp_lab_estampas() {
 		6  => array( 'Tecnologia abstrata', 'https://downloadscdn6.magnific.com/1194/618/617185.jpg?filename=abstract-technology-background-concept.jpg&token=exp=1795712905~hmac=126b88843b2cacf1ceda9f063b52a5aa' ),
 		7  => array( 'Tinta colorida', 'https://downloadscdn6.magnific.com/53876/109/108486.jpg?filename=colorful-alcohol-ink-abstract-background.jpg&token=exp=1795712907~hmac=743545e24508bd7bc1443d6d337708b6' ),
 		8  => array( 'Abstrato 3D roxo', 'https://downloadscdn5.magnific.com/download_vector/jpg/53/53876/20/20776/20776368_v1072-036-c.jpg?token=exp=1795712471~hmac=1553124414fdebacc4d62425017ca0fb' ),
-		9  => array( 'Mármore azul e roxo', 'https://downloadscdn6.magnific.com/53876/105/104413.jpg?filename=blue-purple-marble-background-with-orange-touch.jpg&token=exp=1795712908~hmac=8401f2a5a8611208c3912f434f265180' ),
+		9  => array( 'Tinta roxa', 'https://downloadscdn6.magnific.com/53876/111/110811.jpg?filename=purple-alcohol-ink-abstract-background.jpg&token=exp=1795713078~hmac=3dc62a42a2a243b1747ff9dcc85b4e12' ),
 		10 => array( 'Ondas vermelho e laranja', 'https://downloadscdn6.magnific.com/23/2148236/2148235959.jpg?filename=gleaming-wavy-red-orange-abstract-background.jpg&token=exp=1795712909~hmac=2d60f2a42286744b18ca1bcd79964165' ),
 	);
 }
@@ -208,6 +208,18 @@ add_action( 'init', function () {
 		}
 		update_option( 'dcmp_lab_ids', array(), false );
 		update_option( 'dcmp_lab_pos', 0, false );
+	}
+	// v3: troca a 09 (estampa clara demais).
+	if ( ! get_option( 'dcmp_lab_v3' ) && 10 === (int) get_option( 'dcmp_lab_pos', 0 ) ) {
+		update_option( 'dcmp_lab_v3', time(), false );
+		$ids = (array) get_option( 'dcmp_lab_ids', array() );
+		if ( ! empty( $ids[9] ) && is_int( $ids[9] ) ) {
+			wp_delete_attachment( $ids[9], true );
+		}
+		$lst9 = dcmp_lab_estampas();
+		$ids[9] = dcmp_lab_fazer( 9, $lst9[9][0], $lst9[9][1] );
+		update_option( 'dcmp_lab_ids', $ids, false );
+		return;
 	}
 	$pos = (int) get_option( 'dcmp_lab_pos', 0 );
 	$lst = dcmp_lab_estampas();
