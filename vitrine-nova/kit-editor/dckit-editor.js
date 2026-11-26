@@ -27,8 +27,8 @@ var css=document.createElement('style');css.textContent='.dckv-ed h3{color:#fff;
 +'.dckv-hx{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}.dckv-hx input[type=text]{width:130px;font-family:monospace;text-transform:uppercase}.dckv-hx input[type=color]{width:46px;height:46px;border:0;border-radius:10px;padding:0;background:none;cursor:pointer}.dckv-bt2{background:#fff;color:#0B2A5B;border:0;border-radius:12px;padding:12px 14px;font-weight:800;font-size:14px;cursor:pointer;display:inline-block}.dckv-bt2[hidden]{display:none}.dckv-fd{display:flex;align-items:center;gap:14px;border:2px dashed rgba(255,255,255,.55);border-radius:16px;padding:14px 16px;cursor:pointer;background:rgba(255,255,255,.06);color:#fff}.dckv-fd:hover{border-color:var(--c,#F5B400);background:rgba(255,255,255,.12)}.dckv-fd i{flex:0 0 64px;height:44px;border-radius:8px;background:rgba(255,255,255,.15) center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:24px}.dckv-fd b{display:block;font-size:16px}.dckv-fd .fds{display:block;color:#C9D3E8;font-size:12.5px;margin-top:2px;background:none;text-transform:none;letter-spacing:0;font-weight:500;padding:0;border-radius:0}.dckv-ed .sub{color:#C9D3E8;font-size:13px;margin:12px 0 6px;font-weight:700}.dckv-bt2.x{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.3)}.dckv-ed small.dica{display:block;background:none;color:#C9D3E8;text-transform:none;letter-spacing:0;font-weight:500;padding:0;margin-top:6px}';
 document.head.appendChild(css);
 var esq=sec.firstElementChild,dir=sec.lastElementChild,ed=null,cv=null;
-[].forEach.call(sec.querySelectorAll('[data-dckit-abrir]'),function(a){a.addEventListener('click',function(e){e.preventDefault();abre();});});
-function abre(){
+[].forEach.call(sec.querySelectorAll('[data-dckit-abrir]'),function(a){a.addEventListener('click',function(e){e.preventDefault();abre(true);});});
+function abre(rolar){
 if(ed){return;}
 ed=document.createElement('div');ed.className='dckv-ed';
 var h='<small>Kit Matrícula</small><h2 style="font-size:28px">Monte a arte do seu kit</h2><p>Seu logo já está no kit. É só escolher o fundo da pasta e, se quiser, escrever uma frase.</p>';
@@ -57,7 +57,7 @@ inp.addEventListener('input',function(){st.txt=inp.value;guarda();pinta();});
 ed.querySelector('.lgf').addEventListener('change',function(){var f=this.files&&this.files[0];if(!f){return;}var r=new FileReader();r.onload=function(){img(r.result).then(function(i){if(i){LOGO=limpa(i);LOGOB=null;LV=null;LVE=null;pinta();}});};r.readAsDataURL(f);});
 ed.querySelector('.dckv-go').addEventListener('click',pede);
 marca();
-if(window.innerWidth<860){sec.scrollIntoView({behavior:'smooth',block:'start'});}
+if(rolar){sec.scrollIntoView({behavior:'smooth',block:'start'});}
 Promise.all([img(K.foto),img(K.mask),img(K.logo.cor),img(K.logo.ce||K.logo.branco),img(EX[0].src),img(EX[1].src),img(K.logo.v),img(K.logo.ve||K.logo.vb)]).then(function(r){
 if(!r[0]||!r[1]){ld.textContent='Não foi possível carregar a prévia. Recarregue a página.';return;}
 FOTO=r[0];MASK=r[1];LOGO=r[2]?limpa(r[2]):null;LOGOB=r[3]?limpa(r[3]):null;LV=r[6]?limpa(r[6]):null;LVE=r[7]?limpa(r[7]):null;EX[0].im=r[4];EX[1].im=r[5];
@@ -123,5 +123,6 @@ var fd=new FormData();fd.append('action','dckit_pedir');fd.append('n',K.nonce);f
 return fetch(K.url,{method:'POST',body:fd,credentials:'same-origin'});}).then(function(r){return r.json();}).then(function(j){
 if(j&&j.success&&j.data&&j.data.url){location.href=j.data.url;return;}alert((j&&j.data&&j.data.msg)||'Não foi possível fazer o pedido. Tente de novo.');b.disabled=false;marca();
 }).catch(function(){alert('Não foi possível enviar o pedido. Confira a internet e tente de novo.');b.disabled=false;marca();});}
-if(/[#&?]montar-kit/.test(location.href)){abre();}
+/* abre direto com as ferramentas (sem precisar clicar); com #montar-kit no endereco, rola ate o kit */
+abre(/[#&?]montar-kit/.test(location.href));
 })();
