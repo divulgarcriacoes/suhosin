@@ -10,6 +10,9 @@
 - Produto de teste: **Vestido Midi Plissado Laranja** (id 54, Feminino → Vestidos). O preço R$ 189,90 e o estoque P:3, M:2, G:4 são de teste.
 - Peças antigas cadastradas pelo painel da loja (Flor bella, Laranja, Branco top) continuam no provador.
 
+## 26/11/2026
+- A pedido da Vera: segmento **Infantil removido** (página inicial: menu, textos, cartão de categoria e rodapé; descrição do site; provador). As categorias agora são Feminino, Masculino e Acessórios. No site, o provador 1.6.0 foi editado direto; a cópia 1.7.0 do repositório também.
+
 ## Pendências
 1. Instalar a 1.7.0 e conferir se o produto 54 virou variável (P3, M2, G4).
 2. Subir para 50 as provas por cliente durante os testes (painel Vcela Provador → Prova com IA). Depois voltar para 5.

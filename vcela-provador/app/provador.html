@@ -203,7 +203,7 @@ let peca=null;
 const lista=L.pecas||[];
 if(!lista.length){$("semPecas").hidden=false; if(L.gerando){$("semPecas").textContent="As peças estão sendo criadas agora. Esta página atualiza sozinha em instantes…"; setTimeout(()=>location.reload(),25000);}}
 let tam="";
-const ORD=["Feminino","Masculino","Infantil","Acessórios"];
+const ORD=["Feminino","Masculino","Acessórios"];
 const cats=[...new Set(lista.map(p=>p.cat||"Outras"))].sort((a,b)=>(ORD.indexOf(a)<0?99:ORD.indexOf(a))-(ORD.indexOf(b)<0?99:ORD.indexOf(b)));
 const pre=new URLSearchParams(location.search).get("peca");
 const alvo=lista.find(p=>p.id===pre);

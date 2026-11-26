@@ -171,8 +171,8 @@ add_action('init', function () {
 	}
 });
 
-const VCP_CATS = ['Feminino', 'Masculino', 'Infantil', 'Acessórios'];
-const VCP_SUBS = ['Feminino' => ['Vestidos', 'Blusas', 'Saias', 'Calças', 'Conjuntos'], 'Masculino' => ['Camisetas', 'Camisas', 'Calças', 'Bermudas'], 'Infantil' => ['Menina', 'Menino', 'Bebê'], 'Acessórios' => ['Bolsas', 'Bijuterias', 'Óculos', 'Cintos']];
+const VCP_CATS = ['Feminino', 'Masculino', 'Acessórios'];
+const VCP_SUBS = ['Feminino' => ['Vestidos', 'Blusas', 'Saias', 'Calças', 'Conjuntos'], 'Masculino' => ['Camisetas', 'Camisas', 'Calças', 'Bermudas'], 'Acessórios' => ['Bolsas', 'Bijuterias', 'Óculos', 'Cintos']];
 
 function vcp_preco($v) { $v = preg_replace('/[^0-9,\.]/', '', (string) $v); if ($v === '') return ''; $n = (float) str_replace(',', '.', str_replace('.', '', preg_match('/,\d{1,2}$/', $v) ? $v : str_replace(',', '', $v))); if (!preg_match('/,\d{1,2}$/', $v)) $n = (float) str_replace(',', '', $v); return $n > 0 ? number_format($n, 2, ',', '.') : ''; }
 function vcp_tams($txt) { return array_values(array_filter(array_map(fn($t) => mb_strtoupper(trim($t)), preg_split('/[,;\/|]+/', (string) $txt)), fn($t) => $t !== '' && mb_strlen($t) <= 12)); }
