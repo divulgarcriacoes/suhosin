@@ -254,3 +254,70 @@ add_action( 'woocommerce_before_add_to_cart_form', function () {
 	}
 	echo '<p style="margin:8px 0 14px"><a class="button" style="background:#C9A24A;color:#0B1F3F;font-weight:800;border-radius:10px;padding:12px 18px;display:inline-block" href="' . esc_url( add_query_arg( 'prod', 'kit', dcvx_url( 'dcomp-artes' ) ) ) . '">Monte a arte do seu kit em tempo real</a></p>';
 }, 5 );
+
+/* ------------------------------------------------------------ vitrine das escolas */
+
+/* Uma vez: foto do kit (121613) como imagem do produto e o molde do logo nas 3 peças (vitrine com o logo da escola).
+   Pasta: logo colorido seguindo as dobras do tecido. Squeeze: logo colorido. Bloco (capa azul): logo branco.
+   Coordenadas em % da foto quadrada (cantos: sup. esq., sup. dir., inf. dir., inf. esq.). Um molde do Corel enviado depois substitui este. */
+add_action( 'init', function () {
+	if ( get_option( 'dckit_vitrine_v2' ) || ! dckit_pid() ) {
+		return;
+	}
+	update_option( 'dckit_vitrine_v2', time(), false );
+	$pid = dckit_pid();
+	if ( wp_attachment_is_image( 121613 ) ) {
+		set_post_thumbnail( $pid, 121613 );
+		delete_post_meta( $pid, '_dcmk_foto' );
+	}
+	update_post_meta(
+		$pid,
+		'_dcmk',
+		array(
+			'x'  => 40.6,
+			'y'  => 61.2,
+			'w'  => 80,
+			'r'  => 0,
+			'm'  => 'cor',
+			'd'  => 1,
+			'q'  => array( 13.8, 49.4, 67.5, 49.4, 67.5, 73.1, 13.8, 73.1 ),
+			'qx' => array(
+				array( 'q' => array( 78.5, 56.1, 88.1, 56.1, 88.1, 69.0, 78.5, 69.0 ), 'm' => 'cor', 'l' => 'h', 'd' => 0 ),
+				array( 'q' => array( 64.6, 80.8, 75.0, 81.1, 74.4, 88.0, 62.9, 88.1 ), 'm' => 'branco', 'd' => 0 ),
+			),
+		)
+	);
+}, 45 );
+
+/* Destaque do kit no topo da vitrine da escola (chamado por dcom_vitrine_html). A imagem recebe o logo da escola pelo mockup. */
+function dckit_vitrine_destaque( $lf ) {
+	$pid = dckit_pid();
+	$p   = $pid ? wc_get_product( $pid ) : null;
+	if ( ! $p || ! $p->is_visible() ) {
+		return '';
+	}
+	$f    = function ( $v ) {
+		return 'R$ ' . number_format( (float) $v, 2, ',', '.' );
+	};
+	$tab  = dckit_tabela();
+	$link = add_query_arg( 'lf', $lf, get_permalink( $pid ) );
+	$cri  = ( function_exists( 'dcvx_url' ) && function_exists( 'dcomp_fr' ) && dcomp_fr() ) ? add_query_arg( 'prod', 'kit', dcvx_url( 'dcomp-artes' ) ) : $link;
+	$fx   = '';
+	foreach ( $tab as $q => $u ) {
+		$fx .= '<li><b>' . (int) $q . ' kits</b><span>' . esc_html( $f( $u ) ) . '/kit</span></li>';
+	}
+	return '<style id="dckv">.dckv{display:grid;grid-template-columns:1fr 1.05fr;gap:26px;align-items:center;background:linear-gradient(120deg,var(--az,#0B2A5B),#07142b);color:#fff;border-radius:24px;padding:30px 32px;margin:0 0 18px;overflow:hidden;box-shadow:0 12px 30px rgba(11,42,91,.18)}'
+		. '.dckv small{display:inline-block;background:var(--c,#F5B400);color:var(--ct,#0B2A5B);font-weight:800;font-size:12px;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:6px 12px}'
+		. '.dckv h2{font-size:34px;line-height:1.1;margin:12px 0 8px;color:#fff}.dckv p{margin:0 0 14px;color:#C9D3E8;font-size:15px}'
+		. '.dckv ul.it{list-style:none;margin:0 0 14px;padding:0;display:grid;gap:6px;font-size:15px}.dckv ul.it li:before{content:"\2713";color:var(--c,#F5B400);font-weight:900;margin-right:8px}'
+		. '.dckv ul.fx{list-style:none;margin:0 0 18px;padding:0;display:flex;flex-wrap:wrap;gap:8px}.dckv ul.fx li{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:7px 11px;font-size:12.5px;line-height:1.25}.dckv ul.fx b{display:block;font-size:13px}'
+		. '.dckv .bts{display:flex;gap:10px;flex-wrap:wrap}.dckv .bts a{border-radius:12px;padding:13px 20px;font-weight:800;text-decoration:none!important;font-size:15px}.dckv .b1{background:var(--c,#F5B400);color:var(--ct,#0B2A5B)!important}.dckv .b2{background:#fff;color:var(--az,#0B2A5B)!important}'
+		. '.dckv a.dcv-card{padding:8px;border:0;border-radius:20px}.dckv a.dcv-card:hover{transform:none}.dckv .dcv-img{margin:0;border-radius:14px;background:#fff}.dckv .dcv-img img{max-width:100%;max-height:100%}'
+		. '@media(max-width:860px){.dckv{grid-template-columns:1fr;padding:22px 18px}.dckv h2{font-size:28px}}</style>'
+		. '<section class="dckv" id="dcv-kit"><div><small>Novidade &middot; Matrículas</small><h2>Kit Matrícula com a marca da sua escola</h2>'
+		. '<p>Receba os alunos novos com um kit de boas-vindas personalizado. Monte a arte em tempo real e veja como fica antes de pedir.</p>'
+		. '<ul class="it"><li>Pasta escolar sublimada com a arte da escola</li><li>Squeeze com o logo</li><li>Bloco de anotações com autoadesivos</li></ul>'
+		. '<ul class="fx">' . $fx . '</ul>'
+		. '<div class="bts"><a class="b1" href="' . esc_url( $cri ) . '">Monte a arte do seu kit</a><a class="b2" href="' . esc_url( $link ) . '">Ver o kit</a></div></div>'
+		. '<a class="dcv-card" href="' . esc_url( $link ) . '" aria-label="Kit Matrícula"><span class="dcv-img">' . $p->get_image( 'woocommerce_single' ) . '</span></a></section>';
+}
