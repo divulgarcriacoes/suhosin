@@ -108,8 +108,8 @@ return a;}
 function quebra(g,t,mw){var ws=t.split(/\s+/),ls=[],c='';ws.forEach(function(w){var p=c?c+' '+w:w;if(g.measureText(p).width>mw&&c){ls.push(c);c=w;}else{c=p;}});if(c){ls.push(c);}return ls;}
 var raf=0;function pinta(){if(!OUT||raf){return;}raf=requestAnimationFrame(function(){raf=0;desenha();});}
 function desenha(){var AD=arte(1).getContext('2d').getImageData(0,0,N,N).data,o=OUT.data,i,j,a,l;
-for(i=0;i<N*N;i++){j=i*4;a=CA[i]*0.65;if(a<0.004){o[j]=FD[j];o[j+1]=FD[j+1];o[j+2]=FD[j+2];o[j+3]=255;continue;}l=LUM[i]*1.03;
-o[j]=Math.min(255,AD[j]*l)*a+FD[j]*(1-a);o[j+1]=Math.min(255,AD[j+1]*l)*a+FD[j+1]*(1-a);o[j+2]=Math.min(255,AD[j+2]*l)*a+FD[j+2]*(1-a);o[j+3]=255;}
+for(i=0;i<N*N;i++){j=i*4;a=CA[i]*0.65;if(a<0.004){o[j]=FD[j];o[j+1]=FD[j+1];o[j+2]=FD[j+2];o[j+3]=255;continue;}l=LUM[i]*255-255;/* mesclagem Subtrair do Corel: arte + tecido - 255 */
+o[j]=Math.max(0,Math.min(255,AD[j]+l))*a+FD[j]*(1-a);o[j+1]=Math.max(0,Math.min(255,AD[j+1]+l))*a+FD[j+1]*(1-a);o[j+2]=Math.max(0,Math.min(255,AD[j+2]+l))*a+FD[j+2]*(1-a);o[j+3]=255;}
 ctx.putImageData(OUT,0,0);
 if(LOGO){EX.forEach(function(E){if(!E.im){return;}var Lx=E.modo==='esc'?(LVE||LV||LOGO):(LV||LOGO),sil=E.modo==='esc'&&!LVE,w=E.w,h=E.h,oc=document.createElement('canvas');oc.width=w;oc.height=h;var g=oc.getContext('2d');g.imageSmoothingQuality='high';var r=Math.min(w*E.fit/Lx.w,h*E.fit/Lx.h),lw=Lx.w*r,lh=Lx.h*r;g.drawImage(Lx.cv,Lx.x,Lx.y,Lx.w,Lx.h,(w-lw)/2,(h-lh)/2,lw,lh);
 if(sil){g.globalCompositeOperation='source-in';g.fillStyle='#F2F4F8';g.fillRect(0,0,w,h);}g.globalCompositeOperation='destination-in';g.drawImage(E.im,0,0,w,h);
