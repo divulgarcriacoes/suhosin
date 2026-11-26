@@ -9,8 +9,7 @@ var FRASES=['Bem-vindo!','Seja bem-vindo à nossa escola','Matrícula '+(new Dat
 var st={cor:CORES[0],txt:'',q:K.min},BG=null;
 /* arquivo de impressao da pasta: 45 x 25 cm a 150 dpi, recortado do centro da pasta */
 var PR={larg:45,alt:25,dpi:150};
-try{var sv=JSON.parse(localStorage.getItem('dckit_ed')||'null');if(sv){if(/^#[0-9A-F]{6}$/i.test(sv.cor||'')){st.cor=sv.cor.toUpperCase();}st.txt=String(sv.txt||'').slice(0,40);if(+sv.q>=K.min){st.q=+sv.q;}}}catch(e){}
-function guarda(){try{localStorage.setItem('dckit_ed',JSON.stringify(st));}catch(e){}}
+function guarda(){}
 function fmt(v){return 'R$ '+v.toFixed(2).replace('.',',');}
 function un(q){var p=null;K.faixas.forEach(function(f){if(q>=f.q){p=f.p;}});return p;}
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
@@ -25,7 +24,7 @@ var css=document.createElement('style');css.textContent='.dckv-ed h3{color:#fff;
 +'.dckv-qt{display:flex;flex-wrap:wrap;gap:8px}.dckv-qt button{background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.25);color:#fff;border-radius:12px;padding:8px 12px;font-size:13px;cursor:pointer;line-height:1.25;text-align:left}.dckv-qt button b{display:block;font-size:15px}.dckv-qt button.on{background:#fff;color:#0B2A5B;border-color:var(--c,#F5B400)}'
 +'.dckv-tot{margin:12px 0 0;font-size:16px;color:#fff}.dckv-tot b{font-size:22px}.dckv-go{display:block;width:100%;margin-top:14px;border:0;border-radius:14px;padding:17px;font-size:18px;font-weight:900;cursor:pointer;background:var(--c,#F5B400);color:var(--ct,#0B2A5B)}.dckv-go[disabled]{opacity:.6;cursor:wait}'
 +'.dckv-lg{margin-top:12px;font-size:13px;color:#C9D3E8}.dckv-lg label{color:#fff;text-decoration:underline;cursor:pointer}.dckv-cv{width:100%;height:auto;display:block;border-radius:14px;background:#fff}.dckv-ld{padding:40px;text-align:center;color:#0B2A5B;font-weight:700}'
-+'.dckv-hx{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}.dckv-hx input[type=text]{width:130px;font-family:monospace;text-transform:uppercase}.dckv-hx input[type=color]{width:46px;height:46px;border:0;border-radius:10px;padding:0;background:none;cursor:pointer}.dckv-bt2{background:#fff;color:#0B2A5B;border:0;border-radius:12px;padding:12px 14px;font-weight:800;font-size:14px;cursor:pointer;display:inline-block}.dckv-bt2[hidden]{display:none}.dckv-bt2.x{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.3)}.dckv-ed small.dica{display:block;background:none;color:#C9D3E8;text-transform:none;letter-spacing:0;font-weight:500;padding:0;margin-top:6px}';
++'.dckv-hx{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}.dckv-hx input[type=text]{width:130px;font-family:monospace;text-transform:uppercase}.dckv-hx input[type=color]{width:46px;height:46px;border:0;border-radius:10px;padding:0;background:none;cursor:pointer}.dckv-bt2{background:#fff;color:#0B2A5B;border:0;border-radius:12px;padding:12px 14px;font-weight:800;font-size:14px;cursor:pointer;display:inline-block}.dckv-bt2[hidden]{display:none}.dckv-fd{display:flex;align-items:center;gap:14px;border:2px dashed rgba(255,255,255,.55);border-radius:16px;padding:14px 16px;cursor:pointer;background:rgba(255,255,255,.06);color:#fff}.dckv-fd:hover{border-color:var(--c,#F5B400);background:rgba(255,255,255,.12)}.dckv-fd i{flex:0 0 64px;height:44px;border-radius:8px;background:rgba(255,255,255,.15) center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:24px}.dckv-fd b{display:block;font-size:16px}.dckv-fd .fds{display:block;color:#C9D3E8;font-size:12.5px;margin-top:2px;background:none;text-transform:none;letter-spacing:0;font-weight:500;padding:0;border-radius:0}.dckv-ed .sub{color:#C9D3E8;font-size:13px;margin:12px 0 6px;font-weight:700}.dckv-bt2.x{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.3)}.dckv-ed small.dica{display:block;background:none;color:#C9D3E8;text-transform:none;letter-spacing:0;font-weight:500;padding:0;margin-top:6px}';
 document.head.appendChild(css);
 var esq=sec.firstElementChild,dir=sec.lastElementChild,ed=null,cv=null;
 [].forEach.call(sec.querySelectorAll('[data-dckit-abrir]'),function(a){a.addEventListener('click',function(e){e.preventDefault();abre();});});
@@ -33,8 +32,8 @@ function abre(){
 if(ed){return;}
 ed=document.createElement('div');ed.className='dckv-ed';
 var h='<small>Kit Matrícula</small><h2 style="font-size:28px">Monte a arte do seu kit</h2><p>Seu logo já está no kit. É só escolher o fundo da pasta e, se quiser, escrever uma frase.</p>';
-h+='<h3><i>1</i>Escolha o fundo da pasta</h3><div class="dckv-sw">'+CORES.map(function(c){return '<button type="button" data-c="'+c+'" style="background:'+c+'" aria-label="Cor '+c+'"></button>';}).join('')+'</div>';
-h+='<div class="dckv-hx"><input type="color" aria-label="Escolher cor"><input type="text" class="hx" maxlength="7" placeholder="#0B2A5B" aria-label="Cor em hexadecimal"><label class="dckv-bt2">Usar uma imagem de fundo<input type="file" class="bgf" accept="image/*" hidden></label><button type="button" class="dckv-bt2 x bgx" hidden>Tirar a imagem</button></div><small class="dica">Imagem de fundo: a pasta tem 45 x 25 cm. Use uma imagem deitada, de boa qualidade.</small>';
+h+='<h3><i>1</i>Escolha o fundo da pasta</h3><label class="dckv-fd"><i class="fdi">&#128444;</i><span><b class="fdt">Clique aqui e escolha o fundo da bolsa</b><span class="fds">Uma imagem do seu computador ou celular. A pasta tem 45 x 25 cm: use imagem deitada e de boa qualidade.</span></span><input type="file" class="bgf" accept="image/*" hidden></label><button type="button" class="dckv-bt2 x bgx" hidden style="margin-top:8px">Tirar a imagem e usar só cor</button><p class="sub">Ou use só uma cor</p><div class="dckv-sw">'+CORES.map(function(c){return '<button type="button" data-c="'+c+'" style="background:'+c+'" aria-label="Cor '+c+'"></button>';}).join('')+'</div>';
+h+='<div class="dckv-hx"><input type="color" aria-label="Escolher cor"><input type="text" class="hx" maxlength="7" placeholder="#0B2A5B" aria-label="Cor em hexadecimal"></div>';
 h+='<h3><i>2</i>Escreva uma frase (se quiser)</h3><input type="text" maxlength="40" placeholder="Ex.: Bem-vindo!" aria-label="Frase da pasta"><div class="dckv-ch">'+FRASES.map(function(f){return '<button type="button">'+esc(f)+'</button>';}).join('')+'<button type="button" data-limpa="1">Sem frase</button></div>';
 h+='<h3><i>3</i>Quantos kits?</h3><div class="dckv-qt">'+K.faixas.map(function(f){return '<button type="button" data-q="'+f.q+'"><b>'+f.q+' kits</b>'+fmt(f.p)+'/kit</button>';}).join('')+'</div>';
 h+='<p class="dckv-tot"></p><button type="button" class="dckv-go"></button>';
@@ -45,11 +44,12 @@ var ld=document.createElement('div');ld.className='dckv-ld';ld.textContent='Carr
 dir.style.display='none';var box=document.createElement('div');box.style.cssText='background:#fff;border-radius:20px;padding:8px';box.appendChild(ld);sec.appendChild(box);
 var inp=ed.querySelector('input[aria-label="Frase da pasta"]');inp.value=st.txt;
 var hx=ed.querySelector('input.hx'),pk=ed.querySelector('.dckv-hx input[type=color]'),bgx=ed.querySelector('.bgx');
-function poeCor(c){st.cor=c.toUpperCase();BG=null;bgx.hidden=true;guarda();marca();pinta();}
+function semImg(){BG=null;bgx.hidden=true;var fi=ed.querySelector('.fdi');fi.style.backgroundImage='';fi.innerHTML='&#128444;';ed.querySelector('.fdt').textContent='Clique aqui e escolha o fundo da bolsa';}
+function poeCor(c){st.cor=c.toUpperCase();semImg();marca();pinta();}
 hx.addEventListener('input',function(){var v=hx.value.trim();if(v.charAt(0)!=='#'){v='#'+v;}if(/^#[0-9a-fA-F]{6}$/.test(v)){poeCor(v);}});
 pk.addEventListener('input',function(){poeCor(pk.value);});
-ed.querySelector('.bgf').addEventListener('change',function(){var f=this.files&&this.files[0];if(!f){return;}var r=new FileReader();r.onload=function(){img(r.result).then(function(i){if(i){BG=i;bgx.hidden=false;marca();pinta();}});};r.readAsDataURL(f);this.value='';});
-bgx.addEventListener('click',function(){BG=null;bgx.hidden=true;marca();pinta();});
+ed.querySelector('.bgf').addEventListener('change',function(){var f=this.files&&this.files[0];if(!f){return;}var r=new FileReader();r.onload=function(){img(r.result).then(function(i){if(i){BG=i;bgx.hidden=false;var fi=ed.querySelector('.fdi');fi.style.backgroundImage='url('+r.result+')';fi.textContent='';ed.querySelector('.fdt').textContent='Fundo escolhido. Clique para trocar';marca();pinta();}});};r.readAsDataURL(f);this.value='';});
+bgx.addEventListener('click',function(){semImg();marca();pinta();});
 inp.addEventListener('input',function(){st.txt=inp.value;guarda();pinta();});
 [].forEach.call(ed.querySelectorAll('.dckv-ch button'),function(b){b.addEventListener('click',function(){st.txt=b.getAttribute('data-limpa')?'':b.textContent;inp.value=st.txt;guarda();pinta();});});
 [].forEach.call(ed.querySelectorAll('.dckv-sw button'),function(b){b.addEventListener('click',function(){poeCor(b.getAttribute('data-c'));});});
