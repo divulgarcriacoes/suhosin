@@ -59,7 +59,7 @@ ed.querySelector('.lgf').addEventListener('change',function(){var f=this.files&&
 ed.querySelector('.dckv-go').addEventListener('click',pede);
 marca();
 if(rolar){sec.scrollIntoView({behavior:'smooth',block:'start'});}
-Promise.all([img(K.foto),img(K.mask),img(K.logo.cor),img(K.logo.ce||K.logo.branco),img(EX[0].src),img(EX[1].src),img(K.logo.v),img(K.logo.ve||K.logo.vb)]).then(function(r){
+Promise.all([img(K.foto),img(K.mask),img(K.logo.cor),img(K.logo.ce),img(EX[0].src),img(EX[1].src),img(K.logo.v),img(K.logo.ve)]).then(function(r){
 if(!r[0]||!r[1]){ld.textContent='Não foi possível carregar a prévia. Recarregue a página.';return;}
 FOTO=r[0];MASK=r[1];LOGO=r[2]?limpa(r[2]):null;LOGOB=r[3]?limpa(r[3]):null;LV=r[6]?limpa(r[6]):null;LVE=r[7]?limpa(r[7]):null;EX[0].im=r[4];EX[1].im=r[5];
 prep();box.replaceChild(cv,ld);pinta();});
@@ -111,7 +111,7 @@ function desenha(){var AD=arte(1).getContext('2d').getImageData(0,0,N,N).data,o=
 for(i=0;i<N*N;i++){j=i*4;a=CA[i]*0.84;/* igual ao Corel: Subtrair com transparencia 16 */if(a<0.004){o[j]=FD[j];o[j+1]=FD[j+1];o[j+2]=FD[j+2];o[j+3]=255;continue;}l=LUM[i]*255-255;/* mesclagem Subtrair do Corel: arte + tecido - 255 */
 o[j]=Math.max(0,Math.min(255,AD[j]+l))*a+FD[j]*(1-a);o[j+1]=Math.max(0,Math.min(255,AD[j+1]+l))*a+FD[j+1]*(1-a);o[j+2]=Math.max(0,Math.min(255,AD[j+2]+l))*a+FD[j+2]*(1-a);o[j+3]=255;}
 ctx.putImageData(OUT,0,0);
-if(LOGO){EX.forEach(function(E){if(!E.im){return;}var Lx=E.modo==='esc'?(LVE||LV||LOGO):(LV||LOGO),sil=E.modo==='esc'&&!LVE,w=E.w,h=E.h,oc=document.createElement('canvas');oc.width=w;oc.height=h;var g=oc.getContext('2d');g.imageSmoothingQuality='high';var r=Math.min(w*E.fit/Lx.w,h*E.fit/Lx.h),lw=Lx.w*r,lh=Lx.h*r;g.drawImage(Lx.cv,Lx.x,Lx.y,Lx.w,Lx.h,(w-lw)/2,(h-lh)/2,lw,lh);
+if(LOGO){EX.forEach(function(E){if(!E.im){return;}var Lx=E.modo==='esc'?(LVE||LV||LOGO):(LV||LOGO),sil=false,w=E.w,h=E.h,oc=document.createElement('canvas');oc.width=w;oc.height=h;var g=oc.getContext('2d');g.imageSmoothingQuality='high';var r=Math.min(w*E.fit/Lx.w,h*E.fit/Lx.h),lw=Lx.w*r,lh=Lx.h*r;g.drawImage(Lx.cv,Lx.x,Lx.y,Lx.w,Lx.h,(w-lw)/2,(h-lh)/2,lw,lh);
 if(sil){g.globalCompositeOperation='source-in';g.fillStyle='#F2F4F8';g.fillRect(0,0,w,h);}g.globalCompositeOperation='destination-in';g.drawImage(E.im,0,0,w,h);
 ctx.save();if(E.modo==='esc'){ctx.globalAlpha=0.95;}else{ctx.globalCompositeOperation='multiply';}ctx.drawImage(oc,E.x,E.y);ctx.restore();});}}
 
