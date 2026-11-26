@@ -219,7 +219,12 @@ function dckit_img_salvar( $campo, $nome ) {
 		return 0;
 	}
 	$_FILES[ $campo ]['name'] = $nome . '-' . wp_generate_password( 12, false, false ) . '.' . $ext[ $info['mime'] ]; // phpcs:ignore
+	// Rápido: guarda só o arquivo original, sem gerar as miniaturas do WordPress.
+	add_filter( 'intermediate_image_sizes_advanced', '__return_empty_array', 999 );
+	add_filter( 'big_image_size_threshold', '__return_false', 999 );
 	$id = media_handle_upload( $campo, 0 );
+	remove_filter( 'intermediate_image_sizes_advanced', '__return_empty_array', 999 );
+	remove_filter( 'big_image_size_threshold', '__return_false', 999 );
 	return is_wp_error( $id ) ? 0 : (int) $id;
 }
 
@@ -244,14 +249,14 @@ add_action( 'wp_ajax_dckit_pedir', function () {
 	if ( ! $pr || ! $pr->is_purchasable() ) {
 		wp_send_json_error( array( 'msg' => 'O Kit Matrícula ainda não está disponível para pedido.' ), 400 );
 	}
-	$arte = dcvx_png_salvar( 'arte', 'arte-kit-pasta' );
-	if ( is_wp_error( $arte ) ) {
-		wp_send_json_error( array( 'msg' => $arte->get_error_message() ), 400 );
+	$arte = dckit_img_salvar( 'arte', 'arte-kit-pasta' );
+	if ( ! $arte ) {
+		wp_send_json_error( array( 'msg' => 'Não foi possível receber a arte. Tente de novo.' ), 400 );
 	}
-	$previa = dcvx_png_salvar( 'previa', 'previa-kit' );
-	if ( is_wp_error( $previa ) ) {
+	$previa = dckit_img_salvar( 'previa', 'previa-kit' );
+	if ( ! $previa ) {
 		wp_delete_attachment( $arte, true );
-		wp_send_json_error( array( 'msg' => $previa->get_error_message() ), 400 );
+		wp_send_json_error( array( 'msg' => 'Não foi possível receber a prévia. Tente de novo.' ), 400 );
 	}
 	// Arquivos que a escola importou no montador (imagem de fundo e logo), no tamanho original.
 	$fundo = dckit_img_salvar( 'fundo', 'kit-fundo-enviado' );

@@ -116,15 +116,17 @@ if(sil){g.globalCompositeOperation='source-in';g.fillStyle='#F2F4F8';g.fillRect(
 ctx.save();if(E.modo==='esc'){ctx.globalAlpha=0.95;}else{ctx.globalCompositeOperation='multiply';}ctx.drawImage(oc,E.x,E.y);ctx.restore();});}}
 
 /* ---------- pedido */
-function blob(c){return new Promise(function(ok){c.toBlob(ok,'image/png');});}
+function blob(c,q){return new Promise(function(ok){c.toBlob(ok,'image/jpeg',q);});}
+/* envio com progresso no botao */
+function envia(fd,b){return new Promise(function(ok,no){var x=new XMLHttpRequest();x.open('POST',K.url);x.withCredentials=true;x.upload.onprogress=function(e){if(e.lengthComputable){b.textContent='Enviando o pedido... '+Math.min(99,Math.round(e.loaded/e.total*100))+'%';}};x.upload.onload=function(){b.textContent='Colocando no carrinho...';};x.onload=function(){try{ok(JSON.parse(x.responseText));}catch(e){no(e);}};x.onerror=no;x.send(fd);});}
 function pede(){var b=ed.querySelector('.dckv-go');guarda();
 if(!K.log){location.href=K.entrar;return;}
 if(!OUT){alert('A prévia ainda está carregando. Tente de novo em instantes.');return;}
 var ow=Math.round(PR.larg/2.54*PR.dpi),oh=Math.round(PR.alt/2.54*PR.dpi),RW=MB.w,RH=MB.w*PR.alt/PR.larg,RX=MB.x,RY=MB.y+(MB.h-RH)/2+20,sc=ow/RW,a=arte(sc),pr=document.createElement('canvas');pr.width=ow;pr.height=oh;pr.getContext('2d').drawImage(a,RX*sc,RY*sc,RW*sc,RH*sc,0,0,ow,oh);
 b.disabled=true;b.textContent='Enviando o pedido...';
-Promise.all([blob(cv),blob(pr)]).then(function(bl){if(!bl[0]||!bl[1]){throw new Error('png');}
-var fd=new FormData();fd.append('action','dckit_pedir');fd.append('n',K.nonce);fd.append('qtd',st.q);fd.append('curso',(st.txt||'').trim()||'Kit Matrícula');fd.append('cor',BG?'imagem':st.cor);fd.append('previa',bl[0],'previa.png');if(BG&&BGF){fd.append('fundo',BGF,BGF.name);}if(LGF){fd.append('logo_env',LGF,LGF.name);}fd.append('arte',bl[1],'arte.png');
-return fetch(K.url,{method:'POST',body:fd,credentials:'same-origin'});}).then(function(r){return r.json();}).then(function(j){
+Promise.all([blob(cv,0.88),blob(pr,0.95)]).then(function(bl){if(!bl[0]||!bl[1]){throw new Error('png');}
+var fd=new FormData();fd.append('action','dckit_pedir');fd.append('n',K.nonce);fd.append('qtd',st.q);fd.append('curso',(st.txt||'').trim()||'Kit Matrícula');fd.append('cor',BG?'imagem':st.cor);fd.append('previa',bl[0],'previa.jpg');if(BG&&BGF){fd.append('fundo',BGF,BGF.name);}if(LGF){fd.append('logo_env',LGF,LGF.name);}fd.append('arte',bl[1],'arte.jpg');
+return envia(fd,b);}).then(function(j){
 if(j&&j.success&&j.data&&j.data.url){location.href=j.data.url;return;}alert((j&&j.data&&j.data.msg)||'Não foi possível fazer o pedido. Tente de novo.');b.disabled=false;marca();
 }).catch(function(){alert('Não foi possível enviar o pedido. Confira a internet e tente de novo.');b.disabled=false;marca();});}
 /* abre direto com as ferramentas (sem precisar clicar); com #montar-kit no endereco, rola ate o kit */
