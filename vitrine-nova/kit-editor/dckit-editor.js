@@ -5,11 +5,12 @@ var K=window.DCKIT,sec=document.getElementById('dcv-kit');if(!K||!sec){return;}
 var N=1200,MB={x:77,y:395,w:828,h:545};
 var EX=[{x:942,y:673,w:115,h:155,src:K.sq,modo:'cor',fit:0.8},{x:755,y:970,w:145,h:88,src:K.bl,modo:'esc',fit:0.8}];
 var CORES=[K.cor,'#FFFFFF','#0B2A5B','#1565C0','#00897B','#2E7D32','#F9A825','#E65100','#C62828','#AD1457','#6A1B9A','#212121'].filter(function(c,i,a){return /^#[0-9a-fA-F]{6}$/.test(c||'')&&a.indexOf(c)===i;});
-var FRASES=['Bem-vindo!','Seja bem-vindo à nossa escola','Matrícula '+(new Date().getFullYear()+1),'Aqui começa o seu futuro'];
-var st={cor:CORES[0],txt:'',q:K.min},BG=null,BGF=null,LGF=null;/* arquivos originais que a escola importou: vao junto no pedido */
+var st={cor:CORES[0],wa:fone(K.tel||''),ig:arroba(K.ig||''),q:K.min},LG={dx:0,dy:0,k:1},LBOX=null,ARR=null,BG=null,BGF=null,LGF=null;/* arquivos originais que a escola importou: vao junto no pedido */
 /* arquivo de impressao da pasta: 45 x 25 cm a 150 dpi, recortado do centro da pasta */
 var PR={larg:45,alt:25,dpi:150};
 function guarda(){}
+function fone(v){var d=String(v).replace(/\D/g,'');if(d.length>11&&d.indexOf('55')===0){d=d.slice(2);}if(d.length===11){return '('+d.slice(0,2)+') '+d.slice(2,7)+'-'+d.slice(7);}if(d.length===10){return '('+d.slice(0,2)+') '+d.slice(2,6)+'-'+d.slice(6);}return String(v).trim();}
+function arroba(v){v=String(v).trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i,'').replace(/[\/?#].*$/,'').replace(/^@+/,'');return v?'@'+v:'';}
 function fmt(v){return 'R$ '+v.toFixed(2).replace('.',',');}
 function un(q){var p=null;K.faixas.forEach(function(f){if(q>=f.q){p=f.p;}});return p;}
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
@@ -25,25 +26,30 @@ var css=document.createElement('style');css.textContent='.dckv-ed h3{color:#fff;
 +'.dckv-qt{display:flex;flex-wrap:wrap;gap:8px}.dckv-qt button{background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.25);color:#fff;border-radius:12px;padding:8px 12px;font-size:13px;cursor:pointer;line-height:1.25;text-align:left}.dckv-qt button b{display:block;font-size:15px}.dckv-qt button.on{background:#fff;color:#0B2A5B;border-color:var(--c,#F5B400)}'
 +'.dckv-tot{margin:12px 0 0;font-size:16px;color:#fff}.dckv-tot b{font-size:22px}.dckv-go{display:block;width:100%;margin-top:14px;border:0;border-radius:14px;padding:17px;font-size:18px;font-weight:900;cursor:pointer;background:var(--c,#F5B400);color:var(--ct,#0B2A5B)}.dckv-go[disabled]{opacity:.6;cursor:wait}'
 +'.dckv-lg{margin-top:12px;font-size:13px;color:#C9D3E8}.dckv-lg label{color:#fff;text-decoration:underline;cursor:pointer}.dckv-cv{width:100%;height:auto;display:block;border-radius:14px;background:#fff}.dckv-ld{padding:40px;text-align:center;color:#0B2A5B;font-weight:700}'
-+'.dckv-hx{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}.dckv-hx input[type=text]{width:130px;font-family:monospace;text-transform:uppercase}.dckv-hx input[type=color]{width:46px;height:46px;border:0;border-radius:10px;padding:0;background:none;cursor:pointer}.dckv-bt2{background:#fff;color:#0B2A5B;border:0;border-radius:12px;padding:12px 14px;font-weight:800;font-size:14px;cursor:pointer;display:inline-block}.dckv-bt2[hidden]{display:none}.dckv-fd{display:flex;align-items:center;gap:14px;border:2px dashed rgba(255,255,255,.55);border-radius:16px;padding:14px 16px;cursor:pointer;background:rgba(255,255,255,.06);color:#fff}.dckv-fd:hover{border-color:var(--c,#F5B400);background:rgba(255,255,255,.12)}.dckv-fd i{flex:0 0 64px;height:44px;border-radius:8px;background:rgba(255,255,255,.15) center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:24px}.dckv-fd b{display:block;font-size:16px}.dckv-fd .fds{display:block;color:#C9D3E8;font-size:12.5px;margin-top:2px;background:none;text-transform:none;letter-spacing:0;font-weight:500;padding:0;border-radius:0}.dckv-ed .sub{color:#C9D3E8;font-size:13px;margin:12px 0 6px;font-weight:700}.dckv-bt2.x{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.3)}.dckv-ed small.dica{display:block;background:none;color:#C9D3E8;text-transform:none;letter-spacing:0;font-weight:500;padding:0;margin-top:6px}';
++'.dckv-hx{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}.dckv-hx input[type=text]{width:130px;font-family:monospace;text-transform:uppercase}.dckv-hx input[type=color]{width:46px;height:46px;border:0;border-radius:10px;padding:0;background:none;cursor:pointer}.dckv-bt2{background:#fff;color:#0B2A5B;border:0;border-radius:12px;padding:12px 14px;font-weight:800;font-size:14px;cursor:pointer;display:inline-block}.dckv-bt2[hidden]{display:none}.dckv-fd{display:flex;align-items:center;gap:14px;border:2px dashed rgba(255,255,255,.55);border-radius:16px;padding:14px 16px;cursor:pointer;background:rgba(255,255,255,.06);color:#fff}.dckv-fd:hover{border-color:var(--c,#F5B400);background:rgba(255,255,255,.12)}.dckv-fd i{flex:0 0 64px;height:44px;border-radius:8px;background:rgba(255,255,255,.15) center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:24px}.dckv-fd b{display:block;font-size:16px}.dckv-fd .fds{display:block;color:#C9D3E8;font-size:12.5px;margin-top:2px;background:none;text-transform:none;letter-spacing:0;font-weight:500;padding:0;border-radius:0}.dckv-ct{display:grid;grid-template-columns:1fr 1fr;gap:8px}.dckv-ct label{font-size:12.5px;color:#C9D3E8;font-weight:700;display:block}.dckv-ct label input{margin-top:4px}.dckv-lgc{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:#C9D3E8;font-size:13px}.dckv-lgc input[type=range]{flex:1 1 160px;accent-color:var(--c,#F5B400)}.dckv-cv{touch-action:none}@media(max-width:560px){.dckv-ct{grid-template-columns:1fr}}.dckv-ed .sub{color:#C9D3E8;font-size:13px;margin:12px 0 6px;font-weight:700}.dckv-bt2.x{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.3)}.dckv-ed small.dica{display:block;background:none;color:#C9D3E8;text-transform:none;letter-spacing:0;font-weight:500;padding:0;margin-top:6px}';
 document.head.appendChild(css);
 var esq=sec.firstElementChild,dir=sec.lastElementChild,ed=null,cv=null;
 [].forEach.call(sec.querySelectorAll('[data-dckit-abrir]'),function(a){a.addEventListener('click',function(e){e.preventDefault();abre(true);});});
 function abre(rolar){
 if(ed){return;}
 ed=document.createElement('div');ed.className='dckv-ed';
-var h='<small>Kit Matrícula</small><h2 style="font-size:28px">Monte a arte do seu kit</h2><p>Seu logo já está no kit. É só escolher o fundo da pasta e, se quiser, escrever uma frase.</p>';
+var h='<small>Kit Matrícula</small><h2 style="font-size:28px">Monte a arte do seu kit</h2><p>Seu logo já está no kit. É só escolher o fundo da pasta, conferir o WhatsApp e o Instagram e ajustar o logo.</p>';
 h+='<h3><i>1</i>Escolha o fundo da pasta</h3><label class="dckv-fd"><i class="fdi">&#128444;</i><span><b class="fdt">Clique aqui e escolha o fundo da bolsa</b><span class="fds">Uma imagem do seu computador ou celular. A pasta tem 45 x 25 cm: use imagem deitada e de boa qualidade.</span></span><input type="file" class="bgf" accept="image/*" hidden></label><button type="button" class="dckv-bt2 x bgx" hidden style="margin-top:8px">Tirar a imagem e usar só cor</button><p class="sub">Ou use só uma cor (digite o código ou clique no quadrado)</p>';
 h+='<div class="dckv-hx"><input type="color" aria-label="Escolher cor"><input type="text" class="hx" maxlength="7" placeholder="#0B2A5B" aria-label="Cor em hexadecimal"></div>';
-h+='<h3><i>2</i>Escreva uma frase (se quiser)</h3><input type="text" maxlength="40" placeholder="Ex.: Bem-vindo!" aria-label="Frase da pasta"><div class="dckv-ch">'+FRASES.map(function(f){return '<button type="button">'+esc(f)+'</button>';}).join('')+'<button type="button" data-limpa="1">Sem frase</button></div>';
-h+='<h3><i>3</i>Quantos kits?</h3><div class="dckv-qt">'+K.faixas.map(function(f){return '<button type="button" data-q="'+f.q+'"><b>'+f.q+' kits</b>'+fmt(f.p)+'/kit</button>';}).join('')+'</div>';
+h+='<h3><i>2</i>WhatsApp e Instagram da escola</h3><div class="dckv-ct"><label>WhatsApp<input type="text" class="wa" maxlength="20" placeholder="(11) 91234-5678" inputmode="tel"></label><label>Instagram<input type="text" class="ig" maxlength="32" placeholder="@suaescola"></label></div><small class="dica">Saem impressos na pasta, embaixo do logo. Deixe em branco o que não quiser.</small>';
+h+='<h3><i>3</i>Posição e tamanho do logo</h3><div class="dckv-lgc"><span>Arraste o logo na foto para mudar de lugar.</span><span>Tamanho</span><input type="range" class="lgk" min="40" max="220" value="100" aria-label="Tamanho do logo"><button type="button" class="dckv-bt2 x lgr">Centralizar</button></div>';
+h+='<h3><i>4</i>Quantos kits?</h3><div class="dckv-qt">'+K.faixas.map(function(f){return '<button type="button" data-q="'+f.q+'"><b>'+f.q+' kits</b>'+fmt(f.p)+'/kit</button>';}).join('')+'</div>';
 h+='<p class="dckv-tot"></p><button type="button" class="dckv-go"></button>';
 h+='<p class="dckv-lg">Quer usar outro logo? <label>Enviar logo<input type="file" class="lgf" accept="image/*" hidden></label></p>';
 ed.innerHTML=h;esq.style.display='none';sec.insertBefore(ed,esq);
 cv=document.createElement('canvas');cv.className='dckv-cv';cv.width=N;cv.height=N;cv.setAttribute('role','img');cv.setAttribute('aria-label','Prévia do Kit Matrícula com a sua arte');
 var ld=document.createElement('div');ld.className='dckv-ld';ld.textContent='Carregando a prévia do kit...';
 dir.style.display='none';var box=document.createElement('div');box.style.cssText='background:#fff;border-radius:20px;padding:8px';box.appendChild(ld);sec.appendChild(box);
-var inp=ed.querySelector('input[aria-label="Frase da pasta"]');inp.value=st.txt;
+var iwa=ed.querySelector('input.wa'),iig=ed.querySelector('input.ig'),lgk=ed.querySelector('input.lgk');iwa.value=st.wa;iig.value=st.ig;
+iwa.addEventListener('input',function(){st.wa=iwa.value;pinta();});iwa.addEventListener('blur',function(){st.wa=fone(iwa.value);iwa.value=st.wa;pinta();});
+iig.addEventListener('input',function(){st.ig=iig.value;pinta();});iig.addEventListener('blur',function(){st.ig=arroba(iig.value);iig.value=st.ig;pinta();});
+lgk.addEventListener('input',function(){LG.k=lgk.value/100;pinta();});
+ed.querySelector('.lgr').addEventListener('click',function(){LG={dx:0,dy:0,k:1};lgk.value=100;pinta();});
 var hx=ed.querySelector('input.hx'),pk=ed.querySelector('.dckv-hx input[type=color]'),bgx=ed.querySelector('.bgx');
 function semImg(){BG=null;BGF=null;bgx.hidden=true;var fi=ed.querySelector('.fdi');fi.style.backgroundImage='';fi.innerHTML='&#128444;';ed.querySelector('.fdt').textContent='Clique aqui e escolha o fundo da bolsa';}
 function poeCor(c){st.cor=c.toUpperCase();semImg();marca();pinta();}
@@ -51,8 +57,6 @@ hx.addEventListener('input',function(){var v=hx.value.trim();if(v.charAt(0)!=='#
 pk.addEventListener('input',function(){poeCor(pk.value);});
 ed.querySelector('.bgf').addEventListener('change',function(){var f=this.files&&this.files[0];if(!f){return;}BGF=f;var r=new FileReader();r.onload=function(){img(r.result).then(function(i){if(i){BG=i;BG.lum=lumImg(i);bgx.hidden=false;var fi=ed.querySelector('.fdi');fi.style.backgroundImage='url('+r.result+')';fi.textContent='';ed.querySelector('.fdt').textContent='Fundo escolhido. Clique para trocar';marca();pinta();}});};r.readAsDataURL(f);this.value='';});
 bgx.addEventListener('click',function(){semImg();marca();pinta();});
-inp.addEventListener('input',function(){st.txt=inp.value;guarda();pinta();});
-[].forEach.call(ed.querySelectorAll('.dckv-ch button'),function(b){b.addEventListener('click',function(){st.txt=b.getAttribute('data-limpa')?'':b.textContent;inp.value=st.txt;guarda();pinta();});});
 [].forEach.call(ed.querySelectorAll('.dckv-sw button'),function(b){b.addEventListener('click',function(){poeCor(b.getAttribute('data-c'));});});
 [].forEach.call(ed.querySelectorAll('.dckv-qt button'),function(b){b.addEventListener('click',function(){st.q=+b.getAttribute('data-q');guarda();marca();});});
 ed.querySelector('.lgf').addEventListener('change',function(){var f=this.files&&this.files[0];if(!f){return;}LGF=f;var r=new FileReader();r.onload=function(){img(r.result).then(function(i){if(i){LOGO=limpa(i);LOGOB=null;LV=null;LVE=null;pinta();}});};r.readAsDataURL(f);});
@@ -62,8 +66,17 @@ if(rolar){sec.scrollIntoView({behavior:'smooth',block:'start'});}
 Promise.all([img(K.foto),img(K.mask),img(K.logo.cor),img(K.logo.ce),img(EX[0].src),img(EX[1].src),img(K.logo.v),img(K.logo.ve)]).then(function(r){
 if(!r[0]||!r[1]){ld.textContent='Não foi possível carregar a prévia. Recarregue a página.';return;}
 FOTO=r[0];MASK=r[1];LOGO=r[2]?limpa(r[2]):null;LOGOB=r[3]?limpa(r[3]):null;LV=r[6]?limpa(r[6]):null;LVE=r[7]?limpa(r[7]):null;EX[0].im=r[4];EX[1].im=r[5];
-prep();box.replaceChild(cv,ld);pinta();});
+prep();box.replaceChild(cv,ld);arrasta();pinta();});
 }
+/* logo movel: arrastar com o dedo ou o mouse; roda do mouse muda o tamanho */
+function ponto(e){var r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)*N/r.width,y:(e.clientY-r.top)*N/r.height};}
+function noLogo(p){var b=LBOX;return b&&p.x>=b.x-20&&p.x<=b.x+b.w+20&&p.y>=b.y-20&&p.y<=b.y+b.h+20;}
+function arrasta(){
+cv.addEventListener('pointerdown',function(e){var p=ponto(e);if(!noLogo(p)){return;}ARR={x:p.x,y:p.y,dx:LG.dx,dy:LG.dy};cv.setPointerCapture(e.pointerId);cv.style.cursor='grabbing';e.preventDefault();});
+cv.addEventListener('pointermove',function(e){var p=ponto(e);if(!ARR){cv.style.cursor=noLogo(p)?'grab':'default';return;}LG.dx=Math.max(-330,Math.min(330,ARR.dx+p.x-ARR.x));LG.dy=Math.max(-300,Math.min(220,ARR.dy+p.y-ARR.y));pinta();});
+function solta(){ARR=null;cv.style.cursor='grab';}
+cv.addEventListener('pointerup',solta);cv.addEventListener('pointercancel',solta);
+cv.addEventListener('wheel',function(e){if(!noLogo(ponto(e))){return;}e.preventDefault();LG.k=Math.max(0.4,Math.min(2.2,LG.k*(e.deltaY<0?1.06:0.94)));var s=ed.querySelector('input.lgk');if(s){s.value=Math.round(LG.k*100);}pinta();},{passive:false});}
 function marca(){
 [].forEach.call(ed.querySelectorAll('.dckv-sw button'),function(b){b.classList.toggle('on',!BG&&b.getAttribute('data-c')===st.cor);});var hx2=ed.querySelector('input.hx'),pk2=ed.querySelector('.dckv-hx input[type=color]');if(hx2&&document.activeElement!==hx2){hx2.value=st.cor;}if(pk2){pk2.value=st.cor.toLowerCase();}
 var m=null;[].forEach.call(ed.querySelectorAll('.dckv-qt button'),function(b){if(st.q>=+b.getAttribute('data-q')){m=b;}});
@@ -99,12 +112,16 @@ function logoPara(cor){return (lumHex(cor)<0.5&&LOGOB)?LOGOB:LOGO;}
 function arte(sc){var a=document.createElement('canvas');a.width=Math.round(N*sc);a.height=Math.round(N*sc);var g=a.getContext('2d');g.scale(sc,sc);g.imageSmoothingQuality='high';
 var gr=g.createLinearGradient(0,MB.y,0,MB.y+MB.h);gr.addColorStop(0,st.cor);gr.addColorStop(1,st.cor==='#FFFFFF'?'#FFFFFF':escurece(st.cor,0.86));g.fillStyle=gr;g.fillRect(0,0,N,N);
 if(BG){var bw=BG.naturalWidth,bh=BG.naturalHeight,k2=Math.max(MB.w/bw,MB.h/bh);g.drawImage(BG,MB.x+(MB.w-bw*k2)/2,MB.y+(MB.h-bh*k2)/2,bw*k2,bh*k2);}
-var escuroBg=BG?(BG.lum<0.5):lumHex(st.cor)<0.5,L=(escuroBg&&LOGOB)?LOGOB:LOGO,t=(st.txt||'').trim(),cx=491,mw=t?440:560,mh=t?150:240,cy=t?650:735;
-if(L){var r=Math.min(mw/L.w,mh/L.h),w=L.w*r,h=L.h*r;g.drawImage(L.cv,L.x,L.y,L.w,L.h,cx-w/2,cy-h/2,w,h);}
-if(t){var esc=BG?escuroBg:lumHex(st.cor)<0.55,fs=58,ln;g.textAlign='center';g.fillStyle=esc?'#FFFFFF':'#0B2A5B';
-for(;fs>=28;fs-=4){g.font='800 '+fs+'px Poppins,Arial,sans-serif';ln=quebra(g,t,620);if(ln.length<=2){break;}}
-var y0=L?772:(735-(ln.length-1)*fs*0.55);ln.forEach(function(s2,n){g.fillText(s2,cx,y0+n*fs*1.08+fs*0.35);});}
+var escuroBg=BG?(BG.lum<0.5):lumHex(st.cor)<0.5,L=(escuroBg&&LOGOB)?LOGOB:LOGO,cx=491,wa=fone(st.wa||''),ig=arroba(st.ig||''),tem=!!(wa||ig),mw=500,mh=tem?200:240,cy=tem?690:735;
+if(L){var r=Math.min(mw/L.w,mh/L.h)*LG.k,w=L.w*r,h=L.h*r,lx=cx+LG.dx-w/2,ly=cy+LG.dy-h/2,mx0=MB.x+18,mx1=MB.x+MB.w-18-w,my0=575,my1=(tem?836:MB.y+MB.h-22)-h;/* nao cobre a linha do WhatsApp e do Instagram *//* dentro da pasta, abaixo do ziper */if(mx1>mx0){lx=Math.max(mx0,Math.min(mx1,lx));}else{lx=MB.x+(MB.w-w)/2;}if(my1>my0){ly=Math.max(my0,Math.min(my1,ly));}if(sc===1&&!ARR){LG.dx=lx+w/2-cx;LG.dy=ly+h/2-cy;}g.drawImage(L.cv,L.x,L.y,L.w,L.h,lx,ly,w,h);if(sc===1){LBOX={x:lx,y:ly,w:w,h:h};}}
+if(tem){contatos(g,cx,866,escuroBg?'#FFFFFF':'#0B2A5B',wa,ig);}
 return a;}
+/* WhatsApp e Instagram com icones, centralizados na parte de baixo da pasta */
+function icWa(g,x,y,s,c){g.save();g.strokeStyle=c;g.fillStyle=c;g.lineWidth=s*0.1;g.beginPath();g.arc(x,y,s*0.42,0.35,Math.PI*2-0.15);g.stroke();g.beginPath();g.moveTo(x-s*0.34,y+s*0.22);g.lineTo(x-s*0.46,y+s*0.48);g.lineTo(x-s*0.18,y+s*0.38);g.fill();g.lineWidth=s*0.12;g.lineCap='round';g.beginPath();g.arc(x,y,s*0.2,Math.PI*0.75,Math.PI*1.75);g.stroke();g.restore();}
+function icIg(g,x,y,s,c){g.save();g.strokeStyle=c;g.fillStyle=c;g.lineWidth=s*0.1;var h=s*0.42,r=s*0.14;g.beginPath();g.moveTo(x-h+r,y-h);g.arcTo(x+h,y-h,x+h,y+h,r);g.arcTo(x+h,y+h,x-h,y+h,r);g.arcTo(x-h,y+h,x-h,y-h,r);g.arcTo(x-h,y-h,x+h,y-h,r);g.closePath();g.stroke();g.beginPath();g.arc(x,y,s*0.19,0,6.2832);g.stroke();g.beginPath();g.arc(x+s*0.24,y-s*0.24,s*0.05,0,6.2832);g.fill();g.restore();}
+function contatos(g,cx,y,cor,wa,ig){var fs=34,ic=40,gap=12,sep=46,it=[];g.font='700 '+fs+'px Poppins,Arial,sans-serif';if(wa){it.push({t:wa,f:icWa});}if(ig){it.push({t:ig,f:icIg});}
+var ws=it.map(function(o){return ic+gap+g.measureText(o.t).width;}),tot=ws.reduce(function(a,b){return a+b;},0)+sep*(it.length-1);if(tot>640){fs=Math.max(22,Math.floor(fs*640/tot));ic=Math.round(ic*fs/34);g.font='700 '+fs+'px Poppins,Arial,sans-serif';ws=it.map(function(o){return ic+gap+g.measureText(o.t).width;});tot=ws.reduce(function(a,b){return a+b;},0)+sep*(it.length-1);}
+var x=cx-tot/2;g.fillStyle=cor;g.textAlign='left';g.textBaseline='middle';it.forEach(function(o,i){o.f(g,x+ic/2,y,ic,cor);g.fillText(o.t,x+ic+gap,y+1);x+=ws[i]+sep;});g.textBaseline='alphabetic';}
 function quebra(g,t,mw){var ws=t.split(/\s+/),ls=[],c='';ws.forEach(function(w){var p=c?c+' '+w:w;if(g.measureText(p).width>mw&&c){ls.push(c);c=w;}else{c=p;}});if(c){ls.push(c);}return ls;}
 var raf=0;function pinta(){if(!OUT||raf){return;}raf=requestAnimationFrame(function(){raf=0;desenha();});}
 function desenha(){var AD=arte(1).getContext('2d').getImageData(0,0,N,N).data,o=OUT.data,i,j,a,l;
@@ -125,7 +142,7 @@ if(!OUT){alert('A prévia ainda está carregando. Tente de novo em instantes.');
 var ow=Math.round(PR.larg/2.54*PR.dpi),oh=Math.round(PR.alt/2.54*PR.dpi),RW=MB.w,RH=MB.w*PR.alt/PR.larg,RX=MB.x,RY=MB.y+(MB.h-RH)/2+20,sc=ow/RW,a=arte(sc),pr=document.createElement('canvas');pr.width=ow;pr.height=oh;pr.getContext('2d').drawImage(a,RX*sc,RY*sc,RW*sc,RH*sc,0,0,ow,oh);
 b.disabled=true;b.textContent='Enviando o pedido...';
 Promise.all([blob(cv,0.88),blob(pr,0.95)]).then(function(bl){if(!bl[0]||!bl[1]){throw new Error('png');}
-var fd=new FormData();fd.append('action','dckit_pedir');fd.append('n',K.nonce);fd.append('qtd',st.q);fd.append('curso',(st.txt||'').trim()||'Kit Matrícula');fd.append('cor',BG?'imagem':st.cor);fd.append('previa',bl[0],'previa.jpg');if(BG&&BGF){fd.append('fundo',BGF,BGF.name);}if(LGF){fd.append('logo_env',LGF,LGF.name);}fd.append('arte',bl[1],'arte.jpg');
+var fd=new FormData();fd.append('action','dckit_pedir');fd.append('n',K.nonce);fd.append('qtd',st.q);fd.append('curso',[fone(st.wa||''),arroba(st.ig||'')].filter(Boolean).join(' · ')||'Kit Matrícula');fd.append('cor',BG?'imagem':st.cor);fd.append('previa',bl[0],'previa.jpg');if(BG&&BGF){fd.append('fundo',BGF,BGF.name);}if(LGF){fd.append('logo_env',LGF,LGF.name);}fd.append('arte',bl[1],'arte.jpg');
 return envia(fd,b);}).then(function(j){
 if(j&&j.success&&j.data&&j.data.url){location.href=j.data.url;return;}alert((j&&j.data&&j.data.msg)||'Não foi possível fazer o pedido. Tente de novo.');b.disabled=false;marca();
 }).catch(function(){alert('Não foi possível enviar o pedido. Confira a internet e tente de novo.');b.disabled=false;marca();});}

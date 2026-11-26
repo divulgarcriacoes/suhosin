@@ -355,6 +355,8 @@ function dckit_vitrine_destaque( $lf, $cor = '' ) {
 		'sq'     => '/wp-content/uploads/2026/11/MASCARA-SQUEEZE.png',
 		'bl'     => '/wp-content/uploads/2026/11/MASCARA-BLOCO.png',
 		'logo'   => $lg,
+		'tel'    => $fr ? (string) get_user_meta( function_exists( 'omx_parent' ) ? (int) omx_parent( $fr ) : $fr, 'omx_tel', true ) : '',
+		'ig'     => $fr ? (string) get_user_meta( function_exists( 'omx_parent' ) ? (int) omx_parent( $fr ) : $fr, 'omx_instagram', true ) : '',
 		'cor'    => preg_match( '/^#[0-9a-fA-F]{6}$/', (string) $cor ) ? strtoupper( $cor ) : '#0B2A5B',
 		'min'    => DCKIT_MIN,
 		'faixas' => $fxj,
@@ -416,7 +418,7 @@ add_filter( 'woocommerce_get_item_data', function ( $data, $item ) {
 		return $data;
 	}
 	if ( ! empty( $d['curso'] ) && 'Kit Matrícula' !== $d['curso'] ) {
-		$data[] = array( 'name' => 'Frase', 'value' => esc_html( $d['curso'] ) );
+		$data[] = array( 'name' => 'Contatos na pasta', 'value' => esc_html( $d['curso'] ) );
 	}
 	if ( ! empty( $d['arte'] ) && ( $u = wp_get_attachment_url( (int) $d['arte'] ) ) ) {
 		$data[] = array( 'name' => 'Arte da pasta', 'value' => '<a href="' . esc_url( $u ) . '" target="_blank" rel="noopener">ver arte (45 x 25 cm)</a>' );
