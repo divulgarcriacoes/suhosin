@@ -204,6 +204,25 @@ add_action( 'woocommerce_account_dcomp-artes_endpoint', function () {
 	echo '<script>window.DCVX_PEDIR_KIT=' . wp_json_encode( $out, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT ) . ';</script>'; // phpcs:ignore
 }, 9 );
 
+/* Imagem enviada pela escola (JPG, PNG ou WEBP, até 15 MB e 12000 px). Sem arquivo ou arquivo inválido: 0. */
+function dckit_img_salvar( $campo, $nome ) {
+	if ( empty( $_FILES[ $campo ] ) || ! empty( $_FILES[ $campo ]['error'] ) ) { // phpcs:ignore
+		return 0;
+	}
+	$f = $_FILES[ $campo ]; // phpcs:ignore
+	if ( (int) $f['size'] < 100 || (int) $f['size'] > 15 * 1024 * 1024 ) {
+		return 0;
+	}
+	$info = getimagesize( $f['tmp_name'] );
+	$ext  = array( 'image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp' );
+	if ( ! $info || ! isset( $ext[ $info['mime'] ] ) || $info[0] > 12000 || $info[1] > 12000 ) {
+		return 0;
+	}
+	$_FILES[ $campo ]['name'] = $nome . '-' . wp_generate_password( 12, false, false ) . '.' . $ext[ $info['mime'] ]; // phpcs:ignore
+	$id = media_handle_upload( $campo, 0 );
+	return is_wp_error( $id ) ? 0 : (int) $id;
+}
+
 /* Botão "Pedir estes kits": guarda a arte da pasta e a prévia do kit e coloca o KITMAT no carrinho (mesmo formato dos outros pedidos do criador). */
 add_action( 'wp_ajax_dckit_pedir', function () {
 	if ( ! isset( $_POST['n'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['n'] ) ), 'dckit_pedir' ) ) { // phpcs:ignore
@@ -234,10 +253,13 @@ add_action( 'wp_ajax_dckit_pedir', function () {
 		wp_delete_attachment( $arte, true );
 		wp_send_json_error( array( 'msg' => $previa->get_error_message() ), 400 );
 	}
+	// Arquivos que a escola importou no montador (imagem de fundo e logo), no tamanho original.
+	$fundo = dckit_img_salvar( 'fundo', 'kit-fundo-enviado' );
+	$logo  = dckit_img_salvar( 'logo_env', 'kit-logo-enviado' );
 	if ( null === WC()->cart ) {
 		wc_load_cart();
 	}
-	$key = WC()->cart->add_to_cart( $pid, $qtd, 0, array(), array( 'dcvx' => array( 'arte' => $arte, 'previa' => $previa, 'curso' => $curso, 'prod' => 'kit' ) ) );
+	$key = WC()->cart->add_to_cart( $pid, $qtd, 0, array(), array( 'dcvx' => array( 'arte' => $arte, 'previa' => $previa, 'curso' => $curso, 'prod' => 'kit', 'fundo' => $fundo, 'logo' => $logo ) ) );
 	if ( ! $key ) {
 		wp_delete_attachment( $arte, true );
 		wp_delete_attachment( $previa, true );
@@ -353,3 +375,86 @@ function dckit_vitrine_destaque( $lf, $cor = '' ) {
 		. '<a class="dcv-card" href="' . esc_url( $link ) . '" aria-label="Kit Matrícula"><span class="dcv-img">' . $p->get_image( 'woocommerce_single' ) . '</span></a></section>'
 		. $js_tag;
 }
+
+/* ------------------------------------------------------------ arte do kit no carrinho, no pagamento e no pedido */
+
+function dckit_item_arte( $item ) {
+	if ( empty( $item['dcvx'] ) || empty( $item['product_id'] ) || ! dckit_eh_kit( $item['product_id'] ) ) {
+		return null;
+	}
+	return $item['dcvx'];
+}
+
+// Foto do item = a prévia do kit que a escola montou (carrinho).
+add_filter( 'woocommerce_cart_item_thumbnail', function ( $thumb, $item ) {
+	$d = dckit_item_arte( $item );
+	if ( $d && ! empty( $d['previa'] ) && wp_attachment_is_image( (int) $d['previa'] ) ) {
+		return wp_get_attachment_image( (int) $d['previa'], 'woocommerce_thumbnail' );
+	}
+	return $thumb;
+}, 99, 2 );
+
+// Resumo do pagamento (checkout rápido monta a foto no nome do item): troca a foto do produto pela prévia.
+add_filter( 'woocommerce_cart_item_name', function ( $name, $item ) {
+	$d = dckit_item_arte( $item );
+	if ( $d && ! empty( $d['previa'] ) && false !== strpos( $name, '<img' ) && wp_attachment_is_image( (int) $d['previa'] ) ) {
+		$nova = wp_get_attachment_image( (int) $d['previa'], array( 112, 112 ) );
+		$name = preg_replace( '/<img[^>]*>/', $nova, $name, 1 );
+	}
+	return $name;
+}, 100, 2 );
+
+// Linhas do item: frase, arte da pasta e prévia (links para abrir).
+add_filter( 'woocommerce_get_item_data', function ( $data, $item ) {
+	$d = dckit_item_arte( $item );
+	if ( ! $d ) {
+		return $data;
+	}
+	if ( ! empty( $d['curso'] ) && 'Kit Matrícula' !== $d['curso'] ) {
+		$data[] = array( 'name' => 'Frase', 'value' => esc_html( $d['curso'] ) );
+	}
+	if ( ! empty( $d['arte'] ) && ( $u = wp_get_attachment_url( (int) $d['arte'] ) ) ) {
+		$data[] = array( 'name' => 'Arte da pasta', 'value' => '<a href="' . esc_url( $u ) . '" target="_blank" rel="noopener">ver arte (45 x 25 cm)</a>' );
+	}
+	if ( ! empty( $d['previa'] ) && ( $u = wp_get_attachment_url( (int) $d['previa'] ) ) ) {
+		$data[] = array( 'name' => 'Prévia do kit', 'value' => '<a href="' . esc_url( $u ) . '" target="_blank" rel="noopener">ver prévia</a>' );
+	}
+	if ( ! empty( $d['fundo'] ) && ( $u = wp_get_attachment_url( (int) $d['fundo'] ) ) ) {
+		$data[] = array( 'name' => 'Fundo enviado', 'value' => '<a href="' . esc_url( $u ) . '" target="_blank" rel="noopener">' . esc_html( wp_basename( $u ) ) . '</a>' );
+	}
+	if ( ! empty( $d['logo'] ) && ( $u = wp_get_attachment_url( (int) $d['logo'] ) ) ) {
+		$data[] = array( 'name' => 'Logo enviado', 'value' => '<a href="' . esc_url( $u ) . '" target="_blank" rel="noopener">' . esc_html( wp_basename( $u ) ) . '</a>' );
+	}
+	return $data;
+}, 20, 2 );
+
+// Pedido: grava a arte e a prévia no item (para a produção e para as telas de Pedidos de Arte).
+add_action( 'woocommerce_checkout_create_order_line_item', function ( $oi, $key, $values ) {
+	$d = dckit_item_arte( $values );
+	if ( ! $d ) {
+		return;
+	}
+	if ( ! $oi->get_meta( '_dcvx_arte' ) && ! empty( $d['arte'] ) ) {
+		$oi->add_meta_data( '_dcvx_arte', (int) $d['arte'], true );
+	}
+	if ( ! $oi->get_meta( '_dcvx_previa' ) && ! empty( $d['previa'] ) ) {
+		$oi->add_meta_data( '_dcvx_previa', (int) $d['previa'], true );
+	}
+	if ( ! $oi->get_meta( '_dcvx_curso' ) && isset( $d['curso'] ) ) {
+		$oi->add_meta_data( '_dcvx_curso', (string) $d['curso'], true );
+	}
+	if ( ! empty( $d['arte'] ) && ( $u = wp_get_attachment_url( (int) $d['arte'] ) ) ) {
+		$oi->add_meta_data( 'Arte da pasta', $u, true );
+	}
+	if ( ! empty( $d['previa'] ) && ( $u = wp_get_attachment_url( (int) $d['previa'] ) ) ) {
+		$oi->add_meta_data( 'Prévia do kit', $u, true );
+	}
+	if ( ! empty( $d['fundo'] ) && ( $u = wp_get_attachment_url( (int) $d['fundo'] ) ) ) {
+		$oi->add_meta_data( '_dckit_fundo', (int) $d['fundo'], true );
+		$oi->add_meta_data( 'Fundo enviado', $u, true );
+	}
+	if ( ! empty( $d['logo'] ) && ( $u = wp_get_attachment_url( (int) $d['logo'] ) ) ) {
+		$oi->add_meta_data( '_dckit_logo', (int) $d['logo'], true );
+		$oi->add_meta_data( 'Logo enviado', $u, true );
+	}
+}, 30, 3 );
