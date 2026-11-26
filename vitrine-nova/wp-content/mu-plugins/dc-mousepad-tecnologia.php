@@ -37,3 +37,16 @@ add_action( 'init', function () {
 		wc_delete_product_transients();
 	}
 }, 50 );
+
+// Uma vez: apaga as 10 fotos de fundo de tecnologia baixadas do banco de imagens (121651 a 121660), que não foram usadas.
+add_action( 'init', function () {
+	if ( get_option( 'dcmp_tec_del_v2' ) ) {
+		return;
+	}
+	update_option( 'dcmp_tec_del_v2', time(), false );
+	for ( $a = 121651; $a <= 121660; $a++ ) {
+		if ( 'attachment' === get_post_type( $a ) && 0 === strpos( get_the_title( $a ), 'Fundo tecnologia' ) ) {
+			wp_delete_attachment( $a, true );
+		}
+	}
+}, 51 );
