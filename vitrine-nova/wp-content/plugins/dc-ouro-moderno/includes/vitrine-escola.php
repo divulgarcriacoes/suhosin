@@ -106,10 +106,47 @@ function dcom_vitrine_cores_estoque( $p ) {
 	return $out;
 }
 
+/* Preco unitario da 1a linha da tabela de quantidades (a mesma conta da pagina do produto, na gravacao mais barata). Cache de 6 horas. */
+function dcom_vitrine_preco_1a_linha( $pid ) {
+	if ( ! function_exists( 'dcprice_qty_tiers_for_product' ) || ! function_exists( 'dcprice_calculate_for_product' ) || ! function_exists( 'dcprice_discount_curve' ) ) {
+		return 0.0;
+	}
+	$ck = 'dcv_p1_' . (int) $pid;
+	$c  = get_transient( $ck );
+	if ( false !== $c ) {
+		return (float) $c;
+	}
+	$best  = 0.0;
+	$tiers = dcprice_qty_tiers_for_product( $pid );
+	if ( ! empty( $tiers ) ) {
+		$opts  = function_exists( 'dcprice_technique_options_for_product' ) ? (array) dcprice_technique_options_for_product( $pid ) : array();
+		$keys  = $opts ? array_map( function ( $o ) { return '' === ( $o['key'] ?? '' ) ? null : $o['key']; }, $opts ) : array( null );
+		$curve = dcprice_discount_curve( $pid );
+		$d1    = isset( $curve[1] ) ? (float) $curve[1] : 0.0;
+		foreach ( $keys as $k ) {
+			$b = dcprice_calculate_for_product( $pid, $tiers[0], $k );
+			if ( is_wp_error( $b ) || empty( $b['unit_price'] ) ) {
+				continue;
+			}
+			$u = round( (float) $b['unit_price'] * ( 1 - $d1 ), 2 );
+			if ( $u > 0 && ( 0.0 === $best || $u < $best ) ) {
+				$best = $u;
+			}
+		}
+	}
+	set_transient( $ck, $best, 6 * HOUR_IN_SECONDS );
+	return $best;
+}
+
 function dcom_vitrine_card( $p, $lf ) {
 	$pid   = $p->get_id();
 	$link  = add_query_arg( 'lf', $lf, get_permalink( $pid ) );
 	$price = (float) $p->get_price();
+	// Mostra o valor da 1a linha da tabela "Escolha a quantidade" (pedido minimo), calculado pelo motor de precos.
+	$p1 = dcom_vitrine_preco_1a_linha( $pid );
+	if ( $p1 > 0 ) {
+		$price = $p1;
+	}
 	$min   = class_exists( 'DC_Min_Order_Qty' ) ? (int) DC_Min_Order_Qty::min_qty_for_product( $pid ) : 0;
 	$slugs = wp_get_post_terms( $pid, 'product_cat', array( 'fields' => 'slugs' ) );
 	$slugs = is_array( $slugs ) ? $slugs : array();
