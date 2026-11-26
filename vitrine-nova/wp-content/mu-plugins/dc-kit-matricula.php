@@ -175,3 +175,82 @@ add_filter( 'woocommerce_cart_item_price', function ( $html, $item ) {
 	}
 	return $html;
 }, 99, 2 );
+
+/* ------------------------------------------------------------ Personalize seu produto (painel da escola) */
+
+/* Dados do pedido do kit para o criador (wp-content/uploads/dcvx-criador.js): faixas, mínimo 5 e a ação dckit_pedir. */
+add_action( 'woocommerce_account_dcomp-artes_endpoint', function () {
+	if ( ! function_exists( 'dcomp_fr' ) || ! dcomp_fr() ) {
+		return;
+	}
+	$pid = dckit_pid();
+	$pr  = $pid ? wc_get_product( $pid ) : null;
+	$out = array( 'ok' => false );
+	if ( $pr && $pr->is_purchasable() && function_exists( 'dcvx_png_salvar' ) ) {
+		$fx = array();
+		foreach ( dckit_tabela() as $q => $p ) {
+			$fx[] = array( 'q' => (int) $q, 'p' => (float) $p );
+		}
+		$out = array(
+			'ok'     => true,
+			'url'    => admin_url( 'admin-ajax.php' ),
+			'nonce'  => wp_create_nonce( 'dckit_pedir' ),
+			'action' => 'dckit_pedir',
+			'preco'  => (float) dckit_unit( DCKIT_MIN ),
+			'min'    => DCKIT_MIN,
+			'faixas' => $fx,
+		);
+	}
+	echo '<script>window.DCVX_PEDIR_KIT=' . wp_json_encode( $out, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT ) . ';</script>'; // phpcs:ignore
+}, 9 );
+
+/* Botão "Pedir estes kits": guarda a arte da pasta e a prévia do kit e coloca o KITMAT no carrinho (mesmo formato dos outros pedidos do criador). */
+add_action( 'wp_ajax_dckit_pedir', function () {
+	if ( ! isset( $_POST['n'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['n'] ) ), 'dckit_pedir' ) ) { // phpcs:ignore
+		wp_send_json_error( array( 'msg' => 'Sessão expirada. Recarregue a página e tente de novo.' ), 403 );
+	}
+	if ( ! function_exists( 'dcomp_fr' ) || ! dcomp_fr() || ! function_exists( 'dcvx_png_salvar' ) ) {
+		wp_send_json_error( array( 'msg' => 'Somente escolas podem fazer este pedido.' ), 403 );
+	}
+	$uid = get_current_user_id();
+	if ( get_transient( 'dcvx_p_' . $uid ) ) {
+		wp_send_json_error( array( 'msg' => 'Aguarde alguns segundos e tente de novo.' ), 429 );
+	}
+	set_transient( 'dcvx_p_' . $uid, 1, 5 );
+	$qtd = isset( $_POST['qtd'] ) ? absint( $_POST['qtd'] ) : DCKIT_MIN; // phpcs:ignore
+	$qtd = max( DCKIT_MIN, min( 5000, $qtd ) );
+	$curso = isset( $_POST['curso'] ) ? mb_substr( sanitize_text_field( wp_unslash( $_POST['curso'] ) ), 0, 120 ) : ''; // phpcs:ignore
+	$pid = dckit_pid();
+	$pr  = $pid ? wc_get_product( $pid ) : null;
+	if ( ! $pr || ! $pr->is_purchasable() ) {
+		wp_send_json_error( array( 'msg' => 'O Kit Matrícula ainda não está disponível para pedido.' ), 400 );
+	}
+	$arte = dcvx_png_salvar( 'arte', 'arte-kit-pasta' );
+	if ( is_wp_error( $arte ) ) {
+		wp_send_json_error( array( 'msg' => $arte->get_error_message() ), 400 );
+	}
+	$previa = dcvx_png_salvar( 'previa', 'previa-kit' );
+	if ( is_wp_error( $previa ) ) {
+		wp_delete_attachment( $arte, true );
+		wp_send_json_error( array( 'msg' => $previa->get_error_message() ), 400 );
+	}
+	if ( null === WC()->cart ) {
+		wc_load_cart();
+	}
+	$key = WC()->cart->add_to_cart( $pid, $qtd, 0, array(), array( 'dcvx' => array( 'arte' => $arte, 'previa' => $previa, 'curso' => $curso, 'prod' => 'kit' ) ) );
+	if ( ! $key ) {
+		wp_delete_attachment( $arte, true );
+		wp_delete_attachment( $previa, true );
+		wp_send_json_error( array( 'msg' => 'Não foi possível colocar o kit no carrinho.' ), 400 );
+	}
+	wp_send_json_success( array( 'url' => wc_get_cart_url() ) );
+} );
+
+/* Na página do kit, a escola logada vai direto para o criador já com o kit aberto. */
+add_action( 'woocommerce_before_add_to_cart_form', function () {
+	global $product;
+	if ( ! $product instanceof WC_Product || ! dckit_eh_kit( $product->get_id() ) || ! function_exists( 'dcvx_url' ) || ! function_exists( 'dcomp_fr' ) || ! dcomp_fr() ) {
+		return;
+	}
+	echo '<p style="margin:8px 0 14px"><a class="button" style="background:#C9A24A;color:#0B1F3F;font-weight:800;border-radius:10px;padding:12px 18px;display:inline-block" href="' . esc_url( add_query_arg( 'prod', 'kit', dcvx_url( 'dcomp-artes' ) ) ) . '">Monte a arte do seu kit em tempo real</a></p>';
+}, 5 );
