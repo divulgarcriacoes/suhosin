@@ -12,6 +12,7 @@
 
 ## 26/11/2026
 - A pedido da Vera: segmento **Infantil removido** (página inicial: menu, textos, cartão de categoria e rodapé; descrição do site; provador). As categorias agora são Feminino, Masculino e Acessórios. No site, o provador 1.6.0 foi editado direto; a cópia 1.7.0 do repositório também.
+- Cartão **Feminino** da página inicial com a foto real do vestido vermelho (mídia id 67, `vcela-site/vcela-feminino-vestido-vermelho.jpg`), escurecido de 20% embaixo. Cartões com 340 px de altura no celular.
 
 ## Pendências
 1. Instalar a 1.7.0 e conferir se o produto 54 virou variável (P3, M2, G4).
