@@ -256,7 +256,7 @@ function dcom_vitrine_html( $id, $term_id, $cor, $nome, $lf, $todas ) {
 		. '<div class="dcv-bts"><a class="dcv-b1" href="#dcv-vitrine">Ver os brindes</a><a class="dcv-b2" href="' . esc_url( $todas ) . '">Catálogo completo</a></div></div>'
 		. '<div class="dcv-cola">' . $cola_html . '</div></section>';
 	// Kit Matricula em destaque logo abaixo da chamada (mu-plugin dc-kit-matricula.php).
-	$h .= function_exists( 'dckit_vitrine_destaque' ) ? dckit_vitrine_destaque( $lf ) : '';
+	$h .= function_exists( 'dckit_vitrine_destaque' ) ? dckit_vitrine_destaque( $lf, $cor ) : '';
 	$h .= '<div class="dcv-van">'
 		. '<div><i>&#10003;</i><span><b>Personalizado</b>Com o logo da escola em cada peça.</span></div>'
 		. '<div><i>$</i><span><b>Preço de rede</b>Valores especiais Ouro Moderno.</span></div>'
