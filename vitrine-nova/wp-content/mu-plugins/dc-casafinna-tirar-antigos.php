@@ -70,11 +70,33 @@ add_action( 'init', function () {
 	}
 }, 73 );
 
+/* 3ª passada (27/11/2026): o Kit Matrícula é das escolas, não da Casafinna: sai das categorias da Casafinna. */
+add_action( 'init', function () {
+	if ( get_option( 'dc_casafinna_tirar_v3' ) || ! function_exists( 'wc_get_product_id_by_sku' ) ) {
+		return;
+	}
+	update_option( 'dc_casafinna_tirar_v3', time(), false );
+	$id = (int) wc_get_product_id_by_sku( defined( 'DCKIT_SKU' ) ? DCKIT_SKU : 'KITMAT' );
+	if ( ! $id ) {
+		return;
+	}
+	$cats = dc_casafinna_cats();
+	$ant  = wp_get_object_terms( $id, 'product_cat', array( 'fields' => 'ids' ) );
+	$tem  = array_values( array_intersect( (array) $ant, $cats ) );
+	if ( $tem ) {
+		wp_remove_object_terms( $id, $tem, 'product_cat' );
+		update_option( 'dc_casafinna_removidos3', array( $id => $tem ), false );
+	}
+	if ( function_exists( 'rocket_clean_domain' ) ) {
+		rocket_clean_domain();
+	}
+}, 74 );
+
 add_action( 'init', function () {
 	if ( empty( $_GET['dc_casafinna_desfazer'] ) || ! current_user_can( 'manage_options' ) ) { // phpcs:ignore
 		return;
 	}
-	foreach ( array( 'dc_casafinna_removidos', 'dc_casafinna_removidos2' ) as $op ) {
+	foreach ( array( 'dc_casafinna_removidos', 'dc_casafinna_removidos2', 'dc_casafinna_removidos3' ) as $op ) {
 		foreach ( (array) get_option( $op, array() ) as $id => $tem ) {
 			wp_set_object_terms( (int) $id, array_map( 'intval', (array) $tem ), 'product_cat', true );
 		}
