@@ -66,3 +66,37 @@ Pode ter até 6 áreas vermelhas na mesma foto (um logo em cada).
 - Fotos de um item só para os produtos Spot com foto `_set`.
 - Sacola BTN301 (Asia): conferir o código no fornecedor.
 - Cor do texto do botão "Ver os brindes" conforme a cor da escola.
+
+---
+
+## Atualização de 26–27/11/2026 (arquivos novos e alterados)
+
+Todos estão no mesmo caminho dentro de `wp-content/`. Quando o arquivo tem opção "roda uma vez" (`dc_..._v1`), ele já rodou no servidor.
+
+| Arquivo | O que faz |
+|---|---|
+| `plugins/dc-price-engine/dcprice-calc.js` | Produto: o campo ao lado do preço é a **quantidade em unidades** (abaixo do mínimo vira o mínimo; a faixa da tabela acompanha) |
+| `plugins/dc-price-engine/dc-price-engine.php` | Carrinho usa a **maior faixa que cabe na quantidade** (46 un. = faixa de 30); versão do JS muda com a data do arquivo |
+| `plugins/dc-frete/includes/fornecedor.php` | XBZ sem profundidade (objeto redondo): o diâmetro (largura) entra como profundidade |
+| `mu-plugins/dc-frete-redondos.php` | Roda uma vez: corrigiu a medida de 162 produtos XBZ que estavam com o chute de 20 x 15 x 10 cm |
+| `mu-plugins/dc-frete-copo-320.php` | Roda uma vez: medida real do Copo Térmico Inox 320ml (8,8 x 8,8 x 11,7 cm) |
+| `mu-plugins/dc-minicart-topo.php` | Sacola do topo mostra o valor do carrinho (era R$0,00) |
+| `mu-plugins/dc-checkout-remover.php` | Checkout: X para tirar cada produto do "Seu pedido" |
+| `mu-plugins/dc-loja-rolagem.php` | Loja e categorias sem paginação: os produtos entram ao rolar a página |
+| `mu-plugins/dc-loja-cores.php` | Bolinhas das cores com estoque nos cartões da loja Divulgar |
+| `mu-plugins/dc-mousepad-laboratorio.php` | 10 fotos do mouse pad no laboratório (estampas do banco de imagens, máscara do Corel), na galeria do BLAIR 93282-106 |
+| `mu-plugins/dc-mousepad-tecnologia.php` | Apaga os 10 produtos "Mouse Pad Tecnologia" feitos antes (roda uma vez) |
+| `mu-plugins/dc-catalogo-estoque.php` | Catálogo "COPOS E GARRAFAS TÉRMICAS" (121661) |
+| `mu-plugins/dc-wordfence-liberar-gift.php` | Libera o endereço do sistema da Gift (44.194.39.85) no Wordfence |
+| `mu-plugins/dc-limpa-cache-once.php` | Limpa o cache do WP Rocket uma vez por versão (troque a data da opção para limpar de novo) |
+| `mu-plugins/dc-lojas-layout.php` | Layout das lojas em subdomínio (Casafinna, Ambient, Wyda). Agora aceita ajustes por loja pelo filtro `dclay_stores` |
+| `mu-plugins/dc-casafinna-logos.php` | Menu **Casafinna** no WordPress: 6 logos, cor principal, cor de fundo, imagem de fundo |
+| `mu-plugins/dc-casafinna-css.php` | Roda uma vez: gerou de novo o estilo do Elementor da página 109107 (ícones gigantes) |
+| `mu-plugins/dc-casafinna-produtos.php` | Roda uma vez: colocou os 105 produtos da loja Ouro na categoria CASAFINNA (1345) |
+
+### Casafinna (casafinna.giftbrand.com.br)
+- Mesmo WordPress da Divulgar. Loja pela categoria **CASAFINNA** (1345) e filhas; página inicial 109107 (Elementor + shortcode `[casafinna_produtos]`).
+- Hoje: 125 produtos (105 da loja Ouro + 20 antigos). Preço normal da Divulgar, **sem comissão**, sem nada da Ouro Moderno.
+- Os 20 antigos têm o logo dentro da foto (feitos fora do sistema, sem molde). Os outros usam o molde.
+- **Falta:** o logo da Casafinna nas fotos dos produtos novos, pela **macro do Corel** (`corel/DivulgarMolde.bas`), e subir os logos no menu Casafinna.
+- Quem gerencia é o dono (admin do WordPress). A Casafinna não tem login.
