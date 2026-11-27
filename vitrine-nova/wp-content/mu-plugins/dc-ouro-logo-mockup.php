@@ -205,11 +205,20 @@ function dcmk_gerar( $att ) {
 }
 
 /* Logos da escola: colorido (omx_logo) e branco (omx_logo_branco, ou gerado a partir do colorido). */
+/* Campo de logo: da escola (user meta) ou, no site da Casafinna (-1), do painel Casafinna. */
+function dcmk_meta( $fr, $k ) {
+	if ( $fr < 0 ) {
+		$o = function_exists( 'dccf_logos_salvos' ) ? dccf_logos_salvos() : array();
+		return isset( $o[ $k ] ) ? $o[ $k ] : '';
+	}
+	return get_user_meta( $fr, $k, true );
+}
+
 function dcmk_logos( $fr ) {
-	$fr  = function_exists( 'omx_parent' ) ? (int) omx_parent( (int) $fr ) : (int) $fr;
+	$fr  = ( $fr > 0 && function_exists( 'omx_parent' ) ) ? (int) omx_parent( (int) $fr ) : (int) $fr;
 	$out = array( 'cor' => '', 'branco' => '', 'png' => false );
-	$lg  = (int) get_user_meta( $fr, 'omx_logo', true );
-	$lb  = (int) get_user_meta( $fr, 'omx_logo_branco', true );
+	$lg  = (int) dcmk_meta( $fr, 'omx_logo' );
+	$lb  = (int) dcmk_meta( $fr, 'omx_logo_branco' );
 	if ( $lg ) {
 		$gen = dcmk_gerar( $lg );
 		if ( $gen ) {
@@ -225,8 +234,8 @@ function dcmk_logos( $fr ) {
 		$out['branco'] = (string) wp_get_attachment_image_url( $lb, '1536x1536' ); // enviado pela escola: usa como está
 	}
 	// Logo vertical (para áreas altas: caneta em pé, squeeze, etiqueta vertical...).
-	$lv  = (int) get_user_meta( $fr, 'omx_logo_vertical', true );
-	$lvb = (int) get_user_meta( $fr, 'omx_logo_vertical_branco', true );
+	$lv  = (int) dcmk_meta( $fr, 'omx_logo_vertical' );
+	$lvb = (int) dcmk_meta( $fr, 'omx_logo_vertical_branco' );
 	if ( $lv ) {
 		$gv = dcmk_gerar( $lv );
 		if ( $gv ) {
@@ -241,7 +250,7 @@ function dcmk_logos( $fr ) {
 	}
 	// Colorido para fundo escuro (símbolo colorido + letras brancas): horizontal e vertical.
 	foreach ( array( 'ce' => 'omx_logo_escuro', 've' => 'omx_logo_vertical_escuro' ) as $ck => $cm ) {
-		$ca = (int) get_user_meta( $fr, $cm, true );
+		$ca = (int) dcmk_meta( $fr, $cm );
 		if ( $ca ) {
 			$cg          = dcmk_gerar( $ca );
 			$out[ $ck ] = $cg ? $cg['cor'] : (string) wp_get_attachment_image_url( $ca, '1536x1536' );
@@ -416,6 +425,9 @@ add_action(
 	'wp_head',
 	function () {
 		$fr = ! empty( $GLOBALS['dcom_fr_atual'] ) ? (int) $GLOBALS['dcom_fr_atual'] : ( ( function_exists( 'dcom_fr_atual' ) && function_exists( 'is_product' ) && is_product() ) ? (int) dcom_fr_atual() : 0 );
+		if ( ! $fr && function_exists( 'dccf_host_casafinna' ) && dccf_host_casafinna() ) {
+			$fr = -1; // Casafinna: logos do painel Casafinna, sem franquia
+		}
 		if ( ! $fr || is_admin() ) {
 			return;
 		}
@@ -425,7 +437,9 @@ add_action(
 		}
 		// Produtos da vitrine da franquia: Padrão das franquias (1456) + categoria da própria franquia.
 		$cats = array( 1456 );
-		if ( function_exists( 'dcom_loja_garantir_cat' ) ) {
+		if ( $fr < 0 ) {
+			$cats = array( 1345 );
+		} elseif ( function_exists( 'dcom_loja_garantir_cat' ) ) {
 			$c = (int) dcom_loja_garantir_cat( $fr );
 			if ( $c ) {
 				$cats[] = $c;
