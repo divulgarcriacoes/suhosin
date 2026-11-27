@@ -59,6 +59,18 @@ add_filter(
 	4
 );
 
+/* Ícones da faixa de categorias maiores (a imagem leva o nome da categoria desenhado, então cresce junto). */
+add_action(
+	'wp_head',
+	function () {
+		if ( is_admin() || ! ( ( function_exists( 'dccf_host_casafinna' ) && dccf_host_casafinna() ) || ( function_exists( 'dccast_host_cast' ) && dccast_host_cast() ) ) ) {
+			return;
+		}
+		echo '<style id="dccf-icones-css">.elementor-element-cd435a7{min-height:0!important;padding:18px 10px!important}.elementor-element-cd435a7 .elementor-widget-image{width:100%!important}.elementor-element-cd435a7 .elementor-widget-image img{width:128px!important;max-width:100%!important;height:auto!important;transition:transform .15s}.elementor-element-cd435a7 .elementor-widget-image a:hover img{transform:scale(1.06)}@media(max-width:1024px){.elementor-element-cd435a7 .elementor-widget-image img{width:116px!important}}@media(max-width:767px){.elementor-element-cd435a7 .elementor-widget-image img{width:104px!important}}</style>';
+	},
+	150
+);
+
 add_action(
 	'wp_footer',
 	function () {
