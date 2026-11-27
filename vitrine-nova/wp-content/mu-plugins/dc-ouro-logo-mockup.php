@@ -208,7 +208,7 @@ function dcmk_gerar( $att ) {
 /* Campo de logo: da escola (user meta) ou, no site da Casafinna (-1), do painel Casafinna. */
 function dcmk_meta( $fr, $k ) {
 	if ( $fr < 0 ) {
-		$o = function_exists( 'dccf_logos_salvos' ) ? dccf_logos_salvos() : array();
+		$o = ( -2 === (int) $fr ) ? ( function_exists( 'dccast_logos_salvos' ) ? dccast_logos_salvos() : array() ) : ( function_exists( 'dccf_logos_salvos' ) ? dccf_logos_salvos() : array() );
 		return isset( $o[ $k ] ) ? $o[ $k ] : '';
 	}
 	return get_user_meta( $fr, $k, true );
@@ -403,6 +403,9 @@ function dcmk_img_unica( $img_id, $product ) {
 		return $img_id;
 	}
 	$fr = dcom_fr_atual();
+	if ( ! $fr && function_exists( 'dccast_host_cast' ) && dccast_host_cast() ) {
+		$fr = -2; // Cast: igual à Casafinna
+	}
 	if ( ! $fr && function_exists( 'dccf_host_casafinna' ) && dccf_host_casafinna() ) {
 		$fr = -1; // Casafinna: usa a mesma foto de um item só (ou a fixada no produto) das lojas Ouro
 	}
@@ -428,6 +431,9 @@ add_action(
 		if ( ! $fr && function_exists( 'dccf_host_casafinna' ) && dccf_host_casafinna() ) {
 			$fr = -1; // Casafinna: logos do painel Casafinna, sem franquia
 		}
+		if ( ! $fr && function_exists( 'dccast_host_cast' ) && dccast_host_cast() ) {
+			$fr = -2; // Cast: logos do painel Cast, sem franquia
+		}
 		if ( ! $fr || is_admin() ) {
 			return;
 		}
@@ -438,7 +444,7 @@ add_action(
 		// Produtos da vitrine da franquia: Padrão das franquias (1456) + categoria da própria franquia.
 		$cats = array( 1456 );
 		if ( $fr < 0 ) {
-			$cats = array( 1345 );
+			$cats = array( -2 === $fr ? (int) get_option( 'dccast_cat', 1456 ) : 1345 );
 		} elseif ( function_exists( 'dcom_loja_garantir_cat' ) ) {
 			$c = (int) dcom_loja_garantir_cat( $fr );
 			if ( $c ) {

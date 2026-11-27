@@ -29,7 +29,7 @@ function dccf_grupos() {
 add_filter(
 	'dclay_subs_produto',
 	function ( $mine, $pid, $c, $terms ) {
-		if ( ! function_exists( 'dccf_host_casafinna' ) || ! dccf_host_casafinna() ) {
+		if ( ! ( ( function_exists( 'dccf_host_casafinna' ) && dccf_host_casafinna() ) || ( function_exists( 'dccast_host_cast' ) && dccast_host_cast() ) ) ) {
 			return $mine;
 		}
 		$ids = array();
@@ -62,7 +62,7 @@ add_filter(
 add_action(
 	'wp_footer',
 	function () {
-		if ( is_admin() || ! function_exists( 'dccf_host_casafinna' ) || ! dccf_host_casafinna() ) {
+		if ( is_admin() || ! ( ( function_exists( 'dccf_host_casafinna' ) && dccf_host_casafinna() ) || ( function_exists( 'dccast_host_cast' ) && dccast_host_cast() ) ) ) {
 			return;
 		}
 		echo '<script id="dccf-icones">(function(){function ir(g){var b=document.querySelector(\'.dcl-chips button[data-cat="\'+g+\'"]\');if(!b){return false;}b.click();var s=document.getElementById("produtos");if(s){s.scrollIntoView({behavior:"smooth"});}return true;}'
