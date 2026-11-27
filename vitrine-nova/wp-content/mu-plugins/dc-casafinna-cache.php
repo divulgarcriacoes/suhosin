@@ -9,13 +9,30 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 function dccf_limpa_cache_loja() {
-	$dir = WP_CONTENT_DIR . '/cache/wp-rocket/casafinna.giftbrand.com.br/';
-	foreach ( array( 'index-https.html', 'index-https.html_gzip', 'index.html', 'index.html_gzip' ) as $f ) {
-		if ( is_file( $dir . $f ) ) {
-			@unlink( $dir . $f ); // phpcs:ignore
+	$dir = WP_CONTENT_DIR . '/cache/wp-rocket/casafinna.giftbrand.com.br';
+	if ( ! is_dir( $dir ) ) {
+		return;
+	}
+	// Página inicial e todas as páginas de produto/categoria (o WP Rocket guarda uma pasta por endereço).
+	$it = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $dir, FilesystemIterator::SKIP_DOTS ), RecursiveIteratorIterator::CHILD_FIRST );
+	foreach ( $it as $f ) {
+		if ( $f->isFile() && 0 === strpos( $f->getFilename(), 'index' ) ) {
+			@unlink( $f->getPathname() ); // phpcs:ignore
 		}
 	}
 }
+
+/* Uma vez: o cache antigo das páginas de produto ainda não tinha o logo. */
+add_action(
+	'init',
+	function () {
+		if ( ! get_option( 'dccf_cache_v3' ) ) {
+			update_option( 'dccf_cache_v3', time(), false );
+			dccf_limpa_cache_loja();
+		}
+	},
+	80
+);
 
 /* Produto mudou de categoria: se mexeu na CASAFINNA (1345) ou numa filha, limpa. */
 add_action(
