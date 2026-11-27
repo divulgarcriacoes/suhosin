@@ -168,6 +168,7 @@ function dclay_shortcode() {
 				}
 			}
 		}
+		$mine           = apply_filters( 'dclay_subs_produto', $mine, $pid, $c, $terms );
 		$subsOf[ $pid ] = $mine;
 		$allSubs        = $allSubs + $mine;
 		$m              = class_exists( 'DC_Min_Order_Qty' ) ? (int) DC_Min_Order_Qty::min_qty_for_product( $pid ) : 0;
