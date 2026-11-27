@@ -394,6 +394,9 @@ function dcmk_img_unica( $img_id, $product ) {
 		return $img_id;
 	}
 	$fr = dcom_fr_atual();
+	if ( ! $fr && function_exists( 'dccf_host_casafinna' ) && dccf_host_casafinna() ) {
+		$fr = -1; // Casafinna: usa a mesma foto de um item só (ou a fixada no produto) das lojas Ouro
+	}
 	if ( ! $fr ) {
 		return $img_id;
 	}
